@@ -14,12 +14,17 @@ db.app = app
 from routes.collector import collector
 from routes.issuer import issuer
 from routes.ping import ping
+from routes.claim import claim
+from routes.token import token
 
 # Registering blueprints.
 app.register_blueprint(collector)
 app.register_blueprint(issuer)
 app.register_blueprint(ping)
+app.register_blueprint(claim)
+app.register_blueprint(token)
+
 
 
 if __name__ == '__main__':
-    app.run(host = 'localhost', debug=True, port = 8088)
+    app.run(host = '0.0.0.0', debug=True, port = 8088)
