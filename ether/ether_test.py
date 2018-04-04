@@ -2,6 +2,7 @@ import json
 from solc import compile_source
 from uuid import uuid4
 from web3 import Web3, IPCProvider, personal
+from web3.contract import ConciseContract
 
 # To use correctly install python3 and set as interpreter
 # Install geth with the rinkeby test network and pip install web3
@@ -16,7 +17,6 @@ from web3 import Web3, IPCProvider, personal
 
 
 # TODO: should read in from a config file on initialize
-from web3.contract import ConciseContract
 
 IPC_LOCATION = '/Users/jordan/Library/Ethereum/rinkeby/geth.ipc'
 
