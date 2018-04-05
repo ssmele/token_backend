@@ -32,7 +32,7 @@ def get_collector_by_c_id(c_id):
 @load_with_schema(CreateCollectorRequest)
 def collectors(data):
     try:
-        db.engine.connect().execute("insert into collectors (userna, password) values('{}','{}')"
+        db.engine.connect().execute("insert into collectors (username, password) values('{}','{}')"
                                     .format(data['username'], data['password']))
     except Exception as e:
         return error_response("Couldn't create account", http_code=200)

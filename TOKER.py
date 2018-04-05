@@ -4,7 +4,7 @@ from utils.setup_utils import load_config
 
 # Setting up flask application.
 app = Flask(__name__)
-app.config.update(load_config())
+app.config.update(load_config(app.root_path))
 
 # Set up the database after configuration application.
 db.init_app(app)
@@ -16,6 +16,7 @@ from routes.issuer import issuer
 from routes.ping import ping
 from routes.claim import claim
 from routes.token import token
+from routes.login import login
 
 # Registering blueprints.
 app.register_blueprint(collector)
@@ -23,6 +24,7 @@ app.register_blueprint(issuer)
 app.register_blueprint(ping)
 app.register_blueprint(claim)
 app.register_blueprint(token)
+app.register_blueprint(login)
 
 
 if __name__ == '__main__':
