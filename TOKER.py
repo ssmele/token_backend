@@ -26,6 +26,23 @@ app.register_blueprint(claim)
 app.register_blueprint(token)
 app.register_blueprint(login_bp)
 
+# Need to move this to another file.
+from flask import request, jsonify
+TEMP_JWT = 'SECRET_AND_SEUCRE_420'
+
+#TODO: Make transition to auth on always.
+#@app.before_request
+def check_jwt():
+    # Get the key out of the authroization header
+    key = request.headers.get('Authorization')
+    if key is None:
+        return jsonify("Access Denied"), 401
+    key = key.split('Bearer ')[1]
+    if key != TEMP_JWT:
+        return jsonify("Access Denied"), 401
+
+
+
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', debug=True, port = 8088)
