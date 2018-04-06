@@ -11,20 +11,20 @@ db.init_app(app)
 db.app = app
 
 # Have to import these after as they require the database to be set up with the application configured.
-from routes.collector import collector
-from routes.issuer import issuer
+from routes.collector import collector_bp
+from routes.issuer import issuer_bp
 from routes.ping import ping
 from routes.claim import claim
 from routes.token import token
-from routes.login import login
+from routes.login import login_bp
 
 # Registering blueprints.
-app.register_blueprint(collector)
-app.register_blueprint(issuer)
+app.register_blueprint(collector_bp)
+app.register_blueprint(issuer_bp)
 app.register_blueprint(ping)
 app.register_blueprint(claim)
 app.register_blueprint(token)
-app.register_blueprint(login)
+app.register_blueprint(login_bp)
 
 
 if __name__ == '__main__':

@@ -1,23 +1,40 @@
 from flask import Blueprint
 from routes import load_with_schema
-from models.collector import LoginCollectorRequest
+from models.collector import LoginCollectorRequest, GetCollectorLoginDetails
+from models.issuer import LoginIssuerRequest, GetIssuerLoginDetails
 from utils.utils import success_response, error_response
-from models import db
 
-login = Blueprint('login', __name__)
+login_bp = Blueprint('login', __name__)
 url_prefix = '/login'
 
-login_parser = LoginCollectorRequest()
+TEMP_JWT = 'SECRET_AND_SEUCRE_420'
 
 
-@login.route(url_prefix, methods=['POST'])
+@login_bp.route(url_prefix + '/collector', methods=['POST'])
 @load_with_schema(LoginCollectorRequest)
-def logins(data):
-    rv = db.engine.connect().execute("select * from collectors where username = '{}'".format(data['username']))
-    for r in rv:
-        if data['password'] == login_parser.dump(r)['password']:
-            return 'SWAG'
-        else:
-            return 'BAD'
+def get_collector_jwt(data):
+    # Gather up login details.
+    login_deets = GetCollectorLoginDetails().execute_n_fetchone(binds=data)
+    if login_deets is None:
+        return error_response("Authorization Failed for Collector Login.")
+
+    # If we got some deets back then check if passwords match.
+    if data['password'] == login_deets['password']:
+        return success_response({'jwt': TEMP_JWT})
     else:
-        return error_response(status="Username not recongnized in system.", status_code=-1, http_code=200)
+        return error_response("Authorization Failed for Collector Login.")
+
+
+@login_bp.route(url_prefix + '/issuer', methods=['POST'])
+@load_with_schema(LoginIssuerRequest)
+def get_issuer_jwt(data):
+    # Gather up login details.
+    login_deets = GetIssuerLoginDetails().execute_n_fetchone(binds=data)
+    if login_deets is None:
+        return error_response("Authorization Failed for Issuer Login.")
+
+    # If we got some deets back then check if passwords match.
+    if data['password'] == login_deets['password']:
+        return success_response({'jwt': TEMP_JWT})
+    else:
+        return error_response("Authorization Failed for Issuer Login.")

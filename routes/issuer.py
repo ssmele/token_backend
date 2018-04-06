@@ -1,13 +1,47 @@
 from flask import Blueprint
 from routes import load_with_schema
-from models.issuer import CreateIssuerRequest
-from utils.utils import success_response
+from models.issuer import CreateIssuerRequest, InsertNewIssuer, GetIssuerByIID, GetIssuerByUsername
+from utils.utils import success_response, error_response
 
-issuer = Blueprint('issuer', __name__)
+issuer_bp = Blueprint('issuer', __name__)
 url_prefix = '/issuer'
 
 
-@issuer.route(url_prefix, methods=['POST'])
+@issuer_bp.route(url_prefix, methods=['POST'])
 @load_with_schema(CreateIssuerRequest)
 def issuers(data):
-    return success_response(data)
+    try:
+        # TODO: Need to create Ethereum account here.
+        # TODO: Need to encrypt password and thangs.
+        InsertNewIssuer().execute(data)
+        return success_response('Created issuer!', http_code=201)
+    except Exception:
+        return error_response("Couldn't create issuer", http_code=200)
+
+
+@issuer_bp.route(url_prefix + '/username=<string:username>', methods=['GET'])
+def get_issuer_by_username(username):
+    """
+    This method retrieves issuer data for the given username.
+    :param username: username of issuer to retrieve.
+    :return:
+    """
+    issuer = GetIssuerByUsername().execute_n_fetchone({'username': username})
+    if issuer:
+        return success_response(issuer)
+    else:
+        return error_response(status="Couldn't retrieve issuer with that username", status_code=-1, http_code=200)
+
+
+@issuer_bp.route(url_prefix + '/i_id=<int:i_id>', methods=['GET'])
+def get_issuer_by_i_id(i_id):
+    """
+    This method retrieves issuer data for the given i_id.
+    :param i_id: i_id of issuer to retrieve.
+    :return:
+    """
+    issuer = GetIssuerByIID().execute_n_fetchone({'i_id': i_id})
+    if issuer:
+        return success_response(issuer)
+    else:
+        return error_response(status="Couldn't retrieve issuer with that i_id", status_code=-1, http_code=200)
