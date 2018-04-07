@@ -24,7 +24,7 @@ class DataQuery:
         except DBAPIError as e:
             raise e
 
-    def execute_n_fetchone(self, binds, schema_out=True):
+    def execute_n_fetchone(self, binds, con=None, schema_out=True):
         """
         Calls query and fetch's the first row will return None if no values are present.
         :param binds: Binds to add to the query.
@@ -33,7 +33,8 @@ class DataQuery:
         """
         try:
             # Perform the selected query and try and get object off of it.
-            rv = db.engine.connect().execute(self.sql_text, binds).fetchone()
+            con = con if con is not None else db.engine.connect()
+            rv = con.execute(self.sql_text, binds).fetchone()
             if rv is None:
                 # Nothing from the query.
                 return None

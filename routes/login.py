@@ -4,6 +4,7 @@ from models.collector import LoginCollectorRequest, GetCollectorLoginDetails
 from models.issuer import LoginIssuerRequest, GetIssuerLoginDetails
 from utils.utils import success_response, error_response
 from utils.doc_utils import BlueprintDocumentation
+from utils.verify_utils import generate_jwt
 
 
 login_bp = Blueprint('login', __name__)
@@ -26,7 +27,8 @@ def get_collector_jwt(data):
 
     # If we got some deets back then check if passwords match.
     if data['password'] == login_deets['password']:
-        return success_response({'jwt': TEMP_JWT})
+        del login_deets['password']
+        return success_response({'jwt': generate_jwt(login_deets)})
     else:
         return error_response("Authorization Failed for Collector Login.")
 
@@ -44,6 +46,7 @@ def get_issuer_jwt(data):
 
     # If we got some deets back then check if passwords match.
     if data['password'] == login_deets['password']:
-        return success_response({'jwt': TEMP_JWT})
+        del login_deets['password']
+        return success_response({'jwt': generate_jwt(login_deets)})
     else:
         return error_response("Authorization Failed for Issuer Login.")

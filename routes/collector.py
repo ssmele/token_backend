@@ -1,6 +1,8 @@
 from flask import Blueprint
 from models.collector import CreateCollectorRequest, GetCollectorByUsername, GetCollectorByCID, InsertNewCollector
+from models.collector import create_collector
 from routes import load_with_schema
+from utils.verify_utils import generate_jwt
 from utils.utils import success_response, error_response
 from utils.doc_utils import BlueprintDocumentation
 
@@ -39,9 +41,12 @@ def get_collector_by_c_id(c_id):
 @collector_docs.document(url_prefix, 'POST', "Method to create collector.", input_schema=CreateCollectorRequest)
 def collectors(data):
     try:
-        # TODO: Need to create Ethereum account here.
-        # TODO: Need to encrypt password and thangs.
-        InsertNewCollector().execute(data)
-        return success_response('Created users!', http_code=201)
+        collector = create_collector(data)
+        return success_response({'jwt': generate_jwt(collector)}, http_code=201)
     except Exception as e:
         return error_response("Couldn't create account", http_code=200)
+
+
+# TODO: GET COLLECTION.
+# TODO: GET COLLECTOR.
+# TODO: CLAIM.
