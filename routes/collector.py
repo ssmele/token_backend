@@ -9,6 +9,7 @@ collector_docs = BlueprintDocumentation(collector_bp, 'Collector')
 url_prefix = '/collector'
 
 
+# TODO: Return collector.
 @collector_bp.route(url_prefix + '/username=<string:username>', methods=['GET'])
 @collector_docs.document(url_prefix + '/username=<string:username>', 'GET',
                          "Method to retrieve collector information by username",

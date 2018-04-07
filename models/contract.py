@@ -24,6 +24,16 @@ class ContractRequest(Schema):
     }
 
 
+class GetContractResponse(Schema):
+    con_id = fields.Int(required=True)
+    i_id = fields.Int(required=True)
+    hash = fields.Str(required=True)
+    name = fields.Str(required=True)
+    description = fields.Str(required=True)
+    num_created = fields.Int(required=True)
+    claim_type = fields.Str(required=True)
+
+
 class InsertNewContract(DataQuery):
 
     def __init__(self):
@@ -43,6 +53,34 @@ class InsertToken(DataQuery):
         """
 
         self.schema_out = None
+        super().__init__()
+
+
+class GetContractByConID(DataQuery):
+
+    def __init__(self):
+        self.sql_text = """
+        SELECT *
+        FROM contracts
+        WHERE con_id = :con_id
+        """
+
+        self.schema_out = GetContractResponse()
+
+        super().__init__()
+
+
+class GetContractByName(DataQuery):
+
+    def __init__(self):
+        self.sql_text = """
+        SELECT *
+        FROM contracts
+        WHERE name like :name
+        """
+
+        self.schema_out = GetContractResponse()
+
         super().__init__()
 
 

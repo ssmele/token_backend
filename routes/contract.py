@@ -1,6 +1,6 @@
 from flask import Blueprint
 from routes import load_with_schema
-from models.contract import ContractRequest, ClaimTypes, insert_bulk_tokens
+from models.contract import ContractRequest, ClaimTypes, GetContractByConID, GetContractByName, insert_bulk_tokens
 from utils.utils import success_response, error_response
 from utils.doc_utils import BlueprintDocumentation
 
@@ -40,3 +40,25 @@ def contracts(data):
         return error_response("Couldn't create new contract.")
 
     return success_response('Success in issuing token!', http_code=201)
+
+
+@contract_bp.route(url_prefix + '/con_id=<int:con_id>', methods=['GET'])
+@contract_docs.document(url_prefix + '/con_id=<int:con_id>', 'GET',
+                        "Method to retrieve contract information by con_id")
+def get_contract_by_con_id(con_id):
+    contract = GetContractByConID().execute_n_fetchone({'con_id': con_id})
+    if contract:
+        return success_response(contract)
+    else:
+        return error_response(status="Couldn't retrieve contract with that con_id", status_code=-1, http_code=200)
+
+
+@contract_bp.route(url_prefix + '/name=<string:name>', methods=['GET'])
+@contract_docs.document(url_prefix + '/name=<string:name>', 'GET',
+                        "Method to retrieve contract information by names like it.")
+def get_contract_by_name(name):
+    contracts_by_name = GetContractByName().execute_n_fetchall({'name': '%'+name+'%'})
+    if contracts_by_name:
+        return success_response({'contracts': contracts_by_name})
+    else:
+        return error_response(status="Couldn't retrieve contract with that con_id", status_code=-1, http_code=200)
