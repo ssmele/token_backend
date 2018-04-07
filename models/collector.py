@@ -7,10 +7,20 @@ class CreateCollectorRequest(Schema):
     username = fields.Str(required=True)
     password = fields.Str(required=True, load_only=True)
 
+    doc_load_info = {
+        'username': {'type': 'string', 'desc': 'desired username for collector creation.'},
+        'password': {'type': 'string', 'desc': 'desired password for collector creation.'}
+    }
+
 
 class LoginCollectorRequest(Schema):
     username = fields.Str(required=True)
     password = fields.Str(required=True)
+
+    doc_load_info = {
+        'username': {'type': 'string', 'desc': 'collector username to use with login.'},
+        'password': {'type': 'string', 'desc': 'collector password to use with login.'}
+    }
 
 
 class GetCollectorByUsername(DataQuery):

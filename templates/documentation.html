@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<style>
+td, th {
+    border: 1px solid #dddddd;
+    text-align: left;
+    padding: 8px;
+}
+tr:nth-child(even){
+    background-color: #dddddd;
+}
+</style>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>TOKEN API Docs</title>
+</head>
+<body>
+<h1>TOKEN API Documentation.</h1>
+<h1>Provided by stone. Any questions, concerns, likes, or dislikes contact me at 801-541-9341</h1>
+<hr style="height:3px;border:black;color:red;background-color:red;" />
+<h2>Response Info</h2>
+<p>All successful responses are wrapped in a common json response. This common json response consists of a 'status',
+'status_code' and 'resp_data' keys. The 'status key' is a string stating the successful action that just took place.
+By default this is "Success". 'status_code' is an integer which for successful responses is always 0. The 'resp_data'
+key holds all the pertinent data for the action that just took place in result of the api call. This will be a json
+    object and the contents are specified per method below in the docs.</p>
+<hr style="height:3px;border:black;color:red;background-color:red;" />
+{% for bp in bp_docs %}
+    <h1><u><em>{{ bp.bp_name }} Methods:</em></u></h1>
+    {% for key, value in bp.registered_endpoints.items() %}
+        <h2> {{ key }} [{{ value.endpoint_type }}]</h2>
+        <u><p> Description:</p></u> <p>{{ value.description }}</p>
+        {% if value.input_schema %}
+            <u><em><p>Method Form Data:</p></em></u>
+            <table style="width: 100%">
+            <tr><th>Param Name</th><th>Param Description</th></tr>
+            {% for k, v in value.input_schema.items() %}
+                <tr>
+                    <th>{{ k }}</th>
+                    <th><pre>{{ v|tojson_pretty|safe }}</pre></th>
+                </tr>
+            {% endfor %}
+            </table>
+        {% endif %}
+        {% if value.url_params %}
+            <u><em><p>Method Url Data:</p></em></u>
+            <table style="width: 100%">
+            <tr><th>Param Name</th><th>Param Description</th></tr>
+            {% for k, v in value.url_params.items() %}
+                <tr>
+                    <th>{{ k }}</th>
+                    <th><pre>{{ v|tojson_pretty|safe }}</pre></th>
+                </tr>
+            {% endfor %}
+            </table>
+        {% endif %}
+    {% else %}
+        <p>No methods for this endpoint</p>
+    {% endfor %}
+    <hr style="height:3px;border:black;color:red;background-color:red;" />
+{% endfor %}
+<br>
+</body>

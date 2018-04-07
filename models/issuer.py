@@ -10,6 +10,11 @@ class CreateIssuerRequest(Schema):
     username = fields.Str(required=True)
     password = fields.Str(required=True, load_only=True)
 
+    doc_load_info = {
+        'username': {'type': 'string', 'desc': 'desired username for issuer creation.'},
+        'password': {'type': 'string', 'desc': 'desired password for issuer creation.'}
+    }
+
 
 class LoginIssuerRequest(Schema):
     """
@@ -18,6 +23,10 @@ class LoginIssuerRequest(Schema):
     username = fields.Str(required=True)
     password = fields.Str(required=True)
 
+    doc_load_info = {
+        'username': {'type': 'string', 'desc': 'issuer username to use with login.'},
+        'password': {'type': 'string', 'desc': 'issuer password to use with login.'}
+    }
 
 class InsertNewIssuer(DataQuery):
 

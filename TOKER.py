@@ -1,6 +1,7 @@
-from flask import Flask
+from flask import Flask, render_template
 from models import db
 from utils.setup_utils import load_config
+from utils.doc_utils import to_pretty_json
 
 # Setting up flask application.
 app = Flask(__name__)
@@ -11,12 +12,12 @@ db.init_app(app)
 db.app = app
 
 # Have to import these after as they require the database to be set up with the application configured.
-from routes.collector import collector_bp
-from routes.issuer import issuer_bp
-from routes.ping import ping
+from routes.collector import collector_bp, collector_docs
+from routes.issuer import issuer_bp, issuer_docs
+from routes.ping import ping, ping_docs
 from routes.claim import claim
 from routes.token import token
-from routes.login import login_bp
+from routes.login import login_bp, login_docs
 
 # Registering blueprints.
 app.register_blueprint(collector_bp)
@@ -26,22 +27,18 @@ app.register_blueprint(claim)
 app.register_blueprint(token)
 app.register_blueprint(login_bp)
 
-# Need to move this to another file.
-from flask import request, jsonify
-TEMP_JWT = 'SECRET_AND_SEUCRE_420'
 
-#TODO: Make transition to auth on always.
-#@app.before_request
-def check_jwt():
-    # Get the key out of the authroization header
-    key = request.headers.get('Authorization')
-    if key is None:
-        return jsonify("Access Denied"), 401
-    key = key.split('Bearer ')[1]
-    if key != TEMP_JWT:
-        return jsonify("Access Denied"), 401
-
-
+# Setting up the documentation.
+@app.route('/docs')
+def docs():
+    """
+    This endpoint simple servers the documenation to the user. The universe is gonna end from heat death anyway f the
+    rules and smoke dope for life.
+    :return:
+    """
+    app.jinja_env.filters['tojson_pretty'] = to_pretty_json
+    blueprint_doc_list = [collector_docs, issuer_docs, login_docs, ping_docs]
+    return render_template('documentation.html', bp_docs=blueprint_doc_list)
 
 
 if __name__ == '__main__':
