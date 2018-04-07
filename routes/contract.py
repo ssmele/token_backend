@@ -1,6 +1,6 @@
 from flask import Blueprint
 from routes import load_with_schema
-from models.contract import ContractRequest, ClaimTypes, InsertNewContract
+from models.contract import ContractRequest, ClaimTypes, insert_bulk_tokens
 from utils.utils import success_response, error_response
 from utils.doc_utils import BlueprintDocumentation
 
@@ -13,8 +13,10 @@ MAX_TOKEN_LIMIT = 1000
 
 @contract_bp.route(url_prefix, methods=['POST'])
 @load_with_schema(ContractRequest)
+@contract_docs.document(url_prefix, 'POST',
+                        'Method to start a request to issue a new token on the eth network. This will also create all'
+                        'new tokens associated with the method.', ContractRequest)
 def contracts(data):
-
     # TODO: Actually issue a deployment for the contract here
     # I don't know how the api for the ether network works just gonna assume if we get None something went wrong.
     contract = 'NOT NULL'
@@ -26,14 +28,13 @@ def contracts(data):
         return error_response("Could not create a token contract with that many individual token. Max is {}"
                               .format(MAX_TOKEN_LIMIT))
 
-    # Update the original data given after validation.
-    data.update({'hash': 'TEMP_HASH'})
+    # Update the original data given after validation for contract creation binds.
+    data.update({'hash': 'TEMP_CONTRACT_HASH'})
     data.update({'claim_type':  ClaimTypes.SIMPLE.value})
 
     # Try and insert into database.
     try:
-        # TODO: GET THE FOREGIN KEY THING TO WORK.
-        InsertNewContract().execute(data)
+        insert_bulk_tokens(data['num_created'], data)
     except Exception as e:
         print(str(e))
         return error_response("Couldn't create new contract.")
