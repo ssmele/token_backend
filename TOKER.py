@@ -2,6 +2,7 @@ from flask import Flask, render_template
 from models import db
 from utils.setup_utils import load_config
 from utils.doc_utils import to_pretty_json
+from utils.utils import success_response_dict
 
 # Setting up flask application.
 app = Flask(__name__)
@@ -38,7 +39,7 @@ def docs():
     """
     app.jinja_env.filters['tojson_pretty'] = to_pretty_json
     blueprint_doc_list = [collector_docs, issuer_docs, login_docs, ping_docs]
-    return render_template('documentation.html', bp_docs=blueprint_doc_list)
+    return render_template('documentation.html', bp_docs=blueprint_doc_list, base_resp=success_response_dict({}))
 
 
 if __name__ == '__main__':

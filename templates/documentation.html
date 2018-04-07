@@ -20,10 +20,13 @@ tr:nth-child(even){
 <hr style="height:3px;border:black;color:red;background-color:red;" />
 <h2>Response Info</h2>
 <p>All successful responses are wrapped in a common json response. This common json response consists of a 'status',
-'status_code' and 'resp_data' keys. The 'status key' is a string stating the successful action that just took place.
-By default this is "Success". 'status_code' is an integer which for successful responses is always 0. The 'resp_data'
-key holds all the pertinent data for the action that just took place in result of the api call. This will be a json
-    object and the contents are specified per method below in the docs.</p>
+'status_code' and 'resp_data' keys.</p>
+<p>"status" is a string stating the successful action that just took place. By default this is "Success".</p>
+<p>"status_code" is an integer which for successful responses is always 0.</p>
+<p>"resp_data" holds all the pertinent data for the action that just took place in result of the api call.
+This will be a json object and the contents are specified per method below in the docs. Below is an example of
+what a base response will look like.</p>
+<pre>{{ base_resp|tojson_pretty|safe }}</pre>
 <hr style="height:3px;border:black;color:red;background-color:red;" />
 {% for bp in bp_docs %}
     <h1><u><em>{{ bp.bp_name }} Methods:</em></u></h1>
