@@ -16,16 +16,18 @@ db.app = app
 from routes.collector import collector_bp, collector_docs
 from routes.issuer import issuer_bp, issuer_docs
 from routes.ping import ping, ping_docs
-from routes.claim import claim
+from routes.claim import claim_bp
 from routes.token import token
+from routes.contract import contract_bp
 from routes.login import login_bp, login_docs
 
 # Registering blueprints.
 app.register_blueprint(collector_bp)
 app.register_blueprint(issuer_bp)
 app.register_blueprint(ping)
-app.register_blueprint(claim)
+app.register_blueprint(claim_bp)
 app.register_blueprint(token)
+app.register_blueprint(contract_bp)
 app.register_blueprint(login_bp)
 
 
