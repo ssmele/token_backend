@@ -2,7 +2,7 @@ from flask import Flask, render_template
 from models import db
 from utils.setup_utils import load_config
 from utils.doc_utils import to_pretty_json
-from utils.utils import success_response_dict
+from utils.utils import success_response_dict, error_response
 
 # Setting up flask application.
 app = Flask(__name__)
@@ -13,8 +13,8 @@ db.init_app(app)
 db.app = app
 
 # Have to import these after as they require the database to be set up with the application configured.
-from routes.collector import collector_bp, collector_docs
-from routes.issuer import issuer_bp, issuer_docs
+from routes.collector import collector_bp, collector_api_bp, collector_docs
+from routes.issuer import issuer_bp, issuer_api_bp, issuer_docs
 from routes.ping import ping, ping_docs
 from routes.claim import claim_bp
 from routes.token import token
@@ -23,13 +23,20 @@ from routes.login import login_bp, login_docs
 
 # Registering blueprints.
 app.register_blueprint(collector_bp)
+app.register_blueprint(collector_api_bp)
 app.register_blueprint(issuer_bp)
+app.register_blueprint(issuer_api_bp)
 app.register_blueprint(ping)
 app.register_blueprint(claim_bp)
 app.register_blueprint(token)
 app.register_blueprint(contract_bp)
 app.register_blueprint(login_bp)
 
+
+@app.errorhandler(Exception)
+def handle_bad_request(e):
+    print(e)
+    return error_response('Unknown Error!')
 
 # Setting up the documentation.
 @app.route('/docs')

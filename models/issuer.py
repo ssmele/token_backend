@@ -1,5 +1,6 @@
 from marshmallow import Schema, fields
 from utils.db_utils import DataQuery
+from models import db
 
 
 class CreateIssuerRequest(Schema):
@@ -16,6 +17,14 @@ class CreateIssuerRequest(Schema):
     }
 
 
+def create_issuer(user_deets):
+    with db.engine.begin() as connection:
+        # Insert the contract.
+        InsertNewIssuer().execute(user_deets, con=connection)
+        issuer = GetIssuerByUsername().execute_n_fetchone({'username': user_deets['username']}, con=connection)
+        return issuer
+
+
 class LoginIssuerRequest(Schema):
     """
     Schema for gathering login request.
@@ -27,6 +36,7 @@ class LoginIssuerRequest(Schema):
         'username': {'type': 'string', 'desc': 'issuer username to use with login.'},
         'password': {'type': 'string', 'desc': 'issuer password to use with login.'}
     }
+
 
 class InsertNewIssuer(DataQuery):
 

@@ -1,16 +1,26 @@
 from flask import jsonify
 
-
-def success_response(resp_data={}, status="Success", status_code=0, http_code=200):
-    return jsonify(success_response_dict(resp_data, status, status_code)), http_code
+# For some reason
+def success_response(resp_data={}, status="Success", status_code=0, http_code=200, is_resource=False):
+    if not is_resource:
+        return jsonify(success_response_dict(resp_data, status, status_code)), http_code
+    else:
+        resp = jsonify(success_response_dict(resp_data, status, status_code))
+        resp.status_code = http_code
+        return resp
 
 
 def success_response_dict(resp_data={}, status="Success", status_code=0):
     return {'resp_data': resp_data, 'status': status, 'status_code': status_code}
 
 
-def error_response(status="Error", status_code=-1, http_code=400):
-    return jsonify({'status': status, 'status_code': status_code}), http_code
+def error_response(status="Error", status_code=-1, http_code=400, is_resource=False):
+    if not is_resource:
+        return jsonify({'status': status, 'status_code': status_code}), http_code
+    else:
+        resp = jsonify({'status': status, 'status_code': status_code})
+        resp.status_code = http_code
+        return resp
 
 # TODO: Make Error Handler
 # TODO: Make db getter
