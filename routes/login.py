@@ -11,8 +11,6 @@ login_bp = Blueprint('login', __name__)
 login_docs = BlueprintDocumentation(login_bp, 'Login')
 url_prefix = '/login'
 
-TEMP_JWT = 'SECRET_AND_SEUCRE_420'
-
 
 @login_bp.route(url_prefix + '/collector', methods=['POST'])
 @load_with_schema(LoginCollectorRequest)

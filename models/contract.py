@@ -11,7 +11,6 @@ class ClaimTypes(Enum):
 
 
 class ContractRequest(Schema):
-    i_id = fields.Int(required=True)
     name = fields.Str(required=True)
     description = fields.Str(required=True)
     num_created = fields.Int(required=True)
@@ -70,6 +69,20 @@ class GetContractByConID(DataQuery):
         super().__init__()
 
 
+class GetContractsByIssuerID(DataQuery):
+
+    def __init__(self):
+        self.sql_text = """
+        SELECT *
+        FROM contracts
+        WHERE i_id = :i_id
+        """
+
+        self.schema_out = GetContractResponse()
+
+        super().__init__()
+
+
 class GetContractByName(DataQuery):
 
     def __init__(self):
@@ -95,10 +108,12 @@ def insert_bulk_tokens(num_to_create, contract_deets):
         # Insert the contract.
         InsertNewContract().execute(contract_deets, con=connection)
         # TODO: look into if this will always return the insert from above.
+
         con_id = connection.execute("select last_insert_rowid() as 'con_id'").fetchone()['con_id']
 
         # Insert all token records associated with it.
         token_binds = {'con_id': con_id, 'tok_hash': 'temp_hash'}
         for tok_num in range(1, num_to_create+1):
             InsertToken().execute(token_binds, con=connection)
+        return con_id
 

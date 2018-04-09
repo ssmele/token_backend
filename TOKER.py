@@ -36,7 +36,8 @@ app.register_blueprint(login_bp)
 @app.errorhandler(Exception)
 def handle_bad_request(e):
     print(e)
-    return error_response('Unknown Error!')
+    return error_response('Unknown Error!', http_code=500)
+
 
 # Setting up the documentation.
 @app.route('/docs')
