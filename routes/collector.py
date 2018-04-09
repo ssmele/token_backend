@@ -25,6 +25,8 @@ def get_collector_by_username(username):
 
 
 @collector_bp.route(url_prefix + '/collection', methods=['GET'])
+@collector_docs.document(url_prefix + '/collection', 'GET',
+                         'This method returns a list of tokens in the collectors collection. Needs JWT.')
 @verify_collector_jwt
 def get_collection():
     # Get collection for user.
@@ -38,7 +40,7 @@ def get_collection():
 class Collector(Resource):
 
     @load_with_schema(CreateCollectorRequest)
-    @collector_docs.document(url_prefix, 'POST', "Method to create collector. Returns jwt for other methods.",
+    @collector_docs.document(url_prefix+" ", 'POST', "Method to create collector. Returns jwt for other methods.",
                              input_schema=CreateCollectorRequest)
     def post(self, data):
         try:

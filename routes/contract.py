@@ -18,7 +18,7 @@ class Contract(Resource):
 
     @load_with_schema(ContractRequest)
     @verify_issuer_jwt
-    @contract_docs.document(url_prefix, 'POST',
+    @contract_docs.document(url_prefix+" ", 'POST',
                             'Method to start a request to issue a new token on the eth network.'
                             ' This will also create all new tokens associated with the method.', ContractRequest)
     def post(self, data):

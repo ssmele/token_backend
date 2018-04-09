@@ -11,7 +11,7 @@ url_prefix = '/claim'
 
 
 @claim_bp.route(url_prefix, methods=['POST'])
-@claim_docs.document(url_prefix, 'POST', 'Method to claim a rand', input_schema=ClaimRequest)
+@claim_docs.document(url_prefix, 'POST', 'Method to claim a token of of a contract.', input_schema=ClaimRequest)
 @verify_collector_jwt
 @load_with_schema(ClaimRequest)
 def claims(data):

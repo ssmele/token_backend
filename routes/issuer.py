@@ -29,7 +29,7 @@ def get_issuer_by_username(username):
 class Issuer(Resource):
 
     @load_with_schema(CreateIssuerRequest)
-    @issuer_docs.document(url_prefix, 'POST', 'Method to create issuer. Returns jwt.', CreateIssuerRequest)
+    @issuer_docs.document(url_prefix+" ", 'POST', 'Method to create issuer. Returns jwt.', CreateIssuerRequest)
     def post(self, data):
         try:
             # TODO: Need to create Ethereum account here.
@@ -40,7 +40,7 @@ class Issuer(Resource):
 
     @verify_issuer_jwt
     @issuer_docs.document(url_prefix, 'GET',
-                          "Method to retrieve collector information. Requires jwt from login/creation account.")
+                          "Method to retrieve issuer information. Requires jwt from login/creation account.")
     def get(self):
         issuer = GetIssuerByIID().execute_n_fetchone({'i_id': g.issuer_info['i_id']})
         if issuer:
