@@ -218,4 +218,10 @@ class GethKeeper(object):
 
     def claim_token(self):
         # TODO: implement
+        # TODO: create a process to listen for send events
+        # TODO: add event to smart contract to send token
+        pass
+
+    def get_users_tokens(self):
+        # TODO: to get a user's tokens, we will have to query all of tokens monitored by Token
         pass
