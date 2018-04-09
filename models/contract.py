@@ -26,7 +26,7 @@ class ContractRequest(Schema):
 class GetContractResponse(Schema):
     con_id = fields.Int(required=True)
     i_id = fields.Int(required=True)
-    hash = fields.Str(required=True)
+    con_hash = fields.Str(required=True)
     name = fields.Str(required=True)
     description = fields.Str(required=True)
     num_created = fields.Int(required=True)
@@ -37,7 +37,7 @@ class InsertNewContract(DataQuery):
 
     def __init__(self):
         self.sql_text = """
-        INSERT INTO contracts(i_id, hash, name, description, num_created, claim_type) 
+        INSERT INTO contracts(i_id, con_hash, name, description, num_created, claim_type) 
         VALUES(:i_id, :hash, :name, :description, :num_created, :claim_type);
         """
         self.schema_out = None
@@ -48,7 +48,7 @@ class InsertToken(DataQuery):
 
     def __init__(self):
         self.sql_text = """
-        INSERT INTO tokens(con_id, hash) values(:con_id, :tok_hash);
+        INSERT INTO tokens(con_id, t_hash) values(:con_id, :tok_hash);
         """
 
         self.schema_out = None

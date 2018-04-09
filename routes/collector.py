@@ -1,6 +1,6 @@
 from flask import Blueprint, g
 from flask_restful import Resource, Api
-from models.collector import CreateCollectorRequest, GetCollectorByUsername, GetCollectorByCID
+from models.collector import CreateCollectorRequest, GetCollectorByUsername, GetCollectorByCID, GetCollection
 from models.collector import create_collector
 from routes import load_with_schema
 from utils.verify_utils import generate_jwt, verify_collector_jwt
@@ -22,6 +22,17 @@ def get_collector_by_username(username):
         return success_response(collector)
     else:
         return error_response(status="Couldn't retrieve collector with that username", status_code=-1, http_code=200)
+
+
+@collector_bp.route(url_prefix + '/collection', methods=['GET'])
+@verify_collector_jwt
+def get_collection():
+    # Get collection for user.
+    collection = GetCollection().execute_n_fetchall({'c_id': g.collector_info['c_id']})
+    if collection:
+        return success_response({'collection': collection})
+    else:
+        return error_response("Couldn't retrieve collectors collection.")
 
 
 class Collector(Resource):
@@ -48,10 +59,5 @@ class Collector(Resource):
             return error_response(status="Couldn't retrieve collector info.", status_code=-1, http_code=200)
 
 
-collector_api_bp = Blueprint('collector_api', __name__)
-collector_api = Api(collector_api_bp)
+collector_api = Api(collector_bp)
 collector_api.add_resource(Collector, url_prefix)
-
-
-# TODO: GET COLLECTION.
-# TODO: CLAIM.

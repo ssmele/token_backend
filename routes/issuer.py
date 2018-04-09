@@ -49,6 +49,5 @@ class Issuer(Resource):
             return error_response(status="Couldn't retrieve issuer info.", status_code=-1, http_code=200)
 
 
-issuer_api_bp = Blueprint('issuer_api', __name__)
-issuer_api = Api(issuer_api_bp)
+issuer_api = Api(issuer_bp)
 issuer_api.add_resource(Issuer, url_prefix)

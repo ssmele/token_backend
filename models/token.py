@@ -1,5 +1,9 @@
-from marshmallow import Schema, fields
+from marshmallow import fields
+from models.contract import GetContractResponse
 
 
-class TokenRequest(Schema):
-    temp = fields.Str()
+class TokenResponse(GetContractResponse):
+    t_id = fields.Int(required=True)
+    con_id = fields.Int(required=True)
+    t_hash = fields.Str(required=True)
+

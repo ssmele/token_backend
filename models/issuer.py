@@ -29,6 +29,7 @@ class LoginIssuerRequest(Schema):
     """
     Schema for gathering login request.
     """
+    i_id = fields.Int(dump_only=True)
     username = fields.Str(required=True)
     password = fields.Str(required=True)
 
@@ -81,7 +82,7 @@ class GetIssuerLoginDetails(DataQuery):
 
     def __init__(self):
         self.sql_text = """
-        SELECT username, password
+        SELECT *
         FROM issuers
         WHERE username = :username
         """

@@ -1,6 +1,7 @@
 from marshmallow import Schema, fields
 from utils.db_utils import DataQuery
 from models import db
+from models.token import TokenResponse
 
 
 class CreateCollectorRequest(Schema):
@@ -58,6 +59,20 @@ class GetCollectorByCID(DataQuery):
 
         self.schema_out = CreateCollectorRequest()
 
+        super().__init__()
+
+
+class GetCollection(DataQuery):
+
+    def __init__(self):
+        self.sql_text = """
+        SELECT * 
+        FROM tokens, contracts 
+        WHERE owner_c_id = :c_id
+        AND contracts.con_id = tokens.con_id;
+        """
+
+        self.schema_out = TokenResponse()
         super().__init__()
 
 
