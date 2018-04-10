@@ -20,6 +20,7 @@ from routes.claim import claim_bp, claim_docs
 from routes.token import token
 from routes.contract import contract_bp, contract_docs
 from routes.login import login_bp, login_docs
+from routes.explore import explore_bp, explore_docs
 
 # Registering blueprints.
 app.register_blueprint(collector_bp)
@@ -29,6 +30,7 @@ app.register_blueprint(claim_bp)
 app.register_blueprint(token)
 app.register_blueprint(contract_bp)
 app.register_blueprint(login_bp)
+app.register_blueprint(explore_bp)
 
 
 @app.errorhandler(Exception)
@@ -46,7 +48,7 @@ def docs():
     :return:
     """
     app.jinja_env.filters['tojson_pretty'] = to_pretty_json
-    blueprint_doc_list = [collector_docs, issuer_docs, contract_docs, login_docs, ping_docs, claim_docs]
+    blueprint_doc_list = [collector_docs, issuer_docs, contract_docs, login_docs, ping_docs, claim_docs, explore_docs]
     return render_template('documentation.html', bp_docs=blueprint_doc_list, base_resp=success_response_dict({}))
 
 

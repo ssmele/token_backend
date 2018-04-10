@@ -97,6 +97,18 @@ class GetContractByName(DataQuery):
         super().__init__()
 
 
+class GetAllContracts(DataQuery):
+    def __init__(self):
+        self.sql_text = """
+        SELECT *
+        FROM contracts
+        """
+
+        self.schema_out = GetContractResponse()
+
+        super().__init__()
+
+
 def insert_bulk_tokens(num_to_create, contract_deets):
     """
     This method inserts the original token contract given the deets and creates the tokens related to it.
