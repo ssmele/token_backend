@@ -1,10 +1,9 @@
-import json
 from binascii import hexlify
 from time import sleep
 
 from solc import compile_source
 from uuid import uuid4
-from web3 import Web3, IPCProvider, personal
+from web3 import Web3, IPCProvider
 from web3.contract import ConciseContract
 
 # TODO: !!!!! TURN THIS FILE INTO TEST SUITE USING GETH_KEEPER !!!!!
@@ -20,10 +19,12 @@ from web3.contract import ConciseContract
 # In another terminal set a symbolic link to the geth.ipc file:
 #    ln -sf <path/to/rinkeby/geth.ipc/file> <path/to/Ethereum/directory>/geth.ipc
 
+# To run the node on the server:
+#     geth --rinkeby --datadir=/usr/apps/Ethereum/rinkeby ipc --ipcapi admin,eth,miner,personal 2>>/usr/apps/EthLog.txt
+# To run console on existing node:    geth --rinkeby --datadir=/usr/apps/Ethereum attach
 
-# TODO: should read in from a config file on initialize
 
-IPC_LOCATION = '/Users/jordan/Library/Ethereum/rinkeby/geth.ipc'
+IPC_LOCATION = '/usr/apps/Ethereum/rinkeby/geth.ipc'
 
 
 class EtherManager(object):
@@ -125,82 +126,25 @@ class EtherManager(object):
     def get_trans_count(self):
         return self._w3.eth.getTransactionCount(self._w3.eth.accounts[0])
 
+    # This just gets a random transaction
     def get_transaction_receipt(self):
         trans_hash = self._w3.eth.getTransactionFromBlock(self._w3.eth.defaultBlock, 0)['hash']
         print('hash: {0}'.format(trans_hash))
         return self._w3.eth.getTransactionReceipt(trans_hash)
 
-    def get_temp_trans(self):
-        return self._w3.eth.getTransactionReceipt('0x7f7ebfa8838a585175c426b9d158fbaaa585c67f78afcec6bf47a2c81562c00f')
-
-    def contract_test(self):
-        contract_source_code = '''
-                pragma solidity ^0.4.0;
-
-                contract mortal {
-                    /* Define variable owner of the type address*/
-                    address owner;
-
-                    /* this function is executed at initialization and sets the owner of the contract */
-                    function mortal() { owner = msg.sender; }
-
-                    /* Function to recover the funds on the contract */
-                    function kill() { if (msg.sender == owner) suicide(owner); }
-                }
-
-                contract greeter is mortal {
-                    /* define variable greeting of the type string */
-                    string greeting;
-
-                    /* this runs when the contract is executed */
-                    function greeter(string _greeting) public {
-                        greeting = _greeting;
-                    }
-
-                    /* main function */
-                    function greet() constant returns (string) {
-                        return greeting;
-                    }
-                }
-                '''
-        compiled_sol = compile_source(contract_source_code)  # Compiled source code
-        print('compiled_sol is {0}'.format(str(compiled_sol)))
-
-        # TODO: need db table storing components of the contract binary interface !!!!!
-        contract_interface = compiled_sol['<stdin>:greeter']
-
-        # Get tx receipt to get contract address and get the contract
-        tx_receipt = self._w3.eth.getTransactionReceipt('0x0afc066b28dd8a9f5b014ef4eec16d6eacaa09de5175a2f0c726fd5ffeeaf84c')
-        print('trans_receipt: {0}'.format(tx_receipt))
-        contract_address = tx_receipt['contractAddress']
-        contract_instance = self._w3.eth.contract(abi=contract_interface['abi'], address=contract_address,
-                                                  ContractFactoryClass=ConciseContract)
-
-        # Getters + Setters for web3.eth.contract object
-        print('Contract value: {}'.format(contract_instance.greet()))
-        print('Setting value to: jordan')
-        print('Contract value: {}'.format(contract_instance.owner))
-        print('KILLING CONTRACT')
-        contract_instance.kill()
-
     def get_peers(self):
         return self._w3.admin.peers
 
-    def get_receipt(self):
-        return self._w3.eth.getTransactionReceipt('0x0afc066b28dd8a9f5b014ef4eec16d6eacaa09de5175a2f0c726fd5ffeeaf84c')
-
+    # TODO: NEVER CALL THIS !!!!!!!!!!!!!!!!!!!!!!!!!!!!
     def get_transactions(self):
         transactions = []
-        blockNum = self._w3.eth.blockNumber
-        for i in range(blockNum):
+        bn = self._w3.eth.blockNumber
+        for i in range(bn):
             block = self._w3.eth.getBlock(i, full_transactions=True)
             for trans in block['transactions']:
                 if trans['from'] == self._w3.eth.accounts[0]:
                     transactions.append(trans)
         return transactions
-
-    def get_trans(self):
-        return self._w3.eth.getTransaction('0xfb8149499d093164c66d314f14d6abfd6f6937c630b39cd4285c91506f57eb88')
 
 
 if __name__ == '__main__':
@@ -229,7 +173,3 @@ if __name__ == '__main__':
     #     print('{0}: {1}'.format(key, val))
 
     em.create_contract()
-
-
-
-
