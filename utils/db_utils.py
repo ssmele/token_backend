@@ -20,7 +20,8 @@ class DataQuery:
         """
         try:
             con = con if con is not None else db.engine.connect()
-            con.execute(self.sql_text, binds)
+            res = con.execute(self.sql_text, binds)
+            return res.rowcount
         except DBAPIError as e:
             raise e
 

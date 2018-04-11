@@ -29,27 +29,25 @@ def get_issuer_by_username(username):
 class Issuer(Resource):
 
     @load_with_schema(CreateIssuerRequest)
-    @issuer_docs.document(url_prefix, 'POST', 'Method to create issuer. Returns jwt.', CreateIssuerRequest)
+    @issuer_docs.document(url_prefix+" ", 'POST', 'Method to create issuer. Returns jwt.', CreateIssuerRequest)
     def post(self, data):
         try:
             # TODO: Need to create Ethereum account here.
             issuer = create_issuer(data)
-            return success_response({'jwt': generate_jwt(issuer)}, http_code=201, is_resource=True)
+            return success_response({'jwt': generate_jwt(issuer)}, http_code=201)
         except Exception:
-            return error_response("Couldn't create issuer", http_code=200, is_resource=True)
+            return error_response("Couldn't create issuer", http_code=200)
 
     @verify_issuer_jwt
     @issuer_docs.document(url_prefix, 'GET',
-                          "Method to retrieve collector information. Requires jwt from login/creation account.")
+                          "Method to retrieve issuer information. Requires jwt from login/creation account.")
     def get(self):
         issuer = GetIssuerByIID().execute_n_fetchone({'i_id': g.issuer_info['i_id']})
         if issuer:
-            return success_response(issuer, is_resource=True)
+            return success_response(issuer)
         else:
-            return error_response(status="Couldn't retrieve issuer info.", status_code=-1, http_code=200,
-                                  is_resource=True)
+            return error_response(status="Couldn't retrieve issuer info.", status_code=-1, http_code=200)
 
 
-issuer_api_bp = Blueprint('issuer_api', __name__)
-issuer_api = Api(issuer_api_bp)
+issuer_api = Api(issuer_bp)
 issuer_api.add_resource(Issuer, url_prefix)

@@ -64,21 +64,18 @@ def verify_collector_jwt(f):
 def parse_jwt_out_of_auth():
     # Make sure we have an Authorization Header.
     if 'Authorization' in request.headers:
-        auth_field = request.headers['Authorization']
+        parsed_jwt = request.headers['Authorization']
 
         try:
-            # Try and coerce the jwt out of the field.
-            jwt = auth_field.split('Bearer ')[1]
-
             # Verify the jwt has not been tampered with.
-            parsed_jwt = verify_jwt(jwt)
+            verified_jwt = verify_jwt(parsed_jwt)
         except Exception:
             return None
 
         # Make sure the jwt contains information.
-        if not parsed_jwt:
+        if not verified_jwt:
             return None
 
-        return parsed_jwt
+        return verified_jwt
     else:
         return None

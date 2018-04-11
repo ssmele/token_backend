@@ -28,6 +28,10 @@ This will be a json object and the contents are specified per method below in th
 what a base response will look like.</p>
 <pre>{{ base_resp|tojson_pretty|safe }}</pre>
 <hr style="height:3px;border:black;color:red;background-color:red;" />
+<h2>Authorization:</h2>
+<p>JWT's can be retrieved from creating issuer/collector accounts or from using the login methods for both issuer
+    and collectors. Place your JWT inside the 'Authorization' header.</p>
+<hr style="height:3px;border:black;color:red;background-color:red;" />
 {% for bp in bp_docs %}
     <h1><u><em>{{ bp.bp_name }} Methods:</em></u></h1>
     {% for key, value in bp.registered_endpoints.items() %}

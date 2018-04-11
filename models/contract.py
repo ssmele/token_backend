@@ -11,7 +11,6 @@ class ClaimTypes(Enum):
 
 
 class ContractRequest(Schema):
-    i_id = fields.Int(required=True)
     name = fields.Str(required=True)
     description = fields.Str(required=True)
     num_created = fields.Int(required=True)
@@ -27,7 +26,7 @@ class ContractRequest(Schema):
 class GetContractResponse(Schema):
     con_id = fields.Int(required=True)
     i_id = fields.Int(required=True)
-    hash = fields.Str(required=True)
+    con_hash = fields.Str(required=True)
     name = fields.Str(required=True)
     description = fields.Str(required=True)
     num_created = fields.Int(required=True)
@@ -38,7 +37,7 @@ class InsertNewContract(DataQuery):
 
     def __init__(self):
         self.sql_text = """
-        INSERT INTO contracts(i_id, hash, name, description, num_created, claim_type) 
+        INSERT INTO contracts(i_id, con_hash, name, description, num_created, claim_type) 
         VALUES(:i_id, :hash, :name, :description, :num_created, :claim_type);
         """
         self.schema_out = None
@@ -49,7 +48,7 @@ class InsertToken(DataQuery):
 
     def __init__(self):
         self.sql_text = """
-        INSERT INTO tokens(con_id, hash) values(:con_id, :tok_hash);
+        INSERT INTO tokens(con_id, t_hash) values(:con_id, :tok_hash);
         """
 
         self.schema_out = None
@@ -63,6 +62,20 @@ class GetContractByConID(DataQuery):
         SELECT *
         FROM contracts
         WHERE con_id = :con_id
+        """
+
+        self.schema_out = GetContractResponse()
+
+        super().__init__()
+
+
+class GetContractsByIssuerID(DataQuery):
+
+    def __init__(self):
+        self.sql_text = """
+        SELECT *
+        FROM contracts
+        WHERE i_id = :i_id
         """
 
         self.schema_out = GetContractResponse()
@@ -84,6 +97,18 @@ class GetContractByName(DataQuery):
         super().__init__()
 
 
+class GetAllContracts(DataQuery):
+    def __init__(self):
+        self.sql_text = """
+        SELECT *
+        FROM contracts
+        """
+
+        self.schema_out = GetContractResponse()
+
+        super().__init__()
+
+
 def insert_bulk_tokens(num_to_create, contract_deets):
     """
     This method inserts the original token contract given the deets and creates the tokens related to it.
@@ -95,10 +120,12 @@ def insert_bulk_tokens(num_to_create, contract_deets):
         # Insert the contract.
         InsertNewContract().execute(contract_deets, con=connection)
         # TODO: look into if this will always return the insert from above.
+
         con_id = connection.execute("select last_insert_rowid() as 'con_id'").fetchone()['con_id']
 
         # Insert all token records associated with it.
         token_binds = {'con_id': con_id, 'tok_hash': 'temp_hash'}
         for tok_num in range(1, num_to_create+1):
             InsertToken().execute(token_binds, con=connection)
+        return con_id
 

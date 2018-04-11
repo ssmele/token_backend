@@ -13,30 +13,31 @@ db.init_app(app)
 db.app = app
 
 # Have to import these after as they require the database to be set up with the application configured.
-from routes.collector import collector_bp, collector_api_bp, collector_docs
-from routes.issuer import issuer_bp, issuer_api_bp, issuer_docs
+from routes.collector import collector_bp, collector_docs
+from routes.issuer import issuer_bp, issuer_docs
 from routes.ping import ping, ping_docs
-from routes.claim import claim_bp
+from routes.claim import claim_bp, claim_docs
 from routes.token import token
 from routes.contract import contract_bp, contract_docs
 from routes.login import login_bp, login_docs
+from routes.explore import explore_bp, explore_docs
 
 # Registering blueprints.
 app.register_blueprint(collector_bp)
-app.register_blueprint(collector_api_bp)
 app.register_blueprint(issuer_bp)
-app.register_blueprint(issuer_api_bp)
 app.register_blueprint(ping)
 app.register_blueprint(claim_bp)
 app.register_blueprint(token)
 app.register_blueprint(contract_bp)
 app.register_blueprint(login_bp)
+app.register_blueprint(explore_bp)
 
 
 @app.errorhandler(Exception)
 def handle_bad_request(e):
     print(e)
-    return error_response('Unknown Error!')
+    return error_response('Unknown Error!', http_code=500)
+
 
 # Setting up the documentation.
 @app.route('/docs')
@@ -47,7 +48,7 @@ def docs():
     :return:
     """
     app.jinja_env.filters['tojson_pretty'] = to_pretty_json
-    blueprint_doc_list = [collector_docs, issuer_docs, contract_docs, login_docs, ping_docs]
+    blueprint_doc_list = [collector_docs, issuer_docs, contract_docs, login_docs, ping_docs, claim_docs, explore_docs]
     return render_template('documentation.html', bp_docs=blueprint_doc_list, base_resp=success_response_dict({}))
 
 
