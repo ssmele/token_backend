@@ -10,6 +10,11 @@ CREATE TABLE collectors (
   username CHAR(50) NOT NULL UNIQUE ,
   password CHAR(50) NOT NULL
 );
+drop table contracts;
+select * from contracts;
+delete from tokens;
+delete from contracts;
+select * from tokens;
 CREATE TABLE contracts (
   con_id INTEGER PRIMARY KEY AUTOINCREMENT,
   i_id INTEGER NOT NULL,
@@ -18,8 +23,12 @@ CREATE TABLE contracts (
   description TEXT,
   num_created INTEGER NOT NULL,
   claim_type CHAR(1) NOT NULL,
+  pic_location varchar(35) NOT NULL,
   FOREIGN KEY(i_id) REFERENCES issuers(i_id)
 );
+commit ;
+DROP TABLE tokens;
+commit ;
 CREATE TABLE tokens (
   t_id INTEGER PRIMARY KEY AUTOINCREMENT,
   con_id INTEGER,
