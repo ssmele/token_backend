@@ -3,10 +3,15 @@ from models import db
 from utils.setup_utils import load_config
 from utils.doc_utils import to_pretty_json
 from utils.utils import success_response_dict, error_response
+from flask import current_app
 
 # Setting up flask application.
 app = Flask(__name__)
 app.config.update(load_config(app.root_path))
+
+with app.app_context():
+    #app.config['APP_ROOT'] = app.root_path
+    current_app.config = app.config
 
 # Set up the database after configuration application.
 db.init_app(app)
