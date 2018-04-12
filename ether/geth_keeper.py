@@ -15,11 +15,15 @@ from web3 import Web3, IPCProvider
 # In another terminal set a symbolic link to the geth.ipc file:
 #    ln -sf <path/to/rinkeby/geth.ipc/file> <path/to/Ethereum/directory>/geth.ipc
 
+# To run the node on the server:
+#     geth --rinkeby --datadir=/usr/apps/Ethereum/rinkeby ipc --ipcapi admin,eth,miner,personal 2>>/usr/apps/EthLog.txt
+# To run console on existing node:    geth --rinkeby --datadir=/usr/apps/Ethereum attach
 
-# TODO: should read in from a config file on initialize
+
 from web3.contract import ConciseContract
 
-IPC_LOCATION = '/Users/jordan/Library/Ethereum/rinkeby/geth.ipc'
+# TODO: Should read from a config file
+IPC_LOCATION = '/usr/apps/Ethereum/rinkeby/geth.ipc'
 
 ACCT_UNLOCK_DUR = 5
 MAX_GAS_PRICE = 500000000  # TODO: set back to 2000000000

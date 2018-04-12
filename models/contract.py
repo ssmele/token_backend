@@ -1,5 +1,6 @@
-from marshmallow import Schema, fields
+from marshmallow import Schema, fields, post_dump
 from utils.db_utils import DataQuery
+from flask import request
 from enum import Enum
 from models import db
 
@@ -31,14 +32,19 @@ class GetContractResponse(Schema):
     description = fields.Str(required=True)
     num_created = fields.Int(required=True)
     claim_type = fields.Str(required=True)
+    pic_location = fields.Str(required=True)
+
+    @post_dump
+    def add_picture_path(self, data):
+        data['pic_location'] = request.url_root + 'contract/image=' + data['pic_location']
 
 
 class InsertNewContract(DataQuery):
 
     def __init__(self):
         self.sql_text = """
-        INSERT INTO contracts(i_id, con_hash, name, description, num_created, claim_type) 
-        VALUES(:i_id, :hash, :name, :description, :num_created, :claim_type);
+        INSERT INTO contracts(i_id, con_hash, name, description, num_created, claim_type, pic_location) 
+        VALUES(:i_id, :hash, :name, :description, :num_created, :claim_type, :pic_location);
         """
         self.schema_out = None
         super().__init__()
@@ -90,6 +96,18 @@ class GetContractByName(DataQuery):
         SELECT *
         FROM contracts
         WHERE name like :name
+        """
+
+        self.schema_out = GetContractResponse()
+
+        super().__init__()
+
+
+class GetAllContracts(DataQuery):
+    def __init__(self):
+        self.sql_text = """
+        SELECT *
+        FROM contracts
         """
 
         self.schema_out = GetContractResponse()
