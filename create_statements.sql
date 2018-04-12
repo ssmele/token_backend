@@ -8,7 +8,9 @@ commit;
 CREATE TABLE collectors (
   c_id INTEGER PRIMARY KEY AUTOINCREMENT,
   username CHAR(50) NOT NULL UNIQUE ,
-  password CHAR(50) NOT NULL
+  password CHAR(50) NOT NULL,
+  c_hash VARCHAR(42) NOT NULL,
+  c_priv_key TEXT NOT NULL
 );
 drop table contracts;
 select * from contracts;
