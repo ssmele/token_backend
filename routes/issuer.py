@@ -5,6 +5,7 @@ from models.issuer import CreateIssuerRequest, GetIssuerByIID, GetIssuerByUserna
 from utils.utils import success_response, error_response
 from utils.doc_utils import BlueprintDocumentation
 from utils.verify_utils import verify_issuer_jwt, generate_jwt
+from models import requires_db
 
 issuer_bp = Blueprint('issuer', __name__)
 issuer_docs = BlueprintDocumentation(issuer_bp, 'Issuer')
@@ -12,6 +13,7 @@ url_prefix = '/issuer'
 
 
 @issuer_bp.route(url_prefix + '/username=<string:username>', methods=['GET'])
+@requires_db
 @issuer_docs.document(url_prefix + '/username=<string:username>', 'GET', 'Gets issuer information by username')
 def get_issuer_by_username(username):
     """
@@ -29,16 +31,19 @@ def get_issuer_by_username(username):
 class Issuer(Resource):
 
     @load_with_schema(CreateIssuerRequest)
+    @requires_db
     @issuer_docs.document(url_prefix+" ", 'POST', 'Method to create issuer. Returns jwt.', CreateIssuerRequest)
     def post(self, data):
         try:
             # TODO: Need to create Ethereum account here.
-            issuer = create_issuer(data)
+            issuer = create_issuer(data, g.sesh)
+            g.sesh.commit()
             return success_response({'jwt': generate_jwt(issuer)}, http_code=201)
         except Exception:
             return error_response("Couldn't create issuer", http_code=200)
 
     @verify_issuer_jwt
+    @requires_db
     @issuer_docs.document(url_prefix, 'GET',
                           "Method to retrieve issuer information. Requires jwt from login/creation account.")
     def get(self):

@@ -1,7 +1,7 @@
 from sqlalchemy.sql import text
 from sqlalchemy.exc import DBAPIError
 from marshmallow.exceptions import ValidationError
-from models import db
+from flask import g
 
 
 class DataQuery:
@@ -10,22 +10,22 @@ class DataQuery:
         self.sql_txt = text(self.sql_text)
         self.schema_out = self.schema_out
 
-    def execute(self, binds, con=None):
+    def execute(self, binds, sesh=None):
         """
         Calls query and fetch's the first row will return None if no values are present.
         :param binds: Binds to add to the query.
         :param schema_out: If row should be dumped to schemas before returning.
-        :param con: If we are being provided a connection use it.
+        :param sesh: If we are being provided a connection use it.
         :return: First value of None.
         """
         try:
-            con = con if con is not None else db.engine.connect()
-            res = con.execute(self.sql_text, binds)
+            sesh = sesh if sesh is not None else g.sesh
+            res = sesh.execute(self.sql_text, binds)
             return res.rowcount
         except DBAPIError as e:
             raise e
 
-    def execute_n_fetchone(self, binds, con=None, schema_out=True):
+    def execute_n_fetchone(self, binds, sesh=None, schema_out=True):
         """
         Calls query and fetch's the first row will return None if no values are present.
         :param binds: Binds to add to the query.
@@ -34,8 +34,8 @@ class DataQuery:
         """
         try:
             # Perform the selected query and try and get object off of it.
-            con = con if con is not None else db.engine.connect()
-            rv = con.execute(self.sql_text, binds).fetchone()
+            sesh = sesh if sesh is not None else g.sesh
+            rv = sesh.execute(self.sql_text, binds).fetchone()
             if rv is None:
                 # Nothing from the query.
                 return None
@@ -53,7 +53,7 @@ class DataQuery:
         except ValidationError as e:
             return None
 
-    def execute_n_fetchall(self, binds, schema_out=True):
+    def execute_n_fetchall(self, binds, sesh=None, schema_out=True):
         """
         Querys and fetch's all rows from the query results.
         :param binds: Binds to use for query.
@@ -62,7 +62,8 @@ class DataQuery:
         """
         try:
             # Perform the selected query and try and get object off of it.
-            rv = db.engine.connect().execute(self.sql_text, binds).fetchall()
+            sesh = sesh if sesh is not None else g.sesh
+            rv = sesh.execute(self.sql_text, binds).fetchall()
             if rv is None:
                 # Nothing from the query.
                 return None

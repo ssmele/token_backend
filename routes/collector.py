@@ -1,5 +1,6 @@
 from flask import Blueprint, g
 from flask_restful import Resource, Api
+from models import requires_db
 from models.collector import CreateCollectorRequest, GetCollectorByUsername, GetCollectorByCID, GetCollection
 from models.collector import create_collector
 from routes import load_with_schema
@@ -13,6 +14,7 @@ url_prefix = '/collector'
 
 
 @collector_bp.route(url_prefix + '/username=<string:username>', methods=['GET'])
+@requires_db
 @collector_docs.document(url_prefix + '/username=<string:username>', 'GET',
                          "Method to retrieve collector information by username",
                          url_params={'username': 'username of collector to search for.'})
@@ -27,11 +29,12 @@ def get_collector_by_username(username):
 @collector_bp.route(url_prefix + '/collection', methods=['GET'])
 @collector_docs.document(url_prefix + '/collection', 'GET',
                          'This method returns a list of tokens in the collectors collection. Needs JWT.')
+@requires_db
 @verify_collector_jwt
 def get_collection():
     # Get collection for user.
     collection = GetCollection().execute_n_fetchall({'c_id': g.collector_info['c_id']})
-    if collection:
+    if collection is not None:
         return success_response({'collection': collection})
     else:
         return error_response("Couldn't retrieve collectors collection.")
@@ -40,16 +43,19 @@ def get_collection():
 class Collector(Resource):
 
     @load_with_schema(CreateCollectorRequest)
+    @requires_db
     @collector_docs.document(url_prefix+" ", 'POST', "Method to create collector. Returns jwt for other methods.",
                              input_schema=CreateCollectorRequest)
     def post(self, data):
         try:
-            collector = create_collector(data)
+            collector = create_collector(data, g.sesh)
+            g.sesh.commit()
             return success_response({'jwt': generate_jwt(collector)}, http_code=201)
         except Exception as e:
             return error_response("Couldn't create account", http_code=200)
 
     @verify_collector_jwt
+    @requires_db
     @collector_docs.document(url_prefix, 'GET',
                              "Method to retrieve collector information. Requires jwt from login/creation account.",
                              url_params={'c_id': 'c_id of collector to search for.'})

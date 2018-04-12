@@ -2,7 +2,6 @@ from marshmallow import Schema, fields, post_dump
 from utils.db_utils import DataQuery
 from flask import request
 from enum import Enum
-from models import db
 
 
 class ClaimTypes(Enum):
@@ -33,6 +32,8 @@ class GetContractResponse(Schema):
     num_created = fields.Int(required=True)
     claim_type = fields.Str(required=True)
     pic_location = fields.Str(required=True)
+
+    username = fields.Str(dump_only=True)
 
     @post_dump
     def add_picture_path(self, data):
@@ -106,8 +107,9 @@ class GetContractByName(DataQuery):
 class GetAllContracts(DataQuery):
     def __init__(self):
         self.sql_text = """
-        SELECT *
-        FROM contracts
+        SELECT * 
+        FROM contracts, issuers
+        WHERE contracts.i_id = issuers.i_id;
         """
 
         self.schema_out = GetContractResponse()
@@ -115,23 +117,22 @@ class GetAllContracts(DataQuery):
         super().__init__()
 
 
-def insert_bulk_tokens(num_to_create, contract_deets):
+def insert_bulk_tokens(num_to_create, contract_deets, sesh):
     """
     This method inserts the original token contract given the deets and creates the tokens related to it.
     :param num_to_create: Number of tokens to create off this contract.
     :param contract_deets: Details for contract creation.
     :return:
     """
-    with db.engine.begin() as connection:
-        # Insert the contract.
-        InsertNewContract().execute(contract_deets, con=connection)
-        # TODO: look into if this will always return the insert from above.
+    # Insert the contract.
+    InsertNewContract().execute(contract_deets, sesh=sesh)
+    # TODO: look into if this will always return the insert from above.
 
-        con_id = connection.execute("select last_insert_rowid() as 'con_id'").fetchone()['con_id']
+    con_id = sesh.execute("select last_insert_rowid() as 'con_id'").fetchone()['con_id']
 
-        # Insert all token records associated with it.
-        token_binds = {'con_id': con_id, 'tok_hash': 'temp_hash'}
-        for tok_num in range(1, num_to_create+1):
-            InsertToken().execute(token_binds, con=connection)
-        return con_id
+    # Insert all token records associated with it.
+    token_binds = {'con_id': con_id, 'tok_hash': 'temp_hash'}
+    for tok_num in range(1, num_to_create+1):
+        InsertToken().execute(token_binds, sesh=sesh)
+    return con_id
 

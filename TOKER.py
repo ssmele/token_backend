@@ -1,4 +1,5 @@
 from flask import Flask, render_template
+from models import Sesh
 from flask_cors import CORS
 from models import db
 from utils.setup_utils import load_config
@@ -12,12 +13,12 @@ CORS(app)
 app.config.update(load_config(app.root_path))
 
 with app.app_context():
-    #app.config['APP_ROOT'] = app.root_path
     current_app.config = app.config
 
 # Set up the database after configuration application.
 db.init_app(app)
 db.app = app
+Sesh.configure(bind=db.engine)
 
 # Have to import these after as they require the database to be set up with the application configured.
 from routes.collector import collector_bp, collector_docs
