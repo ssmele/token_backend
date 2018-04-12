@@ -1,4 +1,5 @@
 from flask import Flask, render_template
+from flask_cors import CORS
 from models import db
 from utils.setup_utils import load_config
 from utils.doc_utils import to_pretty_json
@@ -6,6 +7,7 @@ from utils.utils import success_response_dict, error_response
 
 # Setting up flask application.
 app = Flask(__name__)
+CORS(app)
 app.config.update(load_config(app.root_path))
 
 # Set up the database after configuration application.
