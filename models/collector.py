@@ -78,8 +78,8 @@ class InsertNewCollector(DataQuery):
 
     def __init__(self):
         self.sql_text = """
-        INSERT INTO collectors(username, password) 
-        values(:username, :password)
+        INSERT INTO collectors(username, password, c_hash, c_priv_key) 
+        values(:username, :password, :c_hash, :c_priv_key)
         """
         self.schema_out = None
         super().__init__()
