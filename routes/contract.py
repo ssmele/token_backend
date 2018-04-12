@@ -60,6 +60,7 @@ class Contract(Resource):
             print(str(e))
             return error_response("Couldn't create new contract.")
 
+        g.sesh.commit()
         return success_response('Success in issuing token!', http_code=201)
 
     @contract_docs.document(url_prefix, 'GET',

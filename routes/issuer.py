@@ -37,6 +37,7 @@ class Issuer(Resource):
         try:
             # TODO: Need to create Ethereum account here.
             issuer = create_issuer(data, g.sesh)
+            g.sesh.commit()
             return success_response({'jwt': generate_jwt(issuer)}, http_code=201)
         except Exception:
             return error_response("Couldn't create issuer", http_code=200)

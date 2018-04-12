@@ -49,6 +49,7 @@ class Collector(Resource):
     def post(self, data):
         try:
             collector = create_collector(data, g.sesh)
+            g.sesh.commit()
             return success_response({'jwt': generate_jwt(collector)}, http_code=201)
         except Exception as e:
             return error_response("Couldn't create account", http_code=200)
