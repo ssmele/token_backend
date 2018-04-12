@@ -3,7 +3,7 @@ from flask_restful import Resource, Api
 from models import requires_db
 from models.collector import CreateCollectorRequest, GetCollectorByUsername, GetCollectorByCID, GetCollection
 from models.collector import create_collector
-from routes import load_with_schema
+from routes import load_with_schema, requires_geth
 from utils.verify_utils import generate_jwt, verify_collector_jwt
 from utils.utils import success_response, error_response
 from utils.doc_utils import BlueprintDocumentation
@@ -44,10 +44,12 @@ class Collector(Resource):
 
     @load_with_schema(CreateCollectorRequest)
     @requires_db
+    @requires_geth
     @collector_docs.document(url_prefix+" ", 'POST', "Method to create collector. Returns jwt for other methods.",
                              input_schema=CreateCollectorRequest)
     def post(self, data):
         try:
+            hash, priv_key = g.geth.create_account()
             collector = create_collector(data, g.sesh)
             g.sesh.commit()
             return success_response({'jwt': generate_jwt(collector)}, http_code=201)
