@@ -66,34 +66,22 @@ class GethKeeper(object):
             raise GethException(str(e), 'Could not create account')
 
     # TODO: should gas_price not be a member?
-    def issue_contract(self, issuer_acct_num, issuer_priv_key, issuer_name='', name='', desc='',
-                       img_url='', num_tokes=0, transferable=False, gas_price=MAX_GAS_PRICE):
+    def issue_contract(self, issuer_acct_num, issuer_priv_key, issuer_name='', name='', symbol='TOKE', desc='',
+                       img_url='', num_tokes=0,  gas_price=MAX_GAS_PRICE):
         """ Creates, compiles, and deploys a smart contract with the given attributes
 
         :param issuer_acct_num: The issuer's account hash
         :param issuer_priv_key: The issuer's private key
         :param issuer_name: The issuer's name to place in the contract - default: empty string
         :param name: The contract name - default: empty string
+        :param symbol: The contract's symbol - default: 'TOKE'
         :param desc: The contract description - default: empty string
         :param img_url: Contract image url as a string - default: empty string
         :param num_tokes: Contract's number of tokens - default: 0
-        :param transferable: Boolean representing if the token is transferable - default: False
         :param gas_price: Willing gas price to pay - default: MAX_GAS_PRICE (2000000000)
         :return: Tuple - (transaction_hash, json_abi) as (string, string)
         """
         try:
-            # Create code for non-transferable tokens
-            trans_code = ''
-            modifier = ''
-            if not transferable:
-                trans_code = """
-                modifier onlyOwner {
-                    require(msg.sender == owner);
-                    _;   
-                }
-                """
-                modifier = 'onlyOwner'
-
             # TODO: Have a different function to generate solidity code
             contract_source_code = """
                     pragma solidity ^0.4.0;
@@ -103,15 +91,21 @@ class GethKeeper(object):
                         address owner;
                         
                         // Contract members
-                        string remaining_tokes;  // Holds the remaining # of tokens
                         string issuer_name;
                         string contract_name;
+                        string symbol;
                         string contract_description;
                         string img_url;
-                        int num_tokes;
+                        uint num_tokes;
+                        uint remaining_tokes;  // Holds the remaining # of tokens
+                        
+                        // Mappings
+                        mapping(uint256 => address) private tokenOwners;
+                        mapping(uint256 => bool) private tokenExists;
     
                         // Constructor
-                        function issuer_contract(string _in, string _cn, string _cd, string _iu, int _it) {{
+                        function issuer_contract(string _in, string _cn, string _ts, string _cd, 
+                                string _iu, uint256 _it) {{
                             // Set attributes
                             issuer_name = _in;
                             contract_name = _cn;
@@ -124,36 +118,45 @@ class GethKeeper(object):
                             owner = msg.sender; 
                         }}
                         
-                        {mod_def}
-                        
                         // Function to get issuer_name
-                        function get_issuer_name() constant returns (string) {{
+                        function issuerName() constant returns (string) {{
                             return issuer_name;
                         }}
                         
                         // Function to get contract name
-                        function get_contract_name() constant returns (string) {{
+                        function name() constant returns (string) {{
                             return contract_name;
                         }}
                         
+                        // Function to return the token's symbol
+                        function symbol() constant returns (string) {{
+                            return symbol;
+                        }}
+                        
                         // Function to get description
-                        function get_description() constant returns (string) {{
+                        function description() constant returns (string) {{
                             return constract_description;
                         }}
                         
                         // Function to get image URL
-                        function get_image_url() constant returns (string) {{
+                        function imageURL() constant returns (string) {{
                             return img_url;
                         }}
                         
                         // Function to get the number of tokens
-                        function get_num_tokens() constant returns (int) {{
+                        function totalSupply() constant returns (uint) {{
                             return num_tokes;
                         }}
                         
                         // Function to get the remaining # of tokens
-                        function get_remaining_tokens() constant returns (int) {{
+                        function remainingTokens() constant returns (uint) {{
                             return remaining_tokes;
+                        }}
+                        
+                        // Function to get the token owner
+                        function ownerOf(uint256 _tokenId) constant returns (address) {{
+                            require(tokenExists[_tokenId]);
+                            return tokenOwners[_tokenId];
                         }}
     
                         // Function to recover the funds on the contract
@@ -162,7 +165,7 @@ class GethKeeper(object):
                                 suicide(owner); 
                         }}
                     }} 
-            """.format(mod_def=trans_code)
+            """
             # Compile the source code
             compiled_sol = compile_source(contract_source_code)
             contract_interface = compiled_sol['<stdin>:issuer_contract']
@@ -176,7 +179,7 @@ class GethKeeper(object):
 
             # Instantiate, deploy, and get the transaction hash of the contract
             contract = self._w3.eth.contract(abi=contract_interface['abi'], bytecode=contract_interface['bin'])
-            tx_hash = contract.constructor(issuer_name, name, desc, img_url, num_tokes).transact(
+            tx_hash = contract.constructor(issuer_name, name, symbol, desc, img_url, num_tokes).transact(
                 {'from': issuer_acct_num, 'gasPrice': gas_price})
 
             # Lock the issuer's account back up and return the transaction hash

@@ -1,5 +1,7 @@
 from flask import Flask, render_template
-from models import db, Sesh
+from models import Sesh
+from flask_cors import CORS
+from models import db
 from utils.setup_utils import load_config
 from utils.doc_utils import to_pretty_json
 from utils.utils import success_response_dict, error_response
@@ -7,6 +9,7 @@ from flask import current_app
 
 # Setting up flask application.
 app = Flask(__name__)
+CORS(app)
 app.config.update(load_config(app.root_path))
 
 with app.app_context():
