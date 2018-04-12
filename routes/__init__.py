@@ -1,12 +1,25 @@
-from flask import request, jsonify
+from flask import request, jsonify, g
 from functools import wraps
 from marshmallow import ValidationError
+from ether.geth_keeper import GethKeeper
+
+
+def requires_geth(f):
+    """
+    Places geth on flask request.
+    :return: GethKeeper object
+    """
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        g.geth = GethKeeper()
+        return f(*args, **kwargs)
+    return decorated_function
+
 
 
 def make_error_response(message, status_code=400, **kwargs):
     response = jsonify(message=message, **kwargs)
     response.status_code = status_code
-
     return response
 
 

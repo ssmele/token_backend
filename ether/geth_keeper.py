@@ -83,6 +83,7 @@ class GethKeeper(object):
         """
         try:
             # TODO: Have a different function to generate solidity code
+            # TODO: Change transfer and accept code
             contract_source_code = """
                     pragma solidity ^0.4.0;
     
@@ -102,6 +103,10 @@ class GethKeeper(object):
                         // Mappings
                         mapping(uint256 => address) private tokenOwners;
                         mapping(uint256 => bool) private tokenExists;
+                        
+                        // Events
+                        event Transfer(address indexed _from, address indexed _to, uint256 _tokenId);
+                        event Approval(address indexed _owner, address indexed _approved, uint256 _tokenId);
     
                         // Constructor
                         function issuer_contract(string _in, string _cn, string _ts, string _cd, 
@@ -157,6 +162,27 @@ class GethKeeper(object):
                         function ownerOf(uint256 _tokenId) constant returns (address) {{
                             require(tokenExists[_tokenId]);
                             return tokenOwners[_tokenId];
+                        }}
+                        
+                        // Function to approve an ownership request
+                        function approve(address _to, uint256 _tokenId) {{
+                            require(msg.sender == ownerOf(_tokenId));
+                            require(msg.sender != _to);
+                            allowed[msg.sender][_to] = _tokenId;
+                            Approval(msg.sender, _to, _tokenId);
+                        }}
+                        
+                        // 
+                        function takeOwnership(uint256 _tokenId) {{
+                            require(tokenExists[_tokenId]);
+                            address oldOwner = ownerOf(_tokenId);
+                            address newOwner = msg.sender;
+                            require(newOwner != oldOwner);
+                            require(allowed[oldOwner][newOwner] == _tokenId);
+                            balances[oldOwner] -= 1;
+                            tokenOwners[_tokenId] = newOwner;
+                            balances[newOwner] += 1;
+                            Transfer(oldOwner, newOwner, _tokenId);
                         }}
     
                         // Function to recover the funds on the contract
