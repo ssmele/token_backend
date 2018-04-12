@@ -21,4 +21,5 @@ def claims(data):
     if results is None:
         return error_response("Couldn't claim token")
     else:
+        g.sesh.commit()
         return success_response("Token has been claimed!")
