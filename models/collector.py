@@ -1,6 +1,5 @@
 from marshmallow import Schema, fields
 from utils.db_utils import DataQuery
-from models import db
 from models.token import TokenResponse
 
 
@@ -26,12 +25,11 @@ class LoginCollectorRequest(Schema):
     }
 
 
-def create_collector(user_deets):
-    with db.engine.begin() as connection:
-        # Insert the contract.
-        InsertNewCollector().execute(user_deets, con=connection)
-        collector = GetCollectorByUsername().execute_n_fetchone({'username': user_deets['username']}, con=connection)
-        return collector
+def create_collector(user_deets, sesh):
+    # Insert the contract.
+    InsertNewCollector().execute(user_deets, sesh=sesh)
+    collector = GetCollectorByUsername().execute_n_fetchone({'username': user_deets['username']}, sesh=sesh)
+    return collector
 
 
 class GetCollectorByUsername(DataQuery):

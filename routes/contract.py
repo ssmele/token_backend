@@ -6,6 +6,7 @@ from utils.utils import success_response, error_response
 from utils.doc_utils import BlueprintDocumentation
 from utils.verify_utils import verify_issuer_jwt
 from utils.image_utils import save_file, serve_file, ImageFolders
+from models import requires_db
 from json import loads
 
 contract_bp = Blueprint('contract', __name__)
@@ -18,6 +19,7 @@ MAX_TOKEN_LIMIT = 1000
 class Contract(Resource):
 
     @verify_issuer_jwt
+    @requires_db
     @contract_docs.document(url_prefix+" ", 'POST',
                             'Method to start a request to issue a new token on the eth network.'
                             ' This will also create all new tokens associated with the method.', ContractRequest)
@@ -53,7 +55,7 @@ class Contract(Resource):
 
         # Try and insert into database.
         try:
-            insert_bulk_tokens(data['num_created'], data)
+            insert_bulk_tokens(data['num_created'], data, g.sesh)
         except Exception as e:
             print(str(e))
             return error_response("Couldn't create new contract.")
@@ -62,6 +64,7 @@ class Contract(Resource):
 
     @contract_docs.document(url_prefix, 'GET',
                             'Method to get all contracts deployed by the issuer verified in the jwt.')
+    @requires_db
     @verify_issuer_jwt
     def get(self):
         """
@@ -86,6 +89,7 @@ def server_image(image):
 
 @contract_bp.route(url_prefix + '/con_id=<int:con_id>', methods=['GET'])
 @verify_issuer_jwt
+@requires_db
 @contract_docs.document(url_prefix + '/con_id=<int:con_id>', 'GET',
                         "Method to retrieve contract information by con_id. Requires issuer verification.")
 def get_contract_by_con_id(con_id):
@@ -98,6 +102,7 @@ def get_contract_by_con_id(con_id):
 
 @contract_bp.route(url_prefix + '/name=<string:name>', methods=['GET'])
 @verify_issuer_jwt
+@requires_db
 @contract_docs.document(url_prefix + '/name=<string:name>', 'GET',
                         "Method to retrieve contract information by names like it.")
 def get_contract_by_name(name):

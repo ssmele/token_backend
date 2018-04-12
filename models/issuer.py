@@ -17,12 +17,11 @@ class CreateIssuerRequest(Schema):
     }
 
 
-def create_issuer(user_deets):
-    with db.engine.begin() as connection:
-        # Insert the contract.
-        InsertNewIssuer().execute(user_deets, con=connection)
-        issuer = GetIssuerByUsername().execute_n_fetchone({'username': user_deets['username']}, con=connection)
-        return issuer
+def create_issuer(user_deets, sesh):
+    # Insert the contract.
+    InsertNewIssuer().execute(user_deets, sesh=sesh)
+    issuer = GetIssuerByUsername().execute_n_fetchone({'username': user_deets['username']}, sesh=sesh)
+    return issuer
 
 
 class LoginIssuerRequest(Schema):

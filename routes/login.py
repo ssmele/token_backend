@@ -5,6 +5,7 @@ from models.issuer import LoginIssuerRequest, GetIssuerLoginDetails
 from utils.utils import success_response, error_response
 from utils.doc_utils import BlueprintDocumentation
 from utils.verify_utils import generate_jwt
+from models import requires_db
 
 
 login_bp = Blueprint('login', __name__)
@@ -14,6 +15,7 @@ url_prefix = '/login'
 
 @login_bp.route(url_prefix + '/collector', methods=['POST'])
 @load_with_schema(LoginCollectorRequest)
+@requires_db
 @login_docs.document(url_prefix + '/collector', 'POST',
                      'This method verifies collector creds and generates a JWT if successful verification takes place.',
                      input_schema=LoginCollectorRequest)
@@ -33,6 +35,7 @@ def get_collector_jwt(data):
 
 @login_bp.route(url_prefix + '/issuer', methods=['POST'])
 @load_with_schema(LoginIssuerRequest)
+@requires_db
 @login_docs.document(url_prefix + '/issuer', 'POST',
                      'This method verifies issuer creds and generates a JWT if successful verification takes place.',
                      input_schema=LoginIssuerRequest)

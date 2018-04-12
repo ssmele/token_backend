@@ -1,6 +1,5 @@
 from marshmallow import Schema, fields
 from utils.db_utils import DataQuery
-from models import db
 
 
 class ClaimRequest(Schema):
@@ -24,7 +23,6 @@ class DoesCollectorOwnToken(DataQuery):
         super().__init__()
 
 
-
 class SetTokenIfOneAvailable(DataQuery):
 
     def __init__(self):
@@ -43,15 +41,13 @@ class SetTokenIfOneAvailable(DataQuery):
         super().__init__()
 
 
-def claim_token_for_user(con_id, c_id):
-    with db.engine.begin() as connection:
+def claim_token_for_user(con_id, c_id, sesh):
         have_token_already = DoesCollectorOwnToken().execute_n_fetchone({'con_id': con_id, 'c_id': c_id},
-                                                                        con=connection,
-                                                                        schema_out=False)
+                                                                        sesh=sesh, schema_out=False)
         if have_token_already:
             return None
 
-        rows_updated = SetTokenIfOneAvailable().execute({'con_id': con_id, 'c_id': c_id}, con=connection)
+        rows_updated = SetTokenIfOneAvailable().execute({'con_id': con_id, 'c_id': c_id}, sesh=sesh)
         if rows_updated == 1:
             return True
         else:
