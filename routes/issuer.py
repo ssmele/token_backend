@@ -1,7 +1,7 @@
 from flask import Blueprint, g
 from flask_restful import Resource, Api
 from routes import load_with_schema
-from models.issuer import CreateIssuerRequest, InsertNewIssuer, GetIssuerByIID, GetIssuerByUsername, create_issuer
+from models.issuer import CreateIssuerRequest, GetIssuerByIID, GetIssuerByUsername, create_issuer
 from utils.utils import success_response, error_response
 from utils.doc_utils import BlueprintDocumentation
 from utils.verify_utils import verify_issuer_jwt, generate_jwt

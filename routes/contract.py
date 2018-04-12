@@ -1,11 +1,12 @@
-from flask import Blueprint, g
+from flask import Blueprint, g, request
 from flask_restful import Api, Resource
-from routes import load_with_schema
 from models.contract import ContractRequest, ClaimTypes, GetContractByConID, \
     GetContractByName, insert_bulk_tokens, GetContractsByIssuerID
 from utils.utils import success_response, error_response
 from utils.doc_utils import BlueprintDocumentation
 from utils.verify_utils import verify_issuer_jwt
+from utils.image_utils import save_file, serve_file, ImageFolders
+from json import loads
 
 contract_bp = Blueprint('contract', __name__)
 contract_docs = BlueprintDocumentation(contract_bp, 'Contract')
@@ -16,32 +17,39 @@ MAX_TOKEN_LIMIT = 1000
 
 class Contract(Resource):
 
-    @load_with_schema(ContractRequest)
     @verify_issuer_jwt
     @contract_docs.document(url_prefix+" ", 'POST',
                             'Method to start a request to issue a new token on the eth network.'
                             ' This will also create all new tokens associated with the method.', ContractRequest)
-    def post(self, data):
+    def post(self):
         """
         Method to use for post requests to the /contract method.
         :param data:
         :return:
         """
-        # TODO: Actually issue a deployment for the contract here
-        # I don't know how the api for the ether network works just gonna assume if we get None something went wrong.
-        contract = 'NOT NULL'
-        if contract is None:
-            return error_response('Something went wrong creating issuing token contract.')
-
-        # TODO: Move this to marshmallow possibly.
+        json_data = loads(request.form.get('json_data'))
+        data = ContractRequest().load(json_data)
         if data['num_created'] > MAX_TOKEN_LIMIT:
             return error_response("Could not create a token contract with that many individual token. Max is {}"
                                   .format(MAX_TOKEN_LIMIT))
 
+        # TODO: ISSUE THE ACTUAL CONTRACT HERE.
+
         # Update the original data given after validation for contract creation binds.
-        data.update({'hash': 'TEMP_CONTRACT_HASH'})
-        data.update({'claim_type': ClaimTypes.SIMPLE.value})
-        data.update({'i_id': g.issuer_info['i_id']})
+        data.update({'hash': 'TEMP_CONTRACT_HASH',
+                     'claim_type': ClaimTypes.SIMPLE.value,
+                     'i_id': g.issuer_info['i_id']})
+
+        # If we have an image save it.
+        file_location = None
+        if 'token_image' in request.files:
+            file = request.files['token_image']
+            file_location = save_file(file,  'CONTRACTS', g.issuer_info['i_id'])
+
+        if file_location is None:
+            file_location = 'default.png'
+
+        data.update({'pic_location': file_location})
 
         # Try and insert into database.
         try:
@@ -71,6 +79,11 @@ contract_api = Api(contract_bp)
 contract_api.add_resource(Contract, url_prefix)
 
 
+@contract_bp.route(url_prefix + '/image=<string:image>')
+def server_image(image):
+    return serve_file(image, ImageFolders.CONTRACTS.value)
+
+
 @contract_bp.route(url_prefix + '/con_id=<int:con_id>', methods=['GET'])
 @verify_issuer_jwt
 @contract_docs.document(url_prefix + '/con_id=<int:con_id>', 'GET',
@@ -89,7 +102,7 @@ def get_contract_by_con_id(con_id):
                         "Method to retrieve contract information by names like it.")
 def get_contract_by_name(name):
     contracts_by_name = GetContractByName().execute_n_fetchall({'name': '%'+name+'%'})
-    if contracts_by_name:
+    if contracts_by_name is not None:
         return success_response({'contracts': contracts_by_name})
     else:
         return error_response(status="Couldn't retrieve contract with that con_id", status_code=-1, http_code=200)
