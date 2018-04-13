@@ -1,3 +1,4 @@
+from ether.geth_keeper import GethException
 from flask import Blueprint, g
 from flask_restful import Resource, Api
 from models import requires_db
@@ -55,6 +56,8 @@ class Collector(Resource):
             g.sesh.commit()
             # Return the response
             return success_response({'jwt': generate_jwt(collector)}, http_code=201)
+        except GethException as ge:
+            return error_response(ge.message)
         except Exception as e:
             return error_response("Couldn't create account", http_code=200)
 

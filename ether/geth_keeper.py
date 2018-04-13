@@ -23,6 +23,8 @@ from web3 import Web3, IPCProvider
 from web3.contract import ConciseContract
 
 # TODO: Should read from a config file
+from ether.contract_source import CONTRACT
+
 IPC_LOCATION = '/usr/apps/Ethereum/rinkeby/geth.ipc'
 
 ACCT_UNLOCK_DUR = 5
@@ -84,115 +86,8 @@ class GethKeeper(object):
         try:
             # TODO: Have a different function to generate solidity code
             # TODO: Change transfer and accept code
-            contract_source_code = """
-                    pragma solidity ^0.4.0;
-    
-                    contract issuer_contract {{
-                        // Address of the contract owner
-                        address owner;
-                        
-                        // Contract members
-                        string issuer_name;
-                        string contract_name;
-                        string symbol;
-                        string contract_description;
-                        string img_url;
-                        uint num_tokes;
-                        uint remaining_tokes;  // Holds the remaining # of tokens
-                        
-                        // Mappings
-                        mapping(uint256 => address) private tokenOwners;
-                        mapping(uint256 => bool) private tokenExists;
-                        
-                        // Events
-                        event Transfer(address indexed _from, address indexed _to, uint256 _tokenId);
-                        event Approval(address indexed _owner, address indexed _approved, uint256 _tokenId);
-    
-                        // Constructor
-                        function issuer_contract(string _in, string _cn, string _ts, string _cd, 
-                                string _iu, uint256 _it) {{
-                            // Set attributes
-                            issuer_name = _in;
-                            contract_name = _cn;
-                            contract_description = _cd;
-                            img_url = _iu;
-                            remaining_tokes = _it;
-                            num_tokes = _it;
-                        
-                            // Set the owner of the contract 
-                            owner = msg.sender; 
-                        }}
-                        
-                        // Function to get issuer_name
-                        function issuerName() constant returns (string) {{
-                            return issuer_name;
-                        }}
-                        
-                        // Function to get contract name
-                        function name() constant returns (string) {{
-                            return contract_name;
-                        }}
-                        
-                        // Function to return the token's symbol
-                        function symbol() constant returns (string) {{
-                            return symbol;
-                        }}
-                        
-                        // Function to get description
-                        function description() constant returns (string) {{
-                            return constract_description;
-                        }}
-                        
-                        // Function to get image URL
-                        function imageURL() constant returns (string) {{
-                            return img_url;
-                        }}
-                        
-                        // Function to get the number of tokens
-                        function totalSupply() constant returns (uint) {{
-                            return num_tokes;
-                        }}
-                        
-                        // Function to get the remaining # of tokens
-                        function remainingTokens() constant returns (uint) {{
-                            return remaining_tokes;
-                        }}
-                        
-                        // Function to get the token owner
-                        function ownerOf(uint256 _tokenId) constant returns (address) {{
-                            require(tokenExists[_tokenId]);
-                            return tokenOwners[_tokenId];
-                        }}
-                        
-                        // Function to approve an ownership request
-                        function approve(address _to, uint256 _tokenId) {{
-                            require(msg.sender == ownerOf(_tokenId));
-                            require(msg.sender != _to);
-                            allowed[msg.sender][_to] = _tokenId;
-                            Approval(msg.sender, _to, _tokenId);
-                        }}
-                        
-                        // 
-                        function takeOwnership(uint256 _tokenId) {{
-                            require(tokenExists[_tokenId]);
-                            address oldOwner = ownerOf(_tokenId);
-                            address newOwner = msg.sender;
-                            require(newOwner != oldOwner);
-                            require(allowed[oldOwner][newOwner] == _tokenId);
-                            balances[oldOwner] -= 1;
-                            tokenOwners[_tokenId] = newOwner;
-                            balances[newOwner] += 1;
-                            Transfer(oldOwner, newOwner, _tokenId);
-                        }}
-    
-                        // Function to recover the funds on the contract
-                        function kill() {{ 
-                            if (msg.sender == owner) 
-                                suicide(owner); 
-                        }}
-                    }} 
-            """
             # Compile the source code
+            contract_source_code = CONTRACT
             compiled_sol = compile_source(contract_source_code)
             contract_interface = compiled_sol['<stdin>:issuer_contract']
 
