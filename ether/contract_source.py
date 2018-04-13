@@ -86,7 +86,7 @@ contract issuer_contract {
     }
     
     // Function to transfer from creator to another user
-    function transfer(address _to, uint256 _tokenId) {
+    function sendToken(address _to, uint256 _tokenId) {
         address newOwner = _to;
         require(token_exists[_tokenId]);                // Make sure token exists
         require(msg.sender == owner);                   // Make sure sender is the creator

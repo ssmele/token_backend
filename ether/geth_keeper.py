@@ -69,7 +69,7 @@ class GethKeeper(object):
 
     # TODO: should gas_price not be a member?
     def issue_contract(self, issuer_acct_num, issuer_priv_key, issuer_name='', name='', symbol='TOKE', desc='',
-                       img_url='', num_tokes=0,  gas_price=MAX_GAS_PRICE):
+                       img_url='', num_tokes=0, gas_price=MAX_GAS_PRICE):
         """ Creates, compiles, and deploys a smart contract with the given attributes
 
         :param issuer_acct_num: The issuer's account hash
@@ -128,7 +128,7 @@ class GethKeeper(object):
             raise GethException(str(e), message='Could not check transaction receipt')
 
     def get_contract_instance(self, json_abi, contract_address):
-        """ Returns an instance of the contract specified by the given abi at the given address
+        """ Returns a read-only instance of the contract specified by the given abi at the given address
 
         This instance will contain all of the members and functions that are defined
         in the solidity code (ex. get_image_url())
@@ -144,11 +144,35 @@ class GethKeeper(object):
         except Exception as e:
             raise GethException(str(e), message='Could not get contract instance')
 
-    def claim_token(self):
-        # TODO: implement
-        # TODO: create a process to listen for send events
-        # TODO: add event to smart contract to send token
-        pass
+    def claim_token(self, issuer_addr, issuer_priv_key, contract_addr, contract_abi,
+                    user_address, token_id, gas_price=MAX_GAS_PRICE):
+        """ Function for a user to claim a token
+
+        :param issuer_addr: The address of the issuer account
+        :param issuer_priv_key: The issuer's private key
+        :param contract_addr: The address of the contract
+        :param contract_abi: The contract's application binary interface
+        :param user_address: The receiving user's address
+        :param token_id: The id of the token  !!! Can't be 0 !!!
+        :param gas_price: The gas price to use - default: MAX_GAS_PRICE (2000000000)
+        :return: The address of the transaction
+        """
+        try:
+            # Get the contract
+            contract = self._w3.eth.contract(address=contract_addr, abi=contract_abi)
+
+            # Unlock the issuers account
+            self._w3.personal.unlockAccount(issuer_addr, issuer_priv_key, duration=ACCT_UNLOCK_DUR)
+
+            # Send the token specified by token_id to the user
+            tx_hash = contract.functions.sendToken(user_address, token_id).transact(
+                {'from': issuer_addr, 'gasPrice': gas_price})
+
+            # Lock the issuers account and return
+            self._w3.personal.lockAccount(issuer_addr)
+            return tx_hash
+        except Exception as e:
+            raise GethException(str(e), message='Could not send token')
 
     def get_users_tokens(self):
         # TODO: to get a user's tokens, we will have to query all of tokens monitored by Token
