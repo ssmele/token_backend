@@ -234,3 +234,34 @@ class GethKeeper(object):
                 raise GethException(str(e), message='Could not get contract instance')
             return contract, token_id
         return None
+
+    def kill_contract(self, issuer_addr, issuer_priv_key, contract_addr, json_abi, gas_price=MAX_GAS_PRICE):
+        """ Kills the given contract
+
+        :param issuer_addr: The address of the issuer's account
+        :param issuer_priv_key: The issuer's private key
+        :param contract_addr: The address of the contract
+        :param json_abi: The contract's application binary interface as a json string
+        :param gas_price: The gas price to use - default: MAX_GAS_PRICE (2000000000)
+        :return: The transaction hash of calling the kill function
+        """
+        try:
+            # Get the contract
+            contract_abi = loads(json_abi)['abi']
+            contract = self._w3.eth.contract(address=contract_addr, abi=contract_abi)
+
+            # Unlock the issuers account
+            self._w3.personal.unlockAccount(issuer_addr, issuer_priv_key, duration=ACCT_UNLOCK_DUR)
+
+            # Send the token specified by token_id to the user
+            tx_hash = contract.functions.kill().transact({'from': issuer_addr, 'gasPrice': gas_price})
+
+            # Lock the issuers account and return
+            self._w3.personal.lockAccount(issuer_addr)
+            return tx_hash
+        except Exception as e:
+            raise GethException(str(e), message='Could not kill contract!!!')
+
+# TODO: Add function to cancel a transaction
+# TODO: Add function to replace a transaction
+# TODO: Add functionality to dynamically get best gas price
