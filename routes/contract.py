@@ -29,8 +29,7 @@ class Contract(Resource):
         :param data:
         :return:
         """
-        json_data = loads(request.form.get('json_data'))
-        data = ContractRequest().load(json_data)
+        data = ContractRequest().load(request.form)
         if data['num_created'] > MAX_TOKEN_LIMIT:
             return error_response("Could not create a token contract with that many individual token. Max is {}"
                                   .format(MAX_TOKEN_LIMIT))
