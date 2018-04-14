@@ -41,6 +41,11 @@ class Contract(Resource):
                      'claim_type': ClaimTypes.SIMPLE.value,
                      'i_id': g.issuer_info['i_id']})
 
+        # Update with contract information given by geth keeper.
+        data.update({"con_tx": "blah",
+                     "con_addr": 'something',
+                     'con_abi': 'CONTEACT'})
+
         # If we have an image save it.
         file_location = None
         if 'token_image' in request.files:

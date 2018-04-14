@@ -28,7 +28,8 @@ class SetTokenIfOneAvailable(DataQuery):
     def __init__(self):
         self.sql_text = """
         UPDATE tokens
-        SET owner_c_id = :c_id
+        SET owner_c_id = :c_id,
+        status = 'P'
         WHERE con_id = :con_id
         AND t_id = (SELECT t_id
                     FROM tokens

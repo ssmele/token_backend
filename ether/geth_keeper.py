@@ -1,3 +1,4 @@
+from binascii import hexlify, unhexlify
 from json import dumps, loads
 from uuid import uuid4
 
@@ -96,10 +97,12 @@ class GethKeeper(object):
 
         try:
             # Unlock the issuer's account to transact
+            issuer_acct_num = self._w3.toChecksumAddress(issuer_acct_num)
             self._w3.personal.unlockAccount(issuer_acct_num, issuer_priv_key, duration=ACCT_UNLOCK_DUR)
 
             # Instantiate, deploy, and get the transaction hash of the contract
             contract = self._w3.eth.contract(abi=contract_interface['abi'], bytecode=contract_interface['bin'])
+
             tx_hash = contract.constructor(issuer_name, name, symbol, desc, img_url, num_tokes).transact(
                 {'from': issuer_acct_num, 'gasPrice': gas_price})
 
@@ -109,7 +112,7 @@ class GethKeeper(object):
             # Create the json string of the ABI and return
             abi_dict = {'abi': contract_interface['abi']}
             json_abi = dumps(abi_dict)
-            return tx_hash, json_abi
+            return hexlify(tx_hash), json_abi
         except Exception as e:
             raise GethException(str(e), message='Could not deploy smart contract')
 
@@ -120,6 +123,7 @@ class GethKeeper(object):
         :return: The contract address or None if it has yet to be mined
         """
         try:
+            tx_hash = unhexlify(tx_hash)
             tx_receipt = self._w3.eth.getTransactionReceipt(tx_hash)
             if tx_receipt:
                 return tx_receipt['contractAddress']
@@ -138,6 +142,7 @@ class GethKeeper(object):
         :return: An instance of the contract
         """
         try:
+            contract_address = self._w3.toChecksumAddress(contract_address)
             contract_abi = loads(json_abi)['abi']
             return self._w3.eth.contract(abi=contract_abi, address=contract_address,
                                          ContractFactoryClass=ConciseContract)
@@ -158,6 +163,11 @@ class GethKeeper(object):
         :return: The address of the transaction
         """
         try:
+            # Convert the addresses
+            issuer_addr = self._w3.toChecksumAddress(issuer_addr)
+            contract_addr = self._w3.toChecksumAddress(contract_addr)
+            user_address = self._w3.toChecksumAddress(user_address)
+
             # Get the contract
             contract_abi = loads(json_abi)['abi']
             contract = self._w3.eth.contract(address=contract_addr, abi=contract_abi)
@@ -171,7 +181,7 @@ class GethKeeper(object):
 
             # Lock the issuers account and return
             self._w3.personal.lockAccount(issuer_addr)
-            return tx_hash
+            return hexlify(tx_hash)
         except Exception as e:
             raise GethException(str(e), message='Could not send token')
 
@@ -184,6 +194,10 @@ class GethKeeper(object):
         :return: The user's token_id of the given contract. -1 if the don't own one.
         """
         try:
+            # Convert the addresses
+            contract_addr = self._w3.toChecksumAddress(contract_addr)
+            user_address = self._w3.toChecksumAddress(user_address)
+
             # Get the contract
             contract_abi = loads(json_abi)['abi']
             contract = self._w3.eth.contract(address=contract_addr, abi=contract_abi,
@@ -201,6 +215,7 @@ class GethKeeper(object):
         :param user_address: The address of the user's account
         :return: Array of tuples as [(contract_instance, token_id)]
         """
+        user_address = self._w3.toChecksumAddress(user_address)
         owned_tokens = []
         for contract_addr, json_abi in contract_dict.item():
             # Get the user's token_id for that contract
@@ -224,6 +239,8 @@ class GethKeeper(object):
         :param user_address: The address of the user in question
         :return: Tuple of (contract_instance, token_id) or None if the user doesn't own a token
         """
+        contract_addr = self._w3.toChecksumAddress(contract_addr)
+        user_address = self._w3.toChecksumAddress(user_address)
         token_id = self.get_users_token_id(contract_addr, json_abi, user_address)
         if token_id != -1:
             try:
@@ -248,9 +265,11 @@ class GethKeeper(object):
         try:
             # Get the contract
             contract_abi = loads(json_abi)['abi']
+            contract_addr = self._w3.toChecksumAddress(contract_addr)
             contract = self._w3.eth.contract(address=contract_addr, abi=contract_abi)
 
             # Unlock the issuers account
+            issuer_addr = self._w3.toChecksumAddress(issuer_addr)
             self._w3.personal.unlockAccount(issuer_addr, issuer_priv_key, duration=ACCT_UNLOCK_DUR)
 
             # Send the token specified by token_id to the user
@@ -258,7 +277,7 @@ class GethKeeper(object):
 
             # Lock the issuers account and return
             self._w3.personal.lockAccount(issuer_addr)
-            return tx_hash
+            return hexlify(tx_hash)
         except Exception as e:
             raise GethException(str(e), message='Could not kill contract!!!')
 
