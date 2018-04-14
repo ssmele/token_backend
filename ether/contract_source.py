@@ -16,12 +16,8 @@ contract issuer_contract {
     
     // Mappings
     mapping(uint256 => address) private token_owners;  // Holds owners of tokens
-    mapping(uint256 => bool) private token_exists;     // Holds if a token exists
     mapping(address => bool) private owns_token;       // Holds whether a user owns a token
     mapping(address => uint256) private owners_token;  // Holds the token owned by a user
-    
-    // Events
-    event Transfer(address indexed _from, address indexed _to, uint256 _tokenId);
 
     // Constructor
     function issuer_contract(string _in, string _cn, string _ts, string _cd, 
@@ -29,6 +25,7 @@ contract issuer_contract {
         // Set attributes
         issuer_name = _in;
         contract_name = _cn;
+        contract_symbol = _ts;
         contract_description = _cd;
         img_url = _iu;
         remaining_tokes = _it;
@@ -86,9 +83,8 @@ contract issuer_contract {
     }
     
     // Function to transfer from creator to another user
-    function sendToken(address _to, uint256 _tokenId) {
+    function sendToken(address _to, uint256 _tokenId) public {
         address newOwner = _to;
-        require(token_exists[_tokenId]);                // Make sure token exists
         require(msg.sender == owner);                   // Make sure sender is the creator
         require(owner != newOwner);                     // Make sure the creator isn't sending to self
         require(newOwner != address(0));                // Make sure new owner isn't address 0
@@ -99,7 +95,6 @@ contract issuer_contract {
         token_owners[_tokenId] = newOwner;              // Set the tokens owner
         owners_token[newOwner] = _tokenId;              // Set the owners token
         owns_token[newOwner] = true;                    // Set that the user owns a token
-        Transfer(owner, newOwner, _tokenId);            // Transfer the token
     }
 
     // Function to recover the funds on the contract

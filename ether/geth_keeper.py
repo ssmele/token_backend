@@ -26,7 +26,7 @@ from web3.contract import ConciseContract
 # TODO: Should read from a config file
 from ether.contract_source import CONTRACT
 
-IPC_LOCATION = '/usr/apps/Ethereum/rinkeby/geth.ipc'
+IPC_LOCATION = '/Users/jordan/Library/Ethereum/rinkeby/geth.ipc'
 
 ACCT_UNLOCK_DUR = 5
 MAX_GAS_PRICE = 500000000  # TODO: set back to 2000000000
@@ -128,6 +128,14 @@ class GethKeeper(object):
             if tx_receipt:
                 return tx_receipt['contractAddress']
             return None
+        except Exception as e:
+            raise GethException(str(e), message='Could not check transaction receipt')
+
+    def check_claim_mine(self, tx_hash):
+        try:
+            tx_hash = unhexlify(tx_hash)
+            tx_receipt = self._w3.eth.getTransactionReceipt(tx_hash)
+            return tx_receipt
         except Exception as e:
             raise GethException(str(e), message='Could not check transaction receipt')
 
