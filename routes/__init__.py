@@ -16,7 +16,6 @@ def requires_geth(f):
     return decorated_function
 
 
-
 def make_error_response(message, status_code=400, **kwargs):
     response = jsonify(message=message, **kwargs)
     response.status_code = status_code
