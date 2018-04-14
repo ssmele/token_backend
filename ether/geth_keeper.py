@@ -69,7 +69,7 @@ class GethKeeper(object):
 
     # TODO: should gas_price not be a member?
     def issue_contract(self, issuer_acct_num, issuer_priv_key, issuer_name='', name='', symbol='TOKE', desc='',
-                       img_url='', num_tokes=0,  gas_price=MAX_GAS_PRICE):
+                       img_url='', num_tokes=0, gas_price=MAX_GAS_PRICE):
         """ Creates, compiles, and deploys a smart contract with the given attributes
 
         :param issuer_acct_num: The issuer's account hash
@@ -128,7 +128,7 @@ class GethKeeper(object):
             raise GethException(str(e), message='Could not check transaction receipt')
 
     def get_contract_instance(self, json_abi, contract_address):
-        """ Returns an instance of the contract specified by the given abi at the given address
+        """ Returns a read-only instance of the contract specified by the given abi at the given address
 
         This instance will contain all of the members and functions that are defined
         in the solidity code (ex. get_image_url())
@@ -138,18 +138,130 @@ class GethKeeper(object):
         :return: An instance of the contract
         """
         try:
-            abi_dict = loads(json_abi)
-            return self._w3.eth.contract(abi=abi_dict['abi'], address=contract_address,
+            contract_abi = loads(json_abi)['abi']
+            return self._w3.eth.contract(abi=contract_abi, address=contract_address,
                                          ContractFactoryClass=ConciseContract)
         except Exception as e:
             raise GethException(str(e), message='Could not get contract instance')
 
-    def claim_token(self):
-        # TODO: implement
-        # TODO: create a process to listen for send events
-        # TODO: add event to smart contract to send token
-        pass
+    def claim_token(self, issuer_addr, issuer_priv_key, contract_addr, json_abi,
+                    user_address, token_id, gas_price=MAX_GAS_PRICE):
+        """ Function for a user to claim a token
 
-    def get_users_tokens(self):
-        # TODO: to get a user's tokens, we will have to query all of tokens monitored by Token
-        pass
+        :param issuer_addr: The address of the issuer account
+        :param issuer_priv_key: The issuer's private key
+        :param contract_addr: The address of the contract
+        :param json_abi: The contract's application binary interface as a json string
+        :param user_address: The receiving user's address
+        :param token_id: The id of the token  !!! Can't be 0 !!!
+        :param gas_price: The gas price to use - default: MAX_GAS_PRICE (2000000000)
+        :return: The address of the transaction
+        """
+        try:
+            # Get the contract
+            contract_abi = loads(json_abi)['abi']
+            contract = self._w3.eth.contract(address=contract_addr, abi=contract_abi)
+
+            # Unlock the issuers account
+            self._w3.personal.unlockAccount(issuer_addr, issuer_priv_key, duration=ACCT_UNLOCK_DUR)
+
+            # Send the token specified by token_id to the user
+            tx_hash = contract.functions.sendToken(user_address, token_id).transact(
+                {'from': issuer_addr, 'gasPrice': gas_price})
+
+            # Lock the issuers account and return
+            self._w3.personal.lockAccount(issuer_addr)
+            return tx_hash
+        except Exception as e:
+            raise GethException(str(e), message='Could not send token')
+
+    def get_users_token_id(self, contract_addr, json_abi, user_address):
+        """ Returns a user's token_id for the given contract. Returns -1 if they don't own one.
+
+        :param contract_addr: The address of the contract
+        :param json_abi: The contract's application binary interface as a json string
+        :param user_address: The address of the user in question
+        :return: The user's token_id of the given contract. -1 if the don't own one.
+        """
+        try:
+            # Get the contract
+            contract_abi = loads(json_abi)['abi']
+            contract = self._w3.eth.contract(address=contract_addr, abi=contract_abi,
+                                             ContractFactoryClass=ConciseContract)
+            if contract.ownsToken(user_address):
+                return contract.getUsersToken(user_address)
+            return -1
+        except Exception as e:
+            raise GethException(str(e), message='Could not get a users token id')
+
+    def get_users_collection(self, contract_dict, user_address):
+        """ Gets a user's token collection from the given dictionary of contracts
+
+        :param contract_dict: Dictionary of contract_address:json_abi
+        :param user_address: The address of the user's account
+        :return: Array of tuples as [(contract_instance, token_id)]
+        """
+        owned_tokens = []
+        for contract_addr, json_abi in contract_dict.item():
+            # Get the user's token_id for that contract
+            token_id = self.get_users_token_id(contract_addr, json_abi, user_address)
+            if token_id != -1:
+                # If they own a token in the collection, get the collection and add its instance with the token id
+                try:
+                    contract_abi = loads(json_abi)['abi']
+                    contract = self._w3.eth.contract(address=contract_addr, abi=contract_abi,
+                                                     ContractFactoryClass=ConciseContract)
+                    owned_tokens.append((contract, token_id))
+                except Exception as e:
+                    raise GethException(str(e), message='Could not get contract instance')
+        return owned_tokens
+
+    def get_users_token(self, contract_addr, json_abi, user_address):
+        """ Gets an instance of the contract and the user's token_id
+
+        :param contract_addr: The address of the contract
+        :param json_abi: The contract's application binary interface as a json string
+        :param user_address: The address of the user in question
+        :return: Tuple of (contract_instance, token_id) or None if the user doesn't own a token
+        """
+        token_id = self.get_users_token_id(contract_addr, json_abi, user_address)
+        if token_id != -1:
+            try:
+                contract_abi = loads(json_abi)['abi']
+                contract = self._w3.eth.contract(address=contract_addr, abi=contract_abi,
+                                                 ContractFactoryClass=ConciseContract)
+            except Exception as e:
+                raise GethException(str(e), message='Could not get contract instance')
+            return contract, token_id
+        return None
+
+    def kill_contract(self, issuer_addr, issuer_priv_key, contract_addr, json_abi, gas_price=MAX_GAS_PRICE):
+        """ Kills the given contract
+
+        :param issuer_addr: The address of the issuer's account
+        :param issuer_priv_key: The issuer's private key
+        :param contract_addr: The address of the contract
+        :param json_abi: The contract's application binary interface as a json string
+        :param gas_price: The gas price to use - default: MAX_GAS_PRICE (2000000000)
+        :return: The transaction hash of calling the kill function
+        """
+        try:
+            # Get the contract
+            contract_abi = loads(json_abi)['abi']
+            contract = self._w3.eth.contract(address=contract_addr, abi=contract_abi)
+
+            # Unlock the issuers account
+            self._w3.personal.unlockAccount(issuer_addr, issuer_priv_key, duration=ACCT_UNLOCK_DUR)
+
+            # Send the token specified by token_id to the user
+            tx_hash = contract.functions.kill().transact({'from': issuer_addr, 'gasPrice': gas_price})
+
+            # Lock the issuers account and return
+            self._w3.personal.lockAccount(issuer_addr)
+            return tx_hash
+        except Exception as e:
+            raise GethException(str(e), message='Could not kill contract!!!')
+
+# TODO: Add function to cancel a transaction
+# TODO: Add function to replace a transaction
+# TODO: Add functionality to dynamically get best gas price
