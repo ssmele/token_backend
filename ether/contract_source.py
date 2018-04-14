@@ -108,4 +108,4 @@ contract issuer_contract {
             suicide(owner); 
     }
 }
-""".replace('\n', ' ').replace('\r', '')
+"""
