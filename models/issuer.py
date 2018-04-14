@@ -42,8 +42,8 @@ class InsertNewIssuer(DataQuery):
 
     def __init__(self):
         self.sql_text = """
-        INSERT INTO issuers(username, password) 
-        values(:username, :password)
+        INSERT INTO issuers(username, password, i_hash, i_priv_key) 
+        values(:username, :password, :i_hash, :i_priv_key)
         """
         self.schema_out = None
         super().__init__()
