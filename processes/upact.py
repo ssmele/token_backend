@@ -3,33 +3,45 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.engine import create_engine
 
 
-def update_contracts(rows, geth_keeper, session):
+def update_contracts(rows, session):
+    """ Updates contract status and address if an issue has been processed. 'S' = Success, 'F' = Failure
+
+    :param rows: The rows to iterate over
+    :param session: The database object to use
+    """
     for row in rows:
-        addr = 2 # geth_keeper.check_contract_mine(row['con_tx'])
-        if addr is None:
-            continue
-
-        r = session.execute("update contracts set status = :new_status where con_id = :this_id",
-                         {'new_status': 'S', 'this_id': row['con_id']})
-        if r.rowcount == 1:
-            print("Updated ID ", row['con_id'])
-
+        # Try to get the transaction receipt
+        has_receipt, success, contract_addr = geth.check_contract_mine(row['con_tx'])
+        if has_receipt:
+            status, addr = 'F', None
+            if success:
+                status, addr = 'S', contract_addr
+            # Update the status and contract address
+            session.execute("update contracts set status = :new_status, con_addr = :con_addr where con_id = :this_id",
+                                {'new_status': 'S', 'con_addr': addr, 'this_id': row['con_id']})
     sess.commit()
 
 
-def update_tokens(rows, geth_keeper, session):
-    for row in rows:
-        # TODO: check if token has finished being claimed before updating its status here
-        r = sess.execute("update tokens set status = :new_status where t_id = :this_id",
-                         {'new_status': 'S', 'this_id': row['t_id']})
-        if r.rowcount == 1:
-            print("Updated ID ", row['t_id'])
+def update_tokens(rows, session):
+    """ Updates token status if a claim has been processed. Sets status to 'S' on success or 'F' on failure
 
+    :param rows: The rows to iterate over
+    :param session: The database session object to use
+    """
+    for row in rows:
+        # Try to get the transaction receipt
+        has_receipt, success = geth.check_claim_mine(row['t_hash'])
+        if has_receipt:
+            status = 'F'
+            if success:
+                status = 'S'
+            # Update the status
+            session.execute("update tokens set status = :new_status where t_id = :this_id",
+                            {'new_status': status, 'this_id': row['t_id']})
     sess.commit()
 
 
 if __name__ == '__main__':
-
     # Create geth.
     geth = GethKeeper()
 
@@ -37,18 +49,14 @@ if __name__ == '__main__':
     Session = sessionmaker()
     engine = create_engine('sqlite:///../temp.db')
     Session.configure(bind=engine)
-    sess = Session()
 
     # Get contracts with pending status (for updating contracts)
-    contract_rows = sess.execute("select con_id, con_tx from contracts where status = :desired_status",
-                                 {'desired_status': 'P'})
-
-    update_contracts(contract_rows, geth, sess)
-
     sess = Session()
-    # Get tokens with pending status (for updating claimed tokens)
-    token_rows = sess.execute("select t_id from tokens where status = :desired_status",
-                                 {'desired_status': 'P'})
+    contract_rows = sess.execute("select con_id, con_tx from contracts where status = 'P'")
+    update_contracts(contract_rows, sess)
 
-    update_tokens(token_rows, geth, sess)
+    # Get tokens with pending status (for updating claimed tokens)
+    sess = Session()
+    token_rows = sess.execute("select t_id from tokens where status = 'P'")
+    update_tokens(token_rows, sess)
     sess.close()

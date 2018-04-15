@@ -120,22 +120,32 @@ class GethKeeper(object):
         """ Returns a contract address if the contract has been mined, None otherwise
 
         :param tx_hash: The transaction hash of the contract deployment
-        :return: The contract address or None if it has yet to be mined
+        :return: Tuple - (got_receipt, succeeded, contract_addr | None)
         """
         try:
             tx_hash = unhexlify(tx_hash)
             tx_receipt = self._w3.eth.getTransactionReceipt(tx_hash)
             if tx_receipt:
-                return tx_receipt['contractAddress']
-            return None
+                if tx_receipt['status'] == 0:
+                    return True, False, None
+                else:
+                    return True, True, tx_receipt['contractAddress']
+            return False, False, None
         except Exception as e:
             raise GethException(str(e), message='Could not check transaction receipt')
 
     def check_claim_mine(self, tx_hash):
+        """ Returns if there is a receipt and if the transaction succeeded
+
+        :param tx_hash: The transaction hash
+        :return: Tuple - (got_receipt, did_succeed)
+        """
         try:
             tx_hash = unhexlify(tx_hash)
             tx_receipt = self._w3.eth.getTransactionReceipt(tx_hash)
-            return tx_receipt
+            if tx_receipt:
+                return True, tx_receipt['status'] == 1
+            return False, False
         except Exception as e:
             raise GethException(str(e), message='Could not check transaction receipt')
 
