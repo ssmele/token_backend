@@ -123,9 +123,11 @@ class GethKeeper(object):
         :return: Tuple - (got_receipt, succeeded, contract_addr | None)
         """
         try:
+            # Get the transaction receipt
             tx_hash = unhexlify(tx_hash)
             tx_receipt = self._w3.eth.getTransactionReceipt(tx_hash)
             if tx_receipt:
+                # Return got_receipt, succeeded, and the contract address (None if failed)
                 if tx_receipt['status'] == 0:
                     return True, False, None
                 else:
@@ -141,9 +143,11 @@ class GethKeeper(object):
         :return: Tuple - (got_receipt, did_succeed)
         """
         try:
+            # Get the transaction receipt
             tx_hash = unhexlify(tx_hash)
             tx_receipt = self._w3.eth.getTransactionReceipt(tx_hash)
             if tx_receipt:
+                # Return got_receipt, and succeeded
                 return True, tx_receipt['status'] == 1
             return False, False
         except Exception as e:

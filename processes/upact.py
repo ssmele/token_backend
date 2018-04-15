@@ -57,6 +57,6 @@ if __name__ == '__main__':
 
     # Get tokens with pending status (for updating claimed tokens)
     sess = Session()
-    token_rows = sess.execute("select t_id from tokens where status = 'P'")
+    token_rows = sess.execute("select t_id from tokens where status = 'P' and t_hash is not NULL")
     update_tokens(token_rows, sess)
     sess.close()
