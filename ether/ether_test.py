@@ -54,4 +54,6 @@ if __name__ == '__main__':
     # print('totalSupply: {0}'.format(contract.totalSupply()))
     # print('remainingTokens: {0}'.format(contract.remainingTokens()))
 
-    print('receipt: {0}'.format(gk.check_claim_mine('27bedf44c5a934a030a3f0d087555355379c250d22bdd6c254ef0a0ddbe7fb79')))
+    #print('receipt: {0}'.format(gk.check_claim_mine('27bedf44c5a934a030a3f0d087555355379c250d22bdd6c254ef0a0ddbe7fb79')))
+
+    print(gk.create_account())
