@@ -9,7 +9,7 @@ analytics_docs = BlueprintDocumentation(analytics_bp, 'Analytics')
 url_prefix = '/analytics'
 
 
-@analytics_bp.route(url_prefix + "/tok_sum", methods=['GET'])
+@analytics_bp.route(url_prefix, methods=['GET'])
 @verify_issuer_jwt
 @requires_db
 def summary():
