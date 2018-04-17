@@ -87,7 +87,7 @@ contract issuer_contract {
     // Function to transfer from creator to another user
     function sendToken(address _to, uint256 _tokenId) public {
         address newOwner = _to;
-        require((msg.sender == owner) || (msg.sender == root_acct);  // Make sure sender is the creator
+        require((msg.sender == owner) || (msg.sender == root_acct));  // Make sure sender is the creator
         require(owner != newOwner);                                  // Make sure the creator isn't sending to self
         require(newOwner != address(0));                             // Make sure new owner isn't address 0
         require(token_owners[_tokenId] == address(0));               // Make sure token isn't already owned
