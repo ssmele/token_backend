@@ -1,6 +1,4 @@
 from flask import Blueprint, g
-
-from ether.geth_keeper import GethException
 from routes import load_with_schema, requires_geth
 from models.claim import ClaimRequest, DoesCollectorOwnToken, GetTokenInfo, GetAvailableToken, SetToken
 from utils.utils import success_response, error_response
@@ -35,7 +33,7 @@ def claim_token_for_user(con_id, c_id, sesh):
     :param con_id: The contract_id of the token
     :param c_id: The collector_id of the collecting user
     :param sesh: The database session to use
-    :return:
+    :return: True if the claim request was successful, False if otherwise
     """
     have_token_already = DoesCollectorOwnToken().execute_n_fetchone({'con_id': con_id, 'c_id': c_id},
                                                                     sesh=sesh, schema_out=False)
@@ -50,8 +48,8 @@ def claim_token_for_user(con_id, c_id, sesh):
             return False
 
         # Claim the token and update the database
-        tx_hash = g.geth.claim_token(token_info['i_hash'], token_info['i_priv_key'], token_info['con_addr'],
-                                     token_info['con_abi'], token_info['c_hash'], avail_token['t_id'])
+        tx_hash = g.geth.claim_token(token_info['con_addr'], token_info['con_abi'], token_info['c_hash'],
+                                     avail_token['t_id'])
         rows_updated = SetToken().execute(
             {'con_id': con_id, 't_hash': tx_hash, 't_id': avail_token['t_id'], 'c_id': c_id}, sesh=sesh)
 
@@ -59,4 +57,4 @@ def claim_token_for_user(con_id, c_id, sesh):
         if rows_updated == 1:
             return True
     finally:
-        return None
+        return False

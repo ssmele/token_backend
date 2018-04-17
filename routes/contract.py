@@ -27,10 +27,9 @@ class Contract(Resource):
                             'Method to start a request to issue a new token on the eth network.'
                             ' This will also create all new tokens associated with the method.', ContractRequest)
     def post(self):
-        """
-        Method to use for post requests to the /contract method.
-        :param data:
-        :return:
+        """ Method to use for post requests to the /contract method.
+
+        :return: HTTP response
         """
         data = ContractRequest().load(request.form)
         if data['num_created'] > MAX_TOKEN_LIMIT:
@@ -51,17 +50,16 @@ class Contract(Resource):
             file_location = 'default.png'
         data.update({'pic_location': file_location})
 
-        issuer = GetIssuerInfo().execute_n_fetchone(binds={'i_id': g.issuer_info['i_id']})
-        data['con_tx'], data['con_abi'] = g.geth.issue_contract(issuer['i_hash'],
-                                                                issuer['i_priv_key'],
-                                                                issuer_name=issuer['username'],
-                                                                name=data['name'],
-                                                                desc=data['description'],
-                                                                img_url=data['pic_location'],
-                                                                num_tokes=data['num_created'])
-
-        # Try and insert into database.
         try:
+            # Issue the contract on the ETH network
+            issuer = GetIssuerInfo().execute_n_fetchone(binds={'i_id': g.issuer_info['i_id']})
+            data['con_tx'], data['con_abi'] = g.geth.issue_contract(issuer['i_hash'],
+                                                                    issuer_name=issuer['username'],
+                                                                    name=data['name'],
+                                                                    desc=data['description'],
+                                                                    img_url=data['pic_location'],
+                                                                    num_tokes=data['num_created'])
+            # Insert into the database
             insert_bulk_tokens(data['num_created'], data, g.sesh)
         except GethException as e:
             g.sesh.rollback()

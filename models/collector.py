@@ -1,6 +1,13 @@
 from marshmallow import Schema, fields
+
+from models.contract import GetContractResponse
 from utils.db_utils import DataQuery
-from models.token import TokenResponse
+
+
+class TokenResponse(GetContractResponse):
+    t_id = fields.Int(required=True)
+    con_id = fields.Int(required=True)
+    t_hash = fields.Str(required=True)
 
 
 class CreateCollectorRequest(Schema):
