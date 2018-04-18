@@ -55,7 +55,7 @@ class InsertToken(DataQuery):
 
     def __init__(self):
         self.sql_text = """
-        INSERT INTO tokens(con_id, t_hash) values(:con_id, :tok_hash);
+        INSERT INTO tokens(con_id, t_hash, status) values(:con_id, :tok_hash, 'N');
         """
 
         self.schema_out = None

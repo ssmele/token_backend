@@ -97,7 +97,7 @@ class GethKeeper(object):
             contract_interface = compiled_sol['<stdin>:issuer_contract']
 
         except Exception as e:
-            raise GethException(str(e), message='Could not compile smart contract')
+            raise GethException(str(e), message=str(e))
 
         try:
             # Normalize issuer account and unlock the root account
@@ -118,7 +118,7 @@ class GethKeeper(object):
             json_abi = dumps(abi_dict)
             return hexlify(tx_hash), json_abi
         except Exception as e:
-            raise GethException(str(e), message='Could not deploy smart contract')
+            raise GethException(str(e), message=str(e))
 
     def check_contract_mine(self, tx_hash):
         """ Returns a contract address if the contract has been mined, None otherwise

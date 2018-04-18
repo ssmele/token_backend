@@ -67,7 +67,7 @@ class Contract(Resource):
         except Exception as e:
             g.sesh.rollback()
             print(str(e))
-            return error_response("Couldn't create new contract.")
+            return error_response("Couldn't create new contract. Exception {}".format(str(e)))
 
         g.sesh.commit()
         return success_response('Success in issuing token!', http_code=201)
