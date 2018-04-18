@@ -29,6 +29,7 @@ from routes.token import token
 from routes.contract import contract_bp, contract_docs
 from routes.login import login_bp, login_docs
 from routes.explore import explore_bp, explore_docs
+from routes.analytics import analytics_bp, analytics_docs
 
 # Registering blueprints.
 app.register_blueprint(collector_bp)
@@ -39,6 +40,7 @@ app.register_blueprint(token)
 app.register_blueprint(contract_bp)
 app.register_blueprint(login_bp)
 app.register_blueprint(explore_bp)
+app.register_blueprint(analytics_bp)
 
 
 @app.errorhandler(Exception)
