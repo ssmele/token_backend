@@ -56,4 +56,4 @@ if __name__ == '__main__':
 
     #print('receipt: {0}'.format(gk.check_claim_mine('27bedf44c5a934a030a3f0d087555355379c250d22bdd6c254ef0a0ddbe7fb79')))
 
-    print(gk.create_account())
+    print(gk.issue_contract('0xff95b24806e3d93afc628c4bb684fd245e9853e9', 'test', 'c_name', num_tokes=4))
