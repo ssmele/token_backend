@@ -49,7 +49,7 @@ def claim_token_for_user(con_id, c_id, sesh):
         avail_token = GetAvailableToken().execute_n_fetchone({'con_id': con_id}, sesh=sesh)
         token_info = GetTokenInfo().execute_n_fetchone({'con_id': con_id, 'c_id': c_id}, sesh=sesh)
         if not avail_token and token_info:
-            return False
+            return False, 'No available tokens'
 
         # Claim the token and update the database
         tx_hash = g.geth.claim_token(token_info['con_addr'], token_info['con_abi'], token_info['c_hash'],
@@ -61,6 +61,6 @@ def claim_token_for_user(con_id, c_id, sesh):
         if rows_updated == 1:
             return True, 'Token has been claimed!'
     except GethException as e:
-        return False, e.exception
+        return False, 'GETH !!!' + e.exception
     except Exception as e:
         return False, str(e)
