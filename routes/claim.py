@@ -1,4 +1,6 @@
 from flask import Blueprint, g
+
+from ether.geth_keeper import GethException
 from routes import load_with_schema, requires_geth
 from models.claim import ClaimRequest, DoesCollectorOwnToken, GetTokenInfo, GetAvailableToken, SetToken
 from utils.utils import success_response, error_response
@@ -20,13 +22,13 @@ url_prefix = '/claim'
 @load_with_schema(ClaimRequest)
 @claim_docs.document(url_prefix, 'POST', 'Method to claim a token of of a contract.', input_schema=ClaimRequest)
 def claims(data):
-    results = claim_token_for_user(data['con_id'], g.collector_info['c_id'], g.sesh)
+    results, msg = claim_token_for_user(data['con_id'], g.collector_info['c_id'], g.sesh)
     if results:
         g.sesh.commit()
-        return success_response("Token has been claimed!")
+        return success_response(msg)
     else:
         g.sesh.rollback()
-        return error_response("Couldn't claim token")
+        return error_response(msg)
 
 
 def claim_token_for_user(con_id, c_id, sesh):
@@ -40,7 +42,7 @@ def claim_token_for_user(con_id, c_id, sesh):
     have_token_already = DoesCollectorOwnToken().execute_n_fetchone({'con_id': con_id, 'c_id': c_id},
                                                                     sesh=sesh, schema_out=False)
     if have_token_already:
-        return False
+        return False, 'User already has token'
 
     try:
         # Make sure a token is available and that it has info
@@ -57,6 +59,8 @@ def claim_token_for_user(con_id, c_id, sesh):
 
         # Make sure a row was updated
         if rows_updated == 1:
-            return True
-    finally:
-        return False
+            return True, 'Token has been claimed!'
+    except GethException as e:
+        return False, e.exception
+    except Exception as e:
+        return False, str(e)
