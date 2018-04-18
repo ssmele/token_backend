@@ -1,6 +1,5 @@
 from marshmallow import Schema, fields
 from utils.db_utils import DataQuery
-from models import db
 
 
 class CreateIssuerRequest(Schema):
@@ -15,6 +14,16 @@ class CreateIssuerRequest(Schema):
         'username': {'type': 'string', 'desc': 'desired username for issuer creation.'},
         'password': {'type': 'string', 'desc': 'desired password for issuer creation.'}
     }
+
+
+class IssuerInternalInfo(Schema):
+    """
+    Schema for creating issuer.
+    """
+    i_id = fields.Int(dump_only=True)
+    username = fields.Str(dump_only=True)
+    i_hash = fields.Str(dump_only=True)
+    i_priv_key = fields.Str(dump_only=True)
 
 
 def create_issuer(user_deets, sesh):
@@ -36,6 +45,20 @@ class LoginIssuerRequest(Schema):
         'username': {'type': 'string', 'desc': 'issuer username to use with login.'},
         'password': {'type': 'string', 'desc': 'issuer password to use with login.'}
     }
+
+
+class GetIssuerInfo(DataQuery):
+
+    def __init__(self):
+        self.sql_text = """
+        SELECT *
+        FROM issuers
+        WHERE i_id = :i_id
+        """
+
+        self.schema_out = IssuerInternalInfo()
+
+        super().__init__()
 
 
 class InsertNewIssuer(DataQuery):

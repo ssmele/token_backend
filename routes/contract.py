@@ -2,12 +2,14 @@ from flask import Blueprint, g, request
 from flask_restful import Api, Resource
 from models.contract import ContractRequest, ClaimTypes, GetContractByConID, \
     GetContractByName, insert_bulk_tokens, GetContractsByIssuerID
+from models.issuer import GetIssuerInfo
 from utils.utils import success_response, error_response
 from utils.doc_utils import BlueprintDocumentation
 from utils.verify_utils import verify_issuer_jwt
 from utils.image_utils import save_file, serve_file, ImageFolders
+from ether.geth_keeper import GethException
 from models import requires_db
-from json import loads
+from routes import requires_geth
 
 contract_bp = Blueprint('contract', __name__)
 contract_docs = BlueprintDocumentation(contract_bp, 'Contract')
@@ -20,32 +22,23 @@ class Contract(Resource):
 
     @verify_issuer_jwt
     @requires_db
+    @requires_geth
     @contract_docs.document(url_prefix+" ", 'POST',
                             'Method to start a request to issue a new token on the eth network.'
                             ' This will also create all new tokens associated with the method.', ContractRequest)
     def post(self):
+        """ Method to use for post requests to the /contract method.
+
+        :return: HTTP response
         """
-        Method to use for post requests to the /contract method.
-        :param data:
-        :return:
-        """
-        json_data = loads(request.form.get('json_data'))
-        data = ContractRequest().load(json_data)
+        data = ContractRequest().load(request.form)
         if data['num_created'] > MAX_TOKEN_LIMIT:
             return error_response("Could not create a token contract with that many individual token. Max is {}"
                                   .format(MAX_TOKEN_LIMIT))
 
-        # TODO: ISSUE THE ACTUAL CONTRACT HERE.
-
         # Update the original data given after validation for contract creation binds.
-        data.update({'hash': 'TEMP_CONTRACT_HASH',
-                     'claim_type': ClaimTypes.SIMPLE.value,
+        data.update({'claim_type': ClaimTypes.SIMPLE.value,
                      'i_id': g.issuer_info['i_id']})
-
-        # Update with contract information given by geth keeper.
-        data.update({"con_tx": "blah",
-                     "con_addr": 'something',
-                     'con_abi': 'CONTEACT'})
 
         # If we have an image save it.
         file_location = None
@@ -55,13 +48,24 @@ class Contract(Resource):
 
         if file_location is None:
             file_location = 'default.png'
-
         data.update({'pic_location': file_location})
 
-        # Try and insert into database.
         try:
+            # Issue the contract on the ETH network
+            issuer = GetIssuerInfo().execute_n_fetchone(binds={'i_id': g.issuer_info['i_id']})
+            data['con_tx'], data['con_abi'] = g.geth.issue_contract(issuer['i_hash'],
+                                                                    issuer_name=issuer['username'],
+                                                                    name=data['name'],
+                                                                    desc=data['description'],
+                                                                    img_url=data['pic_location'],
+                                                                    num_tokes=data['num_created'])
+            # Insert into the database
             insert_bulk_tokens(data['num_created'], data, g.sesh)
+        except GethException as e:
+            g.sesh.rollback()
+            return error_response(e.message)
         except Exception as e:
+            g.sesh.rollback()
             print(str(e))
             return error_response("Couldn't create new contract.")
 
@@ -78,7 +82,7 @@ class Contract(Resource):
         :return:
         """
         contracts = GetContractsByIssuerID().execute_n_fetchall({'i_id': g.issuer_info['i_id']})
-        if contracts:
+        if contracts is not None:
             return success_response({'contracts': contracts})
         else:
             return error_response(status="Couldn't retrieve contract with that con_id", status_code=-1, http_code=200)

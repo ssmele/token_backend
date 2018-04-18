@@ -16,7 +16,7 @@ CREATE TABLE contracts (
   con_id INTEGER PRIMARY KEY AUTOINCREMENT,
   i_id INTEGER NOT NULL,
   con_tx TEXT NOT NULL,
-  con_addr TEXT NOT NULL,
+  con_addr TEXT,
   con_abi BLOB NOT NULL,
   name CHAR(50) NOT NULL,
   description TEXT,

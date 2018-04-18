@@ -2,6 +2,7 @@ from marshmallow import Schema, fields
 from utils.db_utils import DataQuery
 
 
+# ------------------------------SCHEMAS-------------------------------
 class ClaimRequest(Schema):
     con_id = fields.Int(required=True)
 
@@ -10,6 +11,21 @@ class ClaimRequest(Schema):
     }
 
 
+class GetTokenInfoInternal(Schema):
+    """ Schema for Token info for the ETH network """
+    t_id = fields.Int(dump_only=True)
+    con_addr = fields.Str(dump_only=True)
+    i_hash = fields.Str(dump_only=True)
+    i_priv_key = fields.Str(dump_only=True)
+    c_hash = fields.Str(dump_only=True)
+
+
+class GetAvailableTokenIDInternal(Schema):
+    """ Schema that gets an available token_id """
+    t_id = fields.Int(dump_only=True)
+
+
+# ------------------------------QUERIES--------------------------------
 class DoesCollectorOwnToken(DataQuery):
 
     def __init__(self):
@@ -23,34 +39,53 @@ class DoesCollectorOwnToken(DataQuery):
         super().__init__()
 
 
-class SetTokenIfOneAvailable(DataQuery):
+class SetToken(DataQuery):
 
     def __init__(self):
         self.sql_text = """
         UPDATE tokens
         SET owner_c_id = :c_id,
-        status = 'P'
+          status = 'P',
+          t_hash = :t_hash
         WHERE con_id = :con_id
-        AND t_id = (SELECT t_id
-                    FROM tokens
-                    WHERE owner_c_id is NULL
-                    AND con_id = :con_id
-                    LIMIT 1);
+          AND t_id = :t_id;
         """
 
         self.schema_out = None
         super().__init__()
 
 
-def claim_token_for_user(con_id, c_id, sesh):
-        have_token_already = DoesCollectorOwnToken().execute_n_fetchone({'con_id': con_id, 'c_id': c_id},
-                                                                        sesh=sesh, schema_out=False)
-        if have_token_already:
-            return None
+class GetAvailableToken(DataQuery):
+    """ Gets an available token in the collection """
 
-        rows_updated = SetTokenIfOneAvailable().execute({'con_id': con_id, 'c_id': c_id}, sesh=sesh)
-        if rows_updated == 1:
-            return True
-        else:
-            return None
+    def __init__(self):
+        self.sql_txt = """
+            SELECT t_id
+            FROM tokens
+            WHERE owner_c_id IS NULL 
+              AND con_id = :con_id
+            LIMIT 1;
+        """
 
+        self.schema_out = GetAvailableTokenIDInternal()
+        super().__init__()
+
+
+class GetTokenInfo(DataQuery):
+    """ Gets a token's related contract and its issuer information for the ETH network """
+
+    def __init__(self):
+        self.sql_txt = """
+            SELECT t.t_id AS t_id, c.con_addr AS con_addr, c.con_abi AS con_abi, i.i_hash AS i_hash, i_priv_key AS i_priv_key, col.c_hash
+            FROM tokens t, contracts c, issuers i, collectors col
+            WHERE  t.con_id = :con_id
+              AND t.con_id = c.con_id
+              AND c.i_id = i.i_id
+              AND c.con_addr IS NOT NULL
+              AND c.status == 'S'
+              AND t.owner_c_id IS NULL
+              AND col.c_id = :c_id;
+        """
+
+        self.schema_out = GetTokenInfoInternal()
+        super().__init__()
