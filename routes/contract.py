@@ -82,7 +82,7 @@ class Contract(Resource):
         :return:
         """
         contracts = GetContractsByIssuerID().execute_n_fetchall({'i_id': g.issuer_info['i_id']})
-        if contracts:
+        if contracts is not None:
             return success_response({'contracts': contracts})
         else:
             return error_response(status="Couldn't retrieve contract with that con_id", status_code=-1, http_code=200)

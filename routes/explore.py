@@ -14,7 +14,7 @@ url_prefix = '/explore'
 @explore_docs.document(url_prefix + '/contracts', 'GET', "Get's all contracts for the explore page.")
 def get_all_contracts():
     contracts = GetAllContracts().execute_n_fetchall({})
-    if contracts:
+    if contracts is not None:
         return success_response({'contracts': contracts})
     else:
         return error_response(status="Couldn't retrieve contracts")
