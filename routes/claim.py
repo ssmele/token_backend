@@ -1,3 +1,5 @@
+import traceback
+
 from flask import Blueprint, g
 
 from ether.geth_keeper import GethException
@@ -63,4 +65,4 @@ def claim_token_for_user(con_id, c_id, sesh):
     except GethException as e:
         return False, 'GETH !!!' + e.exception
     except Exception as e:
-        return False, str(e)
+        return False, str(e) + traceback.format_exc()
