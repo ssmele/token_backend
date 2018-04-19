@@ -59,7 +59,7 @@ class Collector(Resource):
         except GethException as ge:
             return error_response(ge.message)
         except Exception as e:
-            return error_response("Couldn't create account", http_code=200)
+            return error_response(str(e), http_code=200)
 
     @verify_collector_jwt
     @requires_db

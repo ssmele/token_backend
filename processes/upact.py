@@ -1,3 +1,4 @@
+#!/usr/bin/python
 from ether.geth_keeper import GethKeeper
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.engine import create_engine
