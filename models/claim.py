@@ -15,6 +15,7 @@ class GetTokenInfoInternal(Schema):
     """ Schema for Token info for the ETH network """
     t_id = fields.Int(dump_only=True)
     con_addr = fields.Str(dump_only=True)
+    con_abi = fields.Str(dump_only=True)
     i_hash = fields.Str(dump_only=True)
     i_priv_key = fields.Str(dump_only=True)
     c_hash = fields.Str(dump_only=True)
