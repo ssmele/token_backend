@@ -51,7 +51,7 @@ if __name__ == '__main__':
 
     # Creating session for querying.
     Session = sessionmaker()
-    engine = create_engine('sqlite:///../temp.db')
+    engine = create_engine('sqlite:////usr/apps/token/backend/backend/temp.db')
     Session.configure(bind=engine)
 
     # Get contracts with pending status (for updating contracts)
