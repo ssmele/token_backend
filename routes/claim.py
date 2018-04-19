@@ -15,8 +15,6 @@ claim_docs = BlueprintDocumentation(claim_bp, 'Claim')
 url_prefix = '/claim'
 
 
-
-
 @claim_bp.route(url_prefix, methods=['POST'])
 @verify_collector_jwt
 @requires_geth
