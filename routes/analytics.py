@@ -25,3 +25,20 @@ def summary():
 
     return render_template('bar_chart.html', title='Tokens Claimed', max=100, labels=bar_labels, values=bar_values)
 
+
+@analytics_bp.route(url_prefix + "/pie", methods=['GET'])
+@verify_issuer_jwt
+@requires_db
+def pie():
+    data = g.sesh.execute("""
+    select contracts.*, (select count(*) from tokens where tokens.con_id = contracts.con_id and  status = 'S') as 
+    num_claimed from contracts where contracts.i_id = :desired_id;""", {'desired_id': g.issuer_info['i_id']}).fetchall()
+
+    labels = []
+    r = data[0]
+    claimed = ["Claimed", r['num_claimed']]
+    labels.append(claimed)
+    unclaimed = ["Unclaimed", r['num_created'] - r['num_claimed']]
+    labels.append(unclaimed)
+    return render_template('pie_chart.html', labels=labels)
+
