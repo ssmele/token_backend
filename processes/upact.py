@@ -10,6 +10,7 @@ def update_contracts(rows, session):
     :param session: The database object to use
     """
     for row in rows:
+        print('working on {c_id}'.format(c_id=row['con_id']))
         # Try to get the transaction receipt
         has_receipt, success, contract_addr = geth.check_contract_mine(row['con_tx'])
         if has_receipt:
@@ -29,6 +30,7 @@ def update_tokens(rows, session):
     :param session: The database session object to use
     """
     for row in rows:
+        print('working on {t_id}'.format(t_id=row['t_id']))
         # Try to get the transaction receipt
         has_receipt, success = geth.check_claim_mine(row['t_hash'])
         if has_receipt:
@@ -44,6 +46,7 @@ def update_tokens(rows, session):
 if __name__ == '__main__':
     # Create geth.
     geth = GethKeeper()
+    print('running upact')
 
     # Creating session for querying.
     Session = sessionmaker()
