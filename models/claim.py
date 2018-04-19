@@ -76,7 +76,8 @@ class GetTokenInfo(DataQuery):
 
     def __init__(self):
         self.sql_text = """
-            SELECT t.t_id AS t_id, c.con_addr AS con_addr, c.con_abi AS con_abi, i.i_hash AS i_hash, i_priv_key AS i_priv_key, col.c_hash
+            SELECT t.t_id AS t_id, c.con_addr AS con_addr, c.con_abi AS con_abi, i.i_hash AS i_hash, 
+              i_priv_key AS i_priv_key, col.c_hash
             FROM tokens t, contracts c, issuers i, collectors col
             WHERE  t.con_id = :con_id
               AND t.con_id = c.con_id
