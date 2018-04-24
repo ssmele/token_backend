@@ -31,19 +31,20 @@ def summary():
 @requires_db
 def percent_claimed(con_id):
 
-    data = g.sesh.execute("""select * from contracts where contracts.con_id = :contract_id;""",
+    # Get contract.
+    data = g.sesh.execute("""select num_created from contracts where contracts.con_id = :contract_id;""",
                            {"contract_id": con_id}).fetchall()
+
+    # Check that the data is there
     if len(data) == 0:
         return error_response("Con id doesn't exist")
 
+    num_created = data[0]['num_created']
+
+    # Figure out how many have been claimed.
     d_num_claimed = g.sesh.execute("""select count(*) as count1 from tokens where tokens.con_id=:contract_id 
     and status='S';""", {'contract_id': con_id}).fetchall()
-
     num_claimed = d_num_claimed[0]['count1']
-
-    d_num_created = g.sesh.execute("""select contracts.num_created as count2 from contracts where 
-    contracts.con_id = :contract_id;""", {"contract_id": con_id}).fetchall()
-    num_created = d_num_created[0]['count2']
 
     return success_response({
         'num_claimed': num_claimed,
