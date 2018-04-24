@@ -32,6 +32,7 @@ class GetContractResponse(Schema):
     num_created = fields.Int(required=True)
     claim_type = fields.Str(required=True)
     pic_location = fields.Str(required=True)
+    status = fields.Str(required=True)
 
     username = fields.Str(dump_only=True)
 
