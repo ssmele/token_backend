@@ -72,9 +72,10 @@ class GetCollection(DataQuery):
     def __init__(self):
         self.sql_text = """
         SELECT * 
-        FROM tokens, contracts 
+        FROM tokens, contracts, issuers
         WHERE owner_c_id = :c_id
-        AND contracts.con_id = tokens.con_id;
+        AND contracts.con_id = tokens.con_id
+        AND contracts.i_id = issuers.i_id;
         """
 
         self.schema_out = TokenResponse()
