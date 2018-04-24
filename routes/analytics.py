@@ -2,7 +2,7 @@ from flask import Blueprint, g, render_template, request
 from utils.doc_utils import BlueprintDocumentation
 from utils.verify_utils import verify_issuer_jwt
 from models import requires_db
-from utils.utils import error_response
+from utils.utils import error_response, success_response
 
 analytics_bp = Blueprint('analytics', __name__)
 analytics_docs = BlueprintDocumentation(analytics_bp, 'Analytics')
@@ -45,5 +45,8 @@ def percent_claimed(con_id):
     contracts.con_id = :contract_id;""", {"contract_id": con_id}).fetchall()
     num_created = d_num_created[0]['count2']
 
-    values = [num_claimed, num_created - num_claimed]  # = num claimed, num unclaimed
-    return render_template('pie_chart.html', values=values)
+    return success_response({
+        'num_claimed': num_claimed,
+        'num_unclaimed': num_created-num_claimed,
+        'num_created': num_created
+    })
