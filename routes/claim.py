@@ -4,6 +4,7 @@ from flask import Blueprint, g
 
 from ether.geth_keeper import GethException
 from models.claim import ClaimRequest, DoesCollectorOwnToken, GetTokenInfo, GetAvailableToken, SetToken
+from models.constraints import ValidateUniqueCodeConstraint, validate_time_constraints, validate_location_constraints
 from routes import load_with_schema, requires_geth
 from utils.db_utils import requires_db
 from utils.doc_utils import BlueprintDocumentation
@@ -31,9 +32,10 @@ def claims(data):
         return error_response(msg)
 
 
-def claim_token_for_user(con_id, c_id, sesh):
+def claim_token_for_user(con_id, c_id, sesh, constraints):
     """ Attempts to claim a token for the given user
 
+    :return:
     :param con_id: The contract_id of the token
     :param c_id: The collector_id of the collecting user
     :param sesh: The database session to use
@@ -50,6 +52,18 @@ def claim_token_for_user(con_id, c_id, sesh):
         token_info = GetTokenInfo().execute_n_fetchone({'con_id': con_id, 'c_id': c_id}, sesh=sesh)
         if not avail_token and not token_info:
             return False, 'No available tokens'
+
+        # TODO: FINISH AND TEST THESE METHODS! See about making them sql statements instead of server logic. :)
+        # Enforcing claim constraints.
+        # Unique Code Constraints. # TODO: Need to solidify logic for this one.
+        if not ValidateUniqueCodeConstraint().execute_n_fetchone({'con_id': con_id, 'unique_code': constraints['uc']}):
+            return False, 'Invalid Code'
+        # Time Constraints # TODO: Figure out how to compare the times.
+        if not validate_time_constraints():
+            return False, 'Invalid Time'
+        # Location Claims # TODO: Figure out how to compare the distances.
+        if not validate_location_constraints():
+            return False, 'Invalid Location'
 
         # Claim the token and update the database
         tx_hash = g.geth.claim_token(token_info['con_addr'], token_info['con_abi'], token_info['c_hash'],

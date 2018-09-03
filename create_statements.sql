@@ -26,6 +26,30 @@ CREATE TABLE contracts (
   status CHAR(1) NOT NULL DEFAULT 'P',
   FOREIGN KEY(i_id) REFERENCES issuers(i_id)
 );
+
+CREATE TABLE location_claim(
+  lc_id INTEGER PRIMARY KEY AUTOINCREMENT,
+  con_id INTEGER,
+  latitude REAL,
+  longitude REAL,
+  FOREIGN KEY (con_id) REFERENCES contracts(con_id)
+)
+
+CREATE TABLE time_claim(
+  tc_id INTEGER PRIMARY KEY AUTOINCREMENT,
+  con_id INTEGER,
+  start TEXT,
+  end TEXT,
+  FOREIGN KEY (con_id) REFERENCES contracts(con_id)
+)
+
+CREATE TABLE unique_code_claim(
+  uc_id INTEGER PRIMARY KEY AUTOINCREMENT,
+  con_id INTEGER,
+  unique_code TEXT,
+  FOREIGN KEY (con_id) REFERENCES contracts(con_id)
+)
+
 CREATE TABLE tokens (
   t_id INTEGER PRIMARY KEY AUTOINCREMENT,
   con_id INTEGER,
