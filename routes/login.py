@@ -21,7 +21,7 @@ url_prefix = '/login'
                      input_schema=LoginCollectorRequest)
 def get_collector_jwt(data):
     # Gather up login details.
-    login_deets = GetCollectorLoginDetails().execute_n_fetchone(binds=data)
+    login_deets = GetCollectorLoginDetails().execute_n_fetchone(binds=data, close_connection=True)
     if login_deets is None:
         return error_response("Authorization Failed for Collector Login.")
 
@@ -41,7 +41,7 @@ def get_collector_jwt(data):
                      input_schema=LoginIssuerRequest)
 def get_issuer_jwt(data):
     # Gather up login details.
-    login_deets = GetIssuerLoginDetails().execute_n_fetchone(binds=data)
+    login_deets = GetIssuerLoginDetails().execute_n_fetchone(binds=data, close_connection=True)
     if login_deets is None:
         return error_response("Authorization Failed for Issuer Login.")
 

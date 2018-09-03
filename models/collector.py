@@ -32,10 +32,10 @@ class LoginCollectorRequest(Schema):
     }
 
 
-def create_collector(user_deets, sesh):
+def create_collector(user_deets):
     # Insert the contract.
-    InsertNewCollector().execute(user_deets, sesh=sesh)
-    collector = GetCollectorByUsername().execute_n_fetchone({'username': user_deets['username']}, sesh=sesh)
+    InsertNewCollector().execute(user_deets)
+    collector = GetCollectorByUsername().execute_n_fetchone({'username': user_deets['username']})
     return collector
 
 

@@ -61,6 +61,9 @@ class Contract(Resource):
                                                                     num_tokes=data['num_created'])
             # Insert into the database
             insert_bulk_tokens(data['num_created'], data, g.sesh)
+
+            g.sesh.commit()
+            return success_response('Success in issuing token!', http_code=201)
         except GethException as e:
             g.sesh.rollback()
             return error_response(e.message)
@@ -68,9 +71,6 @@ class Contract(Resource):
             g.sesh.rollback()
             print(str(e))
             return error_response("Couldn't create new contract. Exception {}".format(str(e)))
-
-        g.sesh.commit()
-        return success_response('Success in issuing token!', http_code=201)
 
     @contract_docs.document(url_prefix, 'GET',
                             'Method to get all contracts deployed by the issuer verified in the jwt.')
@@ -81,7 +81,7 @@ class Contract(Resource):
         Method to use for get requests to the /contract method.
         :return:
         """
-        contracts = GetContractsByIssuerID().execute_n_fetchall({'i_id': g.issuer_info['i_id']})
+        contracts = GetContractsByIssuerID().execute_n_fetchall({'i_id': g.issuer_info['i_id']}, close_connection=True)
         if contracts is not None:
             return success_response({'contracts': contracts})
         else:
@@ -103,7 +103,7 @@ def server_image(image):
 @contract_docs.document(url_prefix + '/con_id=<int:con_id>', 'GET',
                         "Method to retrieve contract information by con_id. Requires issuer verification.")
 def get_contract_by_con_id(con_id):
-    contract = GetContractByConID().execute_n_fetchone({'con_id': con_id})
+    contract = GetContractByConID().execute_n_fetchone({'con_id': con_id}, close_connection=True)
     if contract:
         return success_response(contract)
     else:
@@ -116,7 +116,7 @@ def get_contract_by_con_id(con_id):
 @contract_docs.document(url_prefix + '/name=<string:name>', 'GET',
                         "Method to retrieve contract information by names like it.")
 def get_contract_by_name(name):
-    contracts_by_name = GetContractByName().execute_n_fetchall({'name': '%'+name+'%'})
+    contracts_by_name = GetContractByName().execute_n_fetchall({'name': '%'+name+'%'}, close_connection=True)
     if contracts_by_name is not None:
         return success_response({'contracts': contracts_by_name})
     else:

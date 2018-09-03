@@ -20,7 +20,7 @@ url_prefix = '/collector'
                          "Method to retrieve collector information by username",
                          url_params={'username': 'username of collector to search for.'})
 def get_collector_by_username(username):
-    collector = GetCollectorByUsername().execute_n_fetchone({'username': username})
+    collector = GetCollectorByUsername().execute_n_fetchone({'username': username}, close_connection=True)
     if collector:
         return success_response(collector)
     else:
@@ -34,7 +34,7 @@ def get_collector_by_username(username):
 @verify_collector_jwt
 def get_collection():
     # Get collection for user.
-    collection = GetCollection().execute_n_fetchall({'c_id': g.collector_info['c_id']})
+    collection = GetCollection().execute_n_fetchall({'c_id': g.collector_info['c_id']}, close_connection=True)
     if collection is not None:
         return success_response({'collection': collection})
     else:
@@ -52,9 +52,9 @@ class Collector(Resource):
         try:
             # Create the collector account and bind the hash and private key
             data['c_hash'], data['c_priv_key'] = g.geth.create_account()
-            collector = create_collector(data, g.sesh)
+            collector = create_collector(data)
             g.sesh.commit()
-            # Return the response
+
             return success_response({'jwt': generate_jwt(collector)}, http_code=201)
         except GethException as ge:
             return error_response(ge.message)
@@ -67,7 +67,7 @@ class Collector(Resource):
                              "Method to retrieve collector information. Requires jwt from login/creation account.",
                              url_params={'c_id': 'c_id of collector to search for.'})
     def get(self):
-        collector = GetCollectorByCID().execute_n_fetchone({'c_id': g.collector_info['c_id']})
+        collector = GetCollectorByCID().execute_n_fetchone({'c_id': g.collector_info['c_id']}, close_connection=True)
         if collector:
             return success_response(collector)
         else:

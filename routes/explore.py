@@ -13,7 +13,7 @@ url_prefix = '/explore'
 @requires_db
 @explore_docs.document(url_prefix + '/contracts', 'GET', "Get's all contracts for the explore page.")
 def get_all_contracts():
-    contracts = GetAllContracts().execute_n_fetchall({})
+    contracts = GetAllContracts().execute_n_fetchall({}, close_connection=True)
     if contracts is not None:
         return success_response({'contracts': contracts})
     else:

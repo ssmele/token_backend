@@ -22,7 +22,7 @@ def get_issuer_by_username(username):
     :param username: username of issuer to retrieve.
     :return:
     """
-    issuer = GetIssuerByUsername().execute_n_fetchone({'username': username})
+    issuer = GetIssuerByUsername().execute_n_fetchone({'username': username}, close_connection=True)
     if issuer:
         return success_response(issuer)
     else:
@@ -54,7 +54,7 @@ class Issuer(Resource):
     @issuer_docs.document(url_prefix, 'GET',
                           "Method to retrieve issuer information. Requires jwt from login/creation account.")
     def get(self):
-        issuer = GetIssuerByIID().execute_n_fetchone({'i_id': g.issuer_info['i_id']})
+        issuer = GetIssuerByIID().execute_n_fetchone({'i_id': g.issuer_info['i_id']}, close_connection=True)
         if issuer:
             return success_response(issuer)
         else:

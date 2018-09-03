@@ -10,26 +10,33 @@ class DataQuery:
         self.sql_txt = text(self.sql_text)
         self.schema_out = self.schema_out
 
-    def execute(self, binds, sesh=None):
+    def execute(self, binds, sesh=None, close_connection=False):
         """
         Calls query and fetch's the first row will return None if no values are present.
         :param binds: Binds to add to the query.
         :param schema_out: If row should be dumped to schemas before returning.
         :param sesh: If we are being provided a connection use it.
+        :param close_connection: If true close connection before returning
         :return: First value of None.
         """
         try:
             sesh = sesh if sesh is not None else g.sesh
             res = sesh.execute(self.sql_text, binds)
+
+            # close connection if needed.
+            if close_connection:
+                sesh.close()
+
             return res.rowcount
         except DBAPIError as e:
             raise e
 
-    def execute_n_fetchone(self, binds, sesh=None, schema_out=True):
+    def execute_n_fetchone(self, binds, sesh=None, schema_out=True, close_connection=False):
         """
         Calls query and fetch's the first row will return None if no values are present.
         :param binds: Binds to add to the query.
         :param schema_out: If row should be dumped to schemas before returning.
+        :param close_connection: If true close connection before returning
         :return: First value of None.
         """
         try:
@@ -39,6 +46,10 @@ class DataQuery:
             if rv is None:
                 # Nothing from the query.
                 return None
+
+            # close connection if needed.
+            if close_connection:
+                sesh.close()
 
             if schema_out:
                 # If we got an object then we need to try and parse it into an python dict.
@@ -53,11 +64,12 @@ class DataQuery:
         except ValidationError as e:
             return None
 
-    def execute_n_fetchall(self, binds, sesh=None, schema_out=True):
+    def execute_n_fetchall(self, binds, sesh=None, schema_out=True, close_connection=False):
         """
         Querys and fetch's all rows from the query results.
         :param binds: Binds to use for query.
         :param schema_out: If row should be dumped to schemas before returning.
+        :param close_connection: If true close connection before returning
         :return:
         """
         try:
@@ -67,6 +79,10 @@ class DataQuery:
             if rv is None:
                 # Nothing from the query.
                 return None
+
+            # close connection if needed.
+            if close_connection:
+                sesh.close()
 
             if schema_out:
                 # If we got an object then we need to try and parse it into an python dict.
