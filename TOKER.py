@@ -1,11 +1,12 @@
 from flask import Flask, render_template
-from models import Sesh
 from flask_cors import CORS
+from flask import current_app
+from werkzeug.exceptions import HTTPException
 from models import db
+from models import Sesh
 from utils.setup_utils import load_config
 from utils.doc_utils import to_pretty_json
 from utils.utils import success_response_dict, error_response
-from flask import current_app
 
 # Setting up flask application.
 app = Flask(__name__)
@@ -43,8 +44,10 @@ app.register_blueprint(analytics_bp)
 
 @app.errorhandler(Exception)
 def handle_bad_request(e):
-    print(e)
-    return error_response('Unknown Error!', http_code=500)
+    if isinstance(e, HTTPException):
+        return error_response(str(e), http_code=e.code)
+    else:
+        return error_response('Unknown Error!', http_code=500)
 
 
 # Setting up the documentation.
