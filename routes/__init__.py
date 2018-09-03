@@ -1,6 +1,8 @@
-from flask import request, jsonify, g
 from functools import wraps
+
+from flask import request, jsonify, g
 from marshmallow import ValidationError
+
 from ether.geth_keeper import GethKeeper
 
 

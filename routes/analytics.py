@@ -1,8 +1,8 @@
-from flask import Blueprint, g, render_template, request
+from flask import Blueprint, g, render_template
 from utils.doc_utils import BlueprintDocumentation
 from utils.verify_utils import verify_issuer_jwt
-from models import requires_db
 from utils.utils import error_response, success_response
+from utils.db_utils import requires_db
 
 analytics_bp = Blueprint('analytics', __name__)
 analytics_docs = BlueprintDocumentation(analytics_bp, 'Analytics')

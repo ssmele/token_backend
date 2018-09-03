@@ -1,7 +1,8 @@
-from flask import current_app, send_from_directory
-from enum import Enum
 import os
+from enum import Enum
 from uuid import uuid1
+
+from flask import current_app, send_from_directory
 
 ALLOWED_EXTENSION = ['png', 'jpg', 'jpeg']
 

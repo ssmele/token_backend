@@ -1,11 +1,12 @@
 from flask import Flask, render_template
-from flask_cors import CORS
 from flask import current_app
+from flask_cors import CORS
 from werkzeug.exceptions import HTTPException
-from models import db
+
 from models import Sesh
-from utils.setup_utils import load_config
+from models import db
 from utils.doc_utils import to_pretty_json
+from utils.setup_utils import load_config
 from utils.utils import success_response_dict, error_response
 
 # Setting up flask application.
@@ -29,7 +30,7 @@ from routes.claim import claim_bp, claim_docs
 from routes.contract import contract_bp, contract_docs
 from routes.login import login_bp, login_docs
 from routes.explore import explore_bp, explore_docs
-from routes.analytics import analytics_bp, analytics_docs
+from routes.analytics import analytics_bp
 
 # Registering blueprints.
 app.register_blueprint(collector_bp)

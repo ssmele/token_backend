@@ -1,7 +1,9 @@
-from marshmallow import Schema, fields, post_dump
-from utils.db_utils import DataQuery
-from flask import request
 from enum import Enum
+
+from flask import request
+from marshmallow import Schema, fields, post_dump
+
+from utils.db_utils import DataQuery
 
 
 class ClaimTypes(Enum):

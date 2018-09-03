@@ -1,6 +1,7 @@
 from flask import Blueprint, g
-from utils.utils import success_response
+
 from utils.doc_utils import BlueprintDocumentation
+from utils.utils import success_response
 from utils.verify_utils import verify_issuer_jwt, verify_collector_jwt
 
 ping = Blueprint('ping', __name__)

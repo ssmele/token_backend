@@ -1,8 +1,9 @@
 from flask import Blueprint
+
 from models.contract import GetAllContracts
-from utils.utils import success_response, error_response
+from utils.db_utils import requires_db
 from utils.doc_utils import BlueprintDocumentation
-from models import requires_db
+from utils.utils import success_response, error_response
 
 explore_bp = Blueprint('explore', __name__)
 explore_docs = BlueprintDocumentation(explore_bp, 'Explore')

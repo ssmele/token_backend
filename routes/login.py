@@ -1,12 +1,12 @@
 from flask import Blueprint
-from routes import load_with_schema
+
 from models.collector import LoginCollectorRequest, GetCollectorLoginDetails
 from models.issuer import LoginIssuerRequest, GetIssuerLoginDetails
-from utils.utils import success_response, error_response
+from routes import load_with_schema
+from utils.db_utils import requires_db
 from utils.doc_utils import BlueprintDocumentation
+from utils.utils import success_response, error_response
 from utils.verify_utils import generate_jwt
-from models import requires_db
-
 
 login_bp = Blueprint('login', __name__)
 login_docs = BlueprintDocumentation(login_bp, 'Login')

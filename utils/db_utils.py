@@ -1,8 +1,31 @@
-from sqlalchemy.sql import text
-from sqlalchemy.exc import DBAPIError
-from marshmallow.exceptions import ValidationError
-from flask import g
+from functools import wraps
+from sqlite3 import Connection as SQLite3Connection
 
+from flask import g
+from marshmallow.exceptions import ValidationError
+from sqlalchemy import event
+from sqlalchemy.engine import Engine
+from sqlalchemy.exc import DBAPIError
+from sqlalchemy.sql import text
+
+from models import Sesh
+
+
+# Need this here as sqlite is a little lame and wont keep this across connections.
+@event.listens_for(Engine, "connect")
+def _set_sqlite_pragma(dbapi_connection, _):
+    if isinstance(dbapi_connection, SQLite3Connection):
+        cursor = dbapi_connection.cursor()
+        cursor.execute("PRAGMA foreign_keys=ON;")
+        cursor.close()
+
+
+def requires_db(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        g.sesh = Sesh()
+        return f(*args, **kwargs)
+    return decorated_function
 
 class DataQuery:
 

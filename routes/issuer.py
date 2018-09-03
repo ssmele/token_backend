@@ -1,12 +1,13 @@
 from flask import Blueprint, g
 from flask_restful import Resource, Api
-from routes import load_with_schema, requires_geth
-from models.issuer import CreateIssuerRequest, GetIssuerByIID, GetIssuerByUsername, create_issuer
-from utils.utils import success_response, error_response
-from utils.doc_utils import BlueprintDocumentation
-from utils.verify_utils import verify_issuer_jwt, generate_jwt
-from models import requires_db
+
 from ether.geth_keeper import GethException
+from models.issuer import CreateIssuerRequest, GetIssuerByIID, GetIssuerByUsername, create_issuer
+from routes import load_with_schema, requires_geth
+from utils.db_utils import requires_db
+from utils.doc_utils import BlueprintDocumentation
+from utils.utils import success_response, error_response
+from utils.verify_utils import verify_issuer_jwt, generate_jwt
 
 issuer_bp = Blueprint('issuer', __name__)
 issuer_docs = BlueprintDocumentation(issuer_bp, 'Issuer')
@@ -37,8 +38,9 @@ class Issuer(Resource):
     @issuer_docs.document(url_prefix+" ", 'POST', 'Method to create issuer. Returns jwt.', CreateIssuerRequest)
     def post(self, data):
         try:
-            # TODO: Need to create Ethereum account here.
             data['i_hash'], data['i_priv_key'] = g.geth.create_account()
+
+            # TODO: EXTEND THIS TO TAKE MORE VALUES FROM THE USER. ONLY HAVE TO CHANGE MARSHMALLOW OBEJCT. (HOPEFULLY)
             issuer = create_issuer(data, g.sesh)
             g.sesh.commit()
             return success_response({'jwt': generate_jwt(issuer)}, http_code=201)

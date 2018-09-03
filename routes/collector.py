@@ -1,13 +1,14 @@
-from ether.geth_keeper import GethException
 from flask import Blueprint, g
 from flask_restful import Resource, Api
-from models import requires_db
+
+from ether.geth_keeper import GethException
 from models.collector import CreateCollectorRequest, GetCollectorByUsername, GetCollectorByCID, GetCollection
 from models.collector import create_collector
 from routes import load_with_schema, requires_geth
-from utils.verify_utils import generate_jwt, verify_collector_jwt
-from utils.utils import success_response, error_response
+from utils.db_utils import requires_db
 from utils.doc_utils import BlueprintDocumentation
+from utils.utils import success_response, error_response
+from utils.verify_utils import generate_jwt, verify_collector_jwt
 
 collector_bp = Blueprint('collector', __name__)
 collector_docs = BlueprintDocumentation(collector_bp, 'Collector')
@@ -52,6 +53,8 @@ class Collector(Resource):
         try:
             # Create the collector account and bind the hash and private key
             data['c_hash'], data['c_priv_key'] = g.geth.create_account()
+
+            # TODO: EXTEND THIS TO TAKE MORE VALUES FROM THE USER. ONLY HAVE TO CHANGE MARSHMALLOW OBEJCT. (HOPEFULLY)
             collector = create_collector(data)
             g.sesh.commit()
 

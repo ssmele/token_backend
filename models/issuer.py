@@ -1,4 +1,5 @@
 from marshmallow import Schema, fields
+
 from utils.db_utils import DataQuery
 
 
@@ -26,10 +27,10 @@ class IssuerInternalInfo(Schema):
     i_priv_key = fields.Str(dump_only=True)
 
 
-def create_issuer(user_deets, sesh):
+def create_issuer(user_deets):
     # Insert the contract.
-    InsertNewIssuer().execute(user_deets, sesh=sesh)
-    issuer = GetIssuerByUsername().execute_n_fetchone({'username': user_deets['username']}, sesh=sesh)
+    InsertNewIssuer().execute(user_deets)
+    issuer = GetIssuerByUsername().execute_n_fetchone({'username': user_deets['username']})
     return issuer
 
 

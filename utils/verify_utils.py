@@ -1,7 +1,9 @@
+from functools import wraps
+
 import jwt
 from flask import request, g
+
 from utils.utils import error_response
-from functools import wraps
 
 SECRET_KEY = 'SECRET_420'
 

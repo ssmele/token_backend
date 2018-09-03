@@ -1,15 +1,16 @@
 from flask import Blueprint, g, request
 from flask_restful import Api, Resource
+
+from ether.geth_keeper import GethException
 from models.contract import ContractRequest, ClaimTypes, GetContractByConID, \
     GetContractByName, insert_bulk_tokens, GetContractsByIssuerID
 from models.issuer import GetIssuerInfo
-from utils.utils import success_response, error_response
-from utils.doc_utils import BlueprintDocumentation
-from utils.verify_utils import verify_issuer_jwt
-from utils.image_utils import save_file, serve_file, ImageFolders
-from ether.geth_keeper import GethException
-from models import requires_db
 from routes import requires_geth
+from utils.db_utils import requires_db
+from utils.doc_utils import BlueprintDocumentation
+from utils.image_utils import save_file, serve_file, ImageFolders
+from utils.utils import success_response, error_response
+from utils.verify_utils import verify_issuer_jwt
 
 contract_bp = Blueprint('contract', __name__)
 contract_docs = BlueprintDocumentation(contract_bp, 'Contract')

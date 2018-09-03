@@ -3,12 +3,12 @@ import traceback
 from flask import Blueprint, g
 
 from ether.geth_keeper import GethException
-from routes import load_with_schema, requires_geth
 from models.claim import ClaimRequest, DoesCollectorOwnToken, GetTokenInfo, GetAvailableToken, SetToken
-from utils.utils import success_response, error_response
+from routes import load_with_schema, requires_geth
+from utils.db_utils import requires_db
 from utils.doc_utils import BlueprintDocumentation
+from utils.utils import success_response, error_response
 from utils.verify_utils import verify_collector_jwt
-from models import requires_db
 
 claim_bp = Blueprint('claim', __name__)
 claim_docs = BlueprintDocumentation(claim_bp, 'Claim')

@@ -1,4 +1,5 @@
 from marshmallow import Schema, fields
+
 from utils.db_utils import DataQuery
 
 

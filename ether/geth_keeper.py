@@ -4,27 +4,22 @@ from uuid import uuid4
 
 from solc import compile_source
 from web3 import Web3, IPCProvider
-
-# To use correctly install python3 and set as interpreter
-# Install geth with the rinkeby test network and pip install web3
-# Fund your rinkeby wallet by going to rinkeby.faucet.io
-
-# Start up the geth node on the rinkeby test network as well as IPC protocol (enabling admin and personal api)
-# with the following command:     geth --rinkeby ipc --ipcapi admin,eth,miner,personal 2>>./rinkebyEth.log
-
-# Steps if you want to practice on the console:
-# In another terminal set a symbolic link to the geth.ipc file:
-#    ln -sf <path/to/rinkeby/geth.ipc/file> <path/to/Ethereum/directory>/geth.ipc
-
-# To run the node on the server:
-#     geth --rinkeby --datadir=/usr/apps/Ethereum/rinkeby ipc --ipcapi admin,eth,miner,personal 2>>/usr/apps/EthLog.txt
-# To run console on existing node:    geth --rinkeby --datadir=/usr/apps/Ethereum attach
-
-
 from web3.contract import ConciseContract
 
 # TODO: Should read from a config file
 from ether.contract_source import CONTRACT
+
+# To use correctly install python3 and set as interpreter
+# Install geth with the rinkeby test network and pip install web3
+# Fund your rinkeby wallet by going to rinkeby.faucet.io
+# Start up the geth node on the rinkeby test network as well as IPC protocol (enabling admin and personal api)
+# with the following command:     geth --rinkeby ipc --ipcapi admin,eth,miner,personal 2>>./rinkebyEth.log
+# Steps if you want to practice on the console:
+# In another terminal set a symbolic link to the geth.ipc file:
+#    ln -sf <path/to/rinkeby/geth.ipc/file> <path/to/Ethereum/directory>/geth.ipc
+# To run the node on the server:
+#     geth --rinkeby --datadir=/usr/apps/Ethereum/rinkeby ipc --ipcapi admin,eth,miner,personal 2>>/usr/apps/EthLog.txt
+# To run console on existing node:    geth --rinkeby --datadir=/usr/apps/Ethereum attach
 
 IPC_LOCATION = '/usr/apps/Ethereum/rinkeby/geth.ipc'
 #IPC_LOCATION = '/home/stone/.ethereum/rinkeby/geth.ipc'
