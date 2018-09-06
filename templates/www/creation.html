@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en" >
+	<head>
+		<title>T o k e n</title>
+		<meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"">
+		
+		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"></script>
+		<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
+		<link href="{{ url_for('static',filename='css/home.css')}}" rel="stylesheet">
+		<link href="{{ url_for('static',filename='css/loader.css')}}" rel="stylesheet">
+		
+	</head>	
+	<body>
+		
+		
+		<header class="nav fixed-top">
+			<img class="logo" src="{{ url_for('static',filename='images/tokentitlelight.png')}}" height="50px" data-toggle="tooltip" data-placement="bottom" title="Alpha 1.0"></img>
+			
+			<a class="nav-btn" href="home">Home</a>
+			<a class="nav-btn" href="analytics" data-placement="bottom" title="View Token Analytics">Analytics</a>
+			<a class="nav-btn" href="explore" data-placement="bottom" title="Explore all issued tokens">Explore</a>						
+			<a class="nav-btn active" href="" data-placement="bottom" title="Issue your very own token">Issuing</a>
+			<a class="nav-btn" href="about" data-placement="bottom" title="Learn about Token and its developers">About</a>
+			
+			<ul class="navbar-nav flex-row ml-md-auto d-none d-md-flex">
+				<li class="nav-item dropdown">
+					<a class="nav-item nav-link dropdown-toggle mr-md-2" href="#" id="bd-versions" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+						My Account
+					</a>
+					<div class="dropdown-menu dropdown-menu-right" aria-labelledby="bd-versions">
+						<a class="dropdown-item" id="#username">Username</a>
+						<a class="dropdown-item" href="index">Logout</a>
+					</div>
+				</li>			
+			</ul>
+		</header>
+		<div class="spacing"></div>
+		
+		<div class="col-lg-7 offset-lg-2">
+			<div class="row align-items-center justify-content-center">
+				
+				<h1 class='display-4'>Token Creation</h1>
+			</div>
+			<div class="row align-items-center justify-content-center">		
+				<p>Customize your token below</p>
+				
+			</div>
+			<div class="row align-items-center justify-content-center">		
+				<div class="card solo align-items-center">
+					<div class="wave">
+						<div class="shadow">
+							<div class="token">
+								<img id="image" src="{{ url_for('static',filename='images/tokenicon.png')}}" alt="" width="128"/>
+							</div>
+						</div>
+						<div id="token_name" class="title center"></div>
+						
+						<div id="token_desc" class="title"></div>
+						<div id="token_count" class="title" style="color: rgba(0,0,0,0.5); position: absolute; bottom: 40px; right: -15px;"></div>
+						
+					</div>
+					
+				</div>
+				
+			</div>
+			
+			
+			<script>
+				var url = "localhost:8088"
+				//var url = "167.99.26.0";
+				
+				function publish(){
+					$('#loader').show();
+			$('#screen').show();
+					var name = $("#name").val();
+					var num_created = $("#count").val();
+					var description = $("#desc").val();
+					var formData = new FormData();
+					formData.append("name",name);
+					formData.append("num_created",num_created);
+					formData.append("description",description);						
+					
+					formData.append("token_image", $('input[type=file]')[0].files[0]);
+					
+					console.log(formData)
+					$.ajaxSetup({
+						headers: {
+							'Authorization': document.cookie
+						},
+						processData: false,
+						contentType: false
+					});
+					$.post(
+					"http://"+url+"/contract",
+					formData,
+					function(data,status){				
+						console.log(data); // read
+						if(status == "success"){
+							window.open('analytics');
+						}
+					})
+					.fail(function(response) {
+						//status
+						//status_code
+						//var obj = JSON.parse(response.responseText);
+						console.log(response.responseText);
+					});
+					setTimeout(function(){ $('#loader').hide();
+			$('#screen').hide(); }, 1000);
+				}
+				
+			</script>
+			<form class="form" id="target" enctype="multipart/form-data" action="javascript:publish();">
+				<div class="form-group row">
+					<input type="" class="form-control" id="name" name="name" placeholder="Name" required>
+					
+				</div>
+				<div class="form-group row">
+				<input type="" class="form-control" id="count" type="number" min="1" max="1000" name="num_created" placeholder="Quantity" required>
+				</div>
+				<div class="form-group row">
+				<textarea type="" class="form-control" id="desc" placeholder="Description" rows="3" name="description" required></textarea>
+				</div>
+				<script>
+				$("#name").change(function(){
+				$('#token_name').html($("#name").val());
+				});
+				$("#desc").change(function(){
+				$('#token_desc').html($("#desc").val());
+				});	
+				$("#count").change(function(){
+				$('#token_count').html('0/'+$("#count").val());
+				});
+				</script>
+				
+				<div class="form-group row">
+				
+				<div class="custom-file">
+				
+				<script>
+				function readURL(input) {
+				if (input.files && input.files[0]) {
+				var reader = new FileReader();
+				reader.name = input.files[0].name;
+				
+				reader.onload = function (e) {
+				$('#image')
+				.attr('src', e.target.result)
+				.width("100%")
+				.height("100%");
+				$('.custom-file-label').text(e.target.name);
+				
+				};
+				
+				reader.readAsDataURL(input.files[0]);
+				}
+				}
+				</script>
+				
+				<input type='file' class="custom-file-input" placeholder="thumbnail" id='t_image' onchange="readURL(this);" name="token_image"/>
+				<label class="custom-file-label form-control" for="t_image">Choose file</label>
+				
+				</div>
+				
+				
+				</div>
+				
+				<div class="form-group row">
+				<div class="form-check disabled">
+				<input class="form-check-input" type="radio" name="exampleRadios" id="exampleRadios3" value="option3" checked>
+				<label class="form-check-label" for="exampleRadios3" >
+				Claimable by anyone
+				</label>
+				</div>				
+				</div>					
+				<div class="form-group row">
+				
+				<button type="submit" class="btn btn-primary">Publish</button>
+								<div id="loader" style="display: none; width: 20px; height: 20px; position: relative; margin: 10px;"></div>
+
+				</div>
+				</form>
+				
+				
+				</div>
+		
+		<div id="screen" style="display: none"></div>
+				<footer></footer>
+				</body>
+				
+				<script>
+				$(document).ready(function(){
+				$('[data-toggle="tooltip"]').tooltip(); 
+				});
+				$(window).scroll(function() {
+				if ($(document).scrollTop() > 50) {
+				$('header').addClass('shrink');
+				$('div.contain').addClass('shrink');
+				} else {
+				$('header').removeClass('shrink');
+				$('div.contain').removeClass('shrink');
+				
+				}
+				});
+				
+				</script>	
+				</html>
+								
