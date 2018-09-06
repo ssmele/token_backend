@@ -2,16 +2,17 @@ from functools import wraps
 from sqlite3 import Connection as SQLite3Connection
 
 from flask import g
-from marshmallow.exceptions import ValidationError
 from sqlalchemy import event
 from sqlalchemy.engine import Engine
-from sqlalchemy.exc import DBAPIError
 from sqlalchemy.sql import text
 
 from models import Sesh
 
 
 # Need this here as sqlite is a little lame and wont keep this across connections.
+from utils.utils import log_kv, LOG_ERROR, LOG_DEBUG
+
+
 @event.listens_for(Engine, "connect")
 def _set_sqlite_pragma(dbapi_connection, _):
     if isinstance(dbapi_connection, SQLite3Connection):
@@ -23,25 +24,32 @@ def _set_sqlite_pragma(dbapi_connection, _):
 def requires_db(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        g.sesh = Sesh()
-        return f(*args, **kwargs)
+        try:
+            g.sesh = Sesh()
+            return f(*args, **kwargs)
+        except Exception as e:
+            log_kv(LOG_ERROR, {'error': 'exception while establishing connection', 'exception': str(e)})
+            raise e
     return decorated_function
+
 
 class DataQuery:
 
+    sql_text = None
+    schema_out = None
+
     def __init__(self):
         self.sql_txt = text(self.sql_text)
-        self.schema_out = self.schema_out
 
     def execute(self, binds, sesh=None, close_connection=False):
         """
         Calls query and fetch's the first row will return None if no values are present.
         :param binds: Binds to add to the query.
-        :param schema_out: If row should be dumped to schemas before returning.
         :param sesh: If we are being provided a connection use it.
         :param close_connection: If true close connection before returning
         :return: First value of None.
         """
+        log_kv(LOG_DEBUG, {'message': 'executing query', 'sql_text': self.sql_text, 'binds': binds})
         try:
             sesh = sesh if sesh is not None else g.sesh
             res = sesh.execute(self.sql_text, binds)
@@ -51,17 +59,20 @@ class DataQuery:
                 sesh.close()
 
             return res.rowcount
-        except DBAPIError as e:
+        except Exception as e:
+            log_kv(LOG_ERROR, {'error': 'could not execute statement', 'exception': str(e)})
             raise e
 
     def execute_n_fetchone(self, binds, sesh=None, schema_out=True, close_connection=False):
         """
         Calls query and fetch's the first row will return None if no values are present.
         :param binds: Binds to add to the query.
+        :param sesh: The database session
         :param schema_out: If row should be dumped to schemas before returning.
         :param close_connection: If true close connection before returning
         :return: First value of None.
         """
+        log_kv(LOG_DEBUG, {'message': 'executing query', 'sql_text': self.sql_text, 'binds': binds})
         try:
             # Perform the selected query and try and get object off of it.
             sesh = sesh if sesh is not None else g.sesh
@@ -79,22 +90,26 @@ class DataQuery:
                 return self.schema_out.dump(rv)
             else:
                 # Else get original Datatype returned by SqlAlchemy.
-                return rv
+                row = {}
+                for key, val in zip(rv.keys(), rv):
+                    row[key] = str(val) if isinstance(val, (bytes, bytearray)) else val
+                return row
 
         # If we encounter an error return None
-        except DBAPIError:
-            return None
-        except ValidationError as e:
+        except Exception as e:
+            log_kv(LOG_ERROR, {'error': 'error executing query', 'exception': str(e)}, exception=True)
             return None
 
     def execute_n_fetchall(self, binds, sesh=None, schema_out=True, close_connection=False):
         """
         Querys and fetch's all rows from the query results.
         :param binds: Binds to use for query.
+        :param sesh: The database session to use
         :param schema_out: If row should be dumped to schemas before returning.
         :param close_connection: If true close connection before returning
         :return:
         """
+        log_kv(LOG_DEBUG, {'message': 'executing query', 'sql_text': self.sql_text, 'binds': binds})
         try:
             # Perform the selected query and try and get object off of it.
             sesh = sesh if sesh is not None else g.sesh
@@ -112,11 +127,15 @@ class DataQuery:
                 return self.schema_out.dump(rv, many=True)
             else:
                 # Else get original DataType returned by SqlAlchemy.
-                return rv
+                rows = []
+                for rv_row in rv:
+                    row = {}
+                    for key, val in zip(rv_row.keys(), rv_row):
+                        row[key] = str(val) if isinstance(val, (bytes, bytearray)) else val
+                    rows.append(row)
+                return rows
 
         # If we encounter an error return None
-        except DBAPIError:
+        except Exception as e:
+            log_kv(LOG_ERROR, {'error': 'error executing query', 'exception': str(e)}, exception=True)
             return None
-        except ValidationError:
-            return None
-

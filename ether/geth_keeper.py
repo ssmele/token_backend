@@ -1,3 +1,4 @@
+import os
 from binascii import hexlify, unhexlify
 from json import dumps, loads
 from uuid import uuid4
@@ -5,8 +6,6 @@ from uuid import uuid4
 from solc import compile_source
 from web3 import Web3, IPCProvider
 from web3.contract import ConciseContract
-
-# TODO: Should read from a config file
 from ether.contract_source import CONTRACT
 
 # To use correctly install python3 and set as interpreter
@@ -21,8 +20,11 @@ from ether.contract_source import CONTRACT
 #     geth --rinkeby --datadir=/usr/apps/Ethereum/rinkeby ipc --ipcapi admin,eth,miner,personal 2>>/usr/apps/EthLog.txt
 # To run console on existing node:    geth --rinkeby --datadir=/usr/apps/Ethereum attach
 
-IPC_LOCATION = '/usr/apps/Ethereum/rinkeby/geth.ipc'
-#IPC_LOCATION = '/home/stone/.ethereum/rinkeby/geth.ipc'
+
+# IPC_LOCATION = '/home/stone/.ethereum/rinkeby/geth.ipc'
+
+
+IPC_LOCATION = os.getenv('IPC_LOC', '/usr/apps/Ethereum/rinkeby/geth.ipc')
 
 ACCT_UNLOCK_DUR = 5
 MAX_GAS_PRICE = 500000000  # TODO: set back to 2000000000
