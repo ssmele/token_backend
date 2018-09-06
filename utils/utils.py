@@ -1,12 +1,14 @@
 import logging
 import os
 import traceback
+from datetime import datetime
 
-from flask import jsonify
+from flask import g, jsonify
 
 
 USE_ETH = True if os.getenv('ETH_GETS', 'False') == 'True' else False
-logging.basicConfig(format='LOG_%(levelname)s: %(message)s', filename='/tmp/log/toker.log', level=logging.DEBUG)
+logging.basicConfig(format='{time} LOG_%(levelname)s: %(message)s'.format(time=str(datetime.now())),
+                    filename='/tmp/log/toker.log', level=logging.DEBUG)
 
 
 LOG_DEBUG = logging.debug
@@ -27,6 +29,9 @@ def log_kv(log_level, data, exception=False):
     if exception:
         data['trace_back'] = traceback.format_exc()
 
+    if hasattr(g, 'log_id'):
+        data['request_id'] = g.log_id
+
     # Build the message to log and log it
     log_str = ''
     for key, val in data.items():
@@ -36,6 +41,8 @@ def log_kv(log_level, data, exception=False):
 
 # For some reason
 def success_response(resp_data=None, status="Success", status_code=0, http_code=200):
+    log_kv(LOG_DEBUG, {'message': 'about to send response', 'status_code': status_code, 'http_code': http_code,
+                       'status': status})
     try:
         resp_data = {} if not resp_data else resp_data
         resp = jsonify(success_response_dict(resp_data, status, status_code))
@@ -52,6 +59,8 @@ def success_response_dict(resp_data=None, status="Success", status_code=0):
 
 
 def error_response(status="Error", status_code=-1, http_code=400):
+    log_kv(LOG_WARNING, {'warning': 'returning error response', 'status': status, 'status_code': status_code,
+                         'http_code': http_code})
     try:
         resp = jsonify({'status': status, 'status_code': status_code})
         resp.status_code = http_code

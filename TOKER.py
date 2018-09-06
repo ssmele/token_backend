@@ -1,5 +1,6 @@
-from flask import Flask, render_template
-from flask import current_app
+from uuid import uuid1
+
+from flask import current_app, Flask, g, render_template, request
 from flask_cors import CORS
 from werkzeug.exceptions import HTTPException
 
@@ -7,7 +8,7 @@ from models import Sesh
 from models import db
 from utils.doc_utils import to_pretty_json
 from utils.setup_utils import load_config
-from utils.utils import success_response_dict, error_response
+from utils.utils import success_response_dict, error_response, log_kv, LOG_DEBUG, LOG_ERROR
 
 # Setting up flask application.
 app = Flask(__name__)
@@ -43,8 +44,16 @@ app.register_blueprint(explore_bp)
 app.register_blueprint(analytics_bp)
 
 
+@app.before_request
+def log_request():
+    g.log_id = str(uuid1())[:8]
+    log_kv(LOG_DEBUG, {'message': 'received request', 'method': request.method, 'headers': request.headers,
+                       'url': request.url, 'data': request.get_data()})
+
+
 @app.errorhandler(Exception)
 def handle_bad_request(e):
+    log_kv(LOG_ERROR, {'error': 'exception while processing request', 'exception': str(e)}, exception=True)
     if isinstance(e, HTTPException):
         return error_response(str(e), http_code=e.code)
     else:

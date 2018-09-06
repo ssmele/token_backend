@@ -28,7 +28,7 @@ def requires_db(f):
             g.sesh = Sesh()
             return f(*args, **kwargs)
         except Exception as e:
-            log_kv(LOG_ERROR, {'error': 'exception while establishing connection', 'exception': str(e)})
+            log_kv(LOG_ERROR, {'error': 'exception while establishing connection', 'exception': str(e)}, exception=True)
             raise e
     return decorated_function
 
@@ -60,7 +60,7 @@ class DataQuery:
 
             return res.rowcount
         except Exception as e:
-            log_kv(LOG_ERROR, {'error': 'could not execute statement', 'exception': str(e)})
+            log_kv(LOG_ERROR, {'error': 'could not execute statement', 'exception': str(e)}, exception=True)
             raise e
 
     def execute_n_fetchone(self, binds, sesh=None, schema_out=True, close_connection=False):
