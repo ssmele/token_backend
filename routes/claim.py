@@ -23,7 +23,7 @@ url_prefix = '/claim'
 @load_with_schema(ClaimRequest)
 @claim_docs.document(url_prefix, 'POST', 'Method to claim a token of of a contract.', input_schema=ClaimRequest)
 def claims(data):
-    results, msg = claim_token_for_user(data['con_id'], g.collector_info['c_id'], data.get('constraints', None), g.sesh)
+    results, msg = claim_token_for_user(data['con_id'], g.collector_info['c_id'], data.get('constraints', {}), g.sesh)
     if results:
         g.sesh.commit()
         return success_response(msg)
@@ -44,9 +44,7 @@ def claim_token_for_user(con_id, c_id, constraints, sesh):
     """
     try:
         # Check to see if this collector already has this token.
-        have_token_already = DoesCollectorOwnToken().execute_n_fetchone({'con_id': con_id, 'c_id': c_id},
-                                                                        sesh=sesh, schema_out=False)
-        if have_token_already:
+        if DoesCollectorOwnToken().execute_n_fetchone({'con_id': con_id, 'c_id': c_id}, schema_out=False):
             return False, 'User already has token'
 
         # Enforcing claim constraints..
