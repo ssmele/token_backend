@@ -1,6 +1,6 @@
 #!/usr/bin/python
 import sys
-sys.path.insert(0,'/usr/apps/token/backend/backend/')
+sys.path.insert(0, '/usr/apps/token/backend/backend/')
 from ether.geth_keeper import GethKeeper
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.engine import create_engine

@@ -22,7 +22,7 @@ from ether.contract_source import CONTRACT
 # To run console on existing node:    geth --rinkeby --datadir=/usr/apps/Ethereum attach
 
 IPC_LOCATION = '/usr/apps/Ethereum/rinkeby/geth.ipc'
-#IPC_LOCATION = '/home/stone/.ethereum/rinkeby/geth.ipc'
+# IPC_LOCATION = '/home/stone/.ethereum/rinkeby/geth.ipc'
 
 ACCT_UNLOCK_DUR = 5
 MAX_GAS_PRICE = 500000000  # TODO: set back to 2000000000

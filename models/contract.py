@@ -4,6 +4,7 @@ from flask import request
 from marshmallow import Schema, fields, post_dump
 
 from utils.db_utils import DataQuery
+from models.constraints import Constraints
 
 
 class ClaimTypes(Enum):
@@ -16,6 +17,8 @@ class ContractRequest(Schema):
     name = fields.Str(required=True)
     description = fields.Str(required=True)
     num_created = fields.Int(required=True)
+
+    constraints = fields.Nested(Constraints, required=False)
 
     doc_load_info = {
         'i_id': {'type': 'int', 'desc': 'i_id of the issuer that this contract should be deployed under.'},
@@ -59,6 +62,17 @@ class InsertToken(DataQuery):
     def __init__(self):
         self.sql_text = """
         INSERT INTO tokens(con_id, t_hash, status) values(:con_id, :tok_hash, 'N');
+        """
+
+        self.schema_out = None
+        super().__init__()
+
+
+class InsertUniqueCodeConstraint(DataQuery):
+
+    def __init__(self):
+        self.sql_txt = """
+        INSERT INTO unique_code_claim (con_id, code) values(:con_id, :code)
         """
 
         self.schema_out = None
@@ -139,3 +153,26 @@ def insert_bulk_tokens(num_to_create, contract_deets, sesh):
         InsertToken().execute(token_binds, sesh=sesh)
     return con_id
 
+
+def process_constraints(constraints, con_id):
+    if 'code_constraints' in constraints:
+        process_unique_code_constraints(constraints['code_constraints'], con_id)
+
+    if 'time_constraints' in constraints:
+        process_time_constraints(constraints['time_constraints'])
+
+    if 'location_constraints' in constraints:
+        process_location_constraints(constraints['location_constraints'])
+
+
+def process_unique_code_constraints(uc_constraints, con_id):
+    for uc in uc_constraints:
+        InsertUniqueCodeConstraint().execute({'con_id': con_id, 'code': uc['code']})
+
+
+def process_time_constraints(time_constraints):
+    pass
+
+
+def process_location_constraints(location_constraints):
+    pass

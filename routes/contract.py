@@ -3,7 +3,7 @@ from flask_restful import Api, Resource
 
 from ether.geth_keeper import GethException
 from models.contract import ContractRequest, ClaimTypes, GetContractByConID, \
-    GetContractByName, insert_bulk_tokens, GetContractsByIssuerID
+    GetContractByName, insert_bulk_tokens, GetContractsByIssuerID, process_constraints
 from models.issuer import GetIssuerInfo
 from routes import requires_geth
 from utils.db_utils import requires_db
@@ -60,8 +60,13 @@ class Contract(Resource):
                                                                     desc=data['description'],
                                                                     img_url=data['pic_location'],
                                                                     num_tokes=data['num_created'])
+
             # Insert into the database
-            insert_bulk_tokens(data['num_created'], data, g.sesh)
+            con_id = insert_bulk_tokens(data['num_created'], data, g.sesh)
+
+            # If constraints were passed in we need to process them.
+            if 'constraints' in data:
+                process_constraints(data['constraints'], con_id)
 
             g.sesh.commit()
             return success_response('Success in issuing token!', http_code=201)

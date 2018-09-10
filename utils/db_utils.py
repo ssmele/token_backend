@@ -27,6 +27,7 @@ def requires_db(f):
         return f(*args, **kwargs)
     return decorated_function
 
+
 class DataQuery:
 
     def __init__(self):
@@ -37,7 +38,6 @@ class DataQuery:
         """
         Calls query and fetch's the first row will return None if no values are present.
         :param binds: Binds to add to the query.
-        :param schema_out: If row should be dumped to schemas before returning.
         :param sesh: If we are being provided a connection use it.
         :param close_connection: If true close connection before returning
         :return: First value of None.
@@ -59,6 +59,7 @@ class DataQuery:
         Calls query and fetch's the first row will return None if no values are present.
         :param binds: Binds to add to the query.
         :param schema_out: If row should be dumped to schemas before returning.
+        :param sesh: session to use if provided.
         :param close_connection: If true close connection before returning
         :return: First value of None.
         """
@@ -93,6 +94,7 @@ class DataQuery:
         :param binds: Binds to use for query.
         :param schema_out: If row should be dumped to schemas before returning.
         :param close_connection: If true close connection before returning
+        :param sesh: session to use if provided.
         :return:
         """
         try:

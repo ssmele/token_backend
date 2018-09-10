@@ -41,7 +41,7 @@ class Issuer(Resource):
             data['i_hash'], data['i_priv_key'] = g.geth.create_account()
 
             # TODO: EXTEND THIS TO TAKE MORE VALUES FROM THE USER. ONLY HAVE TO CHANGE MARSHMALLOW OBEJCT. (HOPEFULLY)
-            issuer = create_issuer(data, g.sesh)
+            issuer = create_issuer(data)
             g.sesh.commit()
             return success_response({'jwt': generate_jwt(issuer)}, http_code=201)
         except GethException as ge:

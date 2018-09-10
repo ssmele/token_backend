@@ -4,7 +4,7 @@ from flask import Blueprint, g
 
 from ether.geth_keeper import GethException
 from models.claim import ClaimRequest, DoesCollectorOwnToken, GetTokenInfo, GetAvailableToken, SetToken
-from models.constraints import ValidateUniqueCodeConstraint, validate_time_constraints, validate_location_constraints
+from models.constraints import validate_uni_code_constraints, validate_time_constraints, validate_location_constraints
 from routes import load_with_schema, requires_geth
 from utils.db_utils import requires_db
 from utils.doc_utils import BlueprintDocumentation
@@ -23,7 +23,7 @@ url_prefix = '/claim'
 @load_with_schema(ClaimRequest)
 @claim_docs.document(url_prefix, 'POST', 'Method to claim a token of of a contract.', input_schema=ClaimRequest)
 def claims(data):
-    results, msg = claim_token_for_user(data['con_id'], g.collector_info['c_id'], g.sesh)
+    results, msg = claim_token_for_user(data['con_id'], g.collector_info['c_id'], data.get('constraints', None), g.sesh)
     if results:
         g.sesh.commit()
         return success_response(msg)
@@ -32,38 +32,41 @@ def claims(data):
         return error_response(msg)
 
 
-def claim_token_for_user(con_id, c_id, sesh, constraints):
+def claim_token_for_user(con_id, c_id, constraints, sesh):
     """ Attempts to claim a token for the given user
 
     :return:
     :param con_id: The contract_id of the token
     :param c_id: The collector_id of the collecting user
     :param sesh: The database session to use
+    :param constraints: Contraint information given by user.
     :return: True if the claim request was successful, False if otherwise
     """
-    have_token_already = DoesCollectorOwnToken().execute_n_fetchone({'con_id': con_id, 'c_id': c_id},
-                                                                    sesh=sesh, schema_out=False)
-    if have_token_already:
-        return False, 'User already has token'
-
     try:
+        # Check to see if this collector already has this token.
+        have_token_already = DoesCollectorOwnToken().execute_n_fetchone({'con_id': con_id, 'c_id': c_id},
+                                                                        sesh=sesh, schema_out=False)
+        if have_token_already:
+            return False, 'User already has token'
+
+        # Enforcing claim constraints..
+        # Unique Code Constraints.
+        if not validate_uni_code_constraints(con_id, constraints.get('code', None)):
+            return False, "Constraint Failed: Code provided does not match any codes required to claim this token."
+
+        # Time Constraints # TODO: Figure out how to compare the times.
+        # if not validate_time_constraints():
+        #    return False, 'Invalid Time'
+
+        # Location Claims # TODO: Figure out how to compare the distances.
+        # if not validate_location_constraints():
+        #    return False, 'Invalid Location'
+
         # Make sure a token is available and that it has info
         avail_token = GetAvailableToken().execute_n_fetchone({'con_id': con_id}, sesh=sesh)
         token_info = GetTokenInfo().execute_n_fetchone({'con_id': con_id, 'c_id': c_id}, sesh=sesh)
         if not avail_token and not token_info:
             return False, 'No available tokens'
-
-        # TODO: FINISH AND TEST THESE METHODS! See about making them sql statements instead of server logic. :)
-        # Enforcing claim constraints.
-        # Unique Code Constraints. # TODO: Need to solidify logic for this one.
-        if not ValidateUniqueCodeConstraint().execute_n_fetchone({'con_id': con_id, 'unique_code': constraints['uc']}):
-            return False, 'Invalid Code'
-        # Time Constraints # TODO: Figure out how to compare the times.
-        if not validate_time_constraints():
-            return False, 'Invalid Time'
-        # Location Claims # TODO: Figure out how to compare the distances.
-        if not validate_location_constraints():
-            return False, 'Invalid Location'
 
         # Claim the token and update the database
         tx_hash = g.geth.claim_token(token_info['con_addr'], token_info['con_abi'], token_info['c_hash'],
@@ -75,6 +78,6 @@ def claim_token_for_user(con_id, c_id, sesh, constraints):
         if rows_updated == 1:
             return True, 'Token has been claimed!'
     except GethException as e:
-        return False, 'GETH !!!' + e.exception
+        return False, 'Error with Ethereum Network please try again soon.' + e.exception
     except Exception as e:
         return False, str(e) + traceback.format_exc()

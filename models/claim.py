@@ -1,11 +1,19 @@
 from marshmallow import Schema, fields
+from models.constraints import validate_code
 
 from utils.db_utils import DataQuery
 
 
-# ------------------------------SCHEMAS-------------------------------
+class ClaimConstraintRequest(Schema):
+    code = fields.Str(required=False, validate=validate_code)
+    time = fields.DateTime(required=False)
+    location = fields.Number(required=False)
+
+
 class ClaimRequest(Schema):
     con_id = fields.Int(required=True)
+
+    constraints = fields.Nested(ClaimConstraintRequest, required=False)
 
     doc_load_info = {
         'con_id': {'type': 'int', 'desc': 'con_id of contract in which you want to claim a token from.'},

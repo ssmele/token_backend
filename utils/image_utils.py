@@ -22,7 +22,7 @@ def save_file(file, folder, tag1):
         new_file_name = "{}_{}.{}".format(tag1, uuid1(), file_type)
 
         # Generate the full path of where to save the file.
-        file_save_path = os.path.join(*[current_app.root_path,'PICTURES',folder, new_file_name])
+        file_save_path = os.path.join(*[current_app.root_path, 'PICTURES', folder, new_file_name])
 
         # Save the file and return the new filename for retrieval if needed later.
         file.save(file_save_path)
