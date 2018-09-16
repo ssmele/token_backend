@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en" >
+	<head>
+		<title>T o k e n</title>
+		<meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+		
+		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"></script>
+		<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
+		<link rel="stylesheet" type="text/css" href="{{ url_for('static',filename='css/main.css') }}" />
+		<link rel="stylesheet" type="text/css" href="{{ url_for('static',filename='css/loader.css') }}" />
+		
+	</head>
+	<script>
+		var login = true;
+		
+		function s(){
+			login = false;
+			$('#repassword').attr('required');
+			$('#email').attr('required');
+			$("#signmeup").hide();
+			$("#logmein").show();			
+			$("#repassword").show();
+			$("#email").show();
+			$('button').text("Sign Up");
+		}
+		function l(){
+			login = true;
+			$('#repassword').removeAttr('required');		
+			$('#email').removeAttr('required');
+			$("#logmein").hide();
+			$("#signmeup").show();
+			$("#repassword").hide();
+			$("#email").hide();
+			$('button').text("Sign In");
+		}
+		var url = "167.99.26.0:80";
+		// var url = "localhost:8088";
+		
+		function form()	{
+			$('#loader').show();
+			$('#screen').show();
+			if(login){
+				var email = $('#username').val();
+				var password = $('#password').val();
+				$.ajaxSetup({
+					headers: {
+						'Authorization': document.cookie
+					}
+				});
+				$.post(
+				"http://"+url+"/login/issuer",
+				JSON.stringify({"username":email,"password":password}),
+				function(data,status){				
+					
+					if(status == "success"){
+						$(".wave").animate({opacity:0},100);
+						document.cookie = data.resp_data.jwt;
+						console.log(document.cookie); // read
+						setTimeout(function(){
+							window.location.href = "home";
+						},1000);
+						
+						
+					}
+				},
+				'json')
+				.fail(function(response) {
+					//status
+					//status_code
+					var obj = JSON.parse(response.responseText);
+					console.log(obj.status_code);
+					
+					if(obj.status_code == -1){
+						$("#error").text("Incorrect username and/or password.");
+						}else{
+						$("#error").text("Something went wrong, please try again.");					
+					}
+				});
+				//event.preventDefault();
+				}else{
+				
+				
+				
+				var email = $('#username').val();
+				var address = $('#email').val();
+				
+				var password = $('#password').val();
+				var repassword = $('#repassword').val();
+				
+				if(password != repassword){
+					$("#error").text("Passwords do not match!");
+					$('#loader').hide();
+			$('#screen').hide(); 
+					return
+				}
+				$.ajaxSetup({
+					headers: {
+						'Authorization': document.cookie
+					}
+				});
+				$.post(
+				"http://"+url+"/issuer",
+				JSON.stringify({"username":email,"password":password}),
+				function(data,status){
+					console.log(data);
+					if(data.status_code == -1){
+						$("#error").text("Username already exists.");
+					}
+					
+					if(status == "success"){
+						document.cookie = data.resp_data.jwt;
+						console.log(document.cookie); // read
+						$("#target").hide();
+						$("#address").html(address); 
+						$("#emailed").show();	
+					}
+				},
+				'json')
+				.fail(function(response) {
+					//status
+					//status_code
+					var obj = JSON.parse(response.responseText);
+					console.log(response.responseText)
+					$("#error").text("Something went wrong, please try again.");
+					
+				})
+			}
+			setTimeout(function(){ $('#loader').hide();
+			$('#screen').hide(); }, 500);
+
+			
+		};
+		
+	</script>
+	<body class="text-center" >
+		<div class="wave">
+			<div class="shadow">				
+				<div class="contain">
+					<img src="{{ url_for('static',filename='images/tokentitlelight.png')}}" alt="" height="180" data-toggle="tooltip" data-placement="right" title="Alpha 1.0"></img>
+					<p id="slogan"><i>Your experiences, made timeless.</i></p>
+					<form class="form-signin" id="target" action="javascript:form();">
+						
+						<input type="username" id="username" class="form-control" value="" placeholder="Username" required>
+						<input type="email" id="email" class="form-control" value="" placeholder="Email" style="display:none;">
+						
+						<input type="password" id="password" class="form-control" placeholder="Password" required>
+						<input type="password" id="repassword" class="form-control" placeholder="Re-enter password" style="display:none;">
+						
+						
+						<button id="submit" class="btn btn-lg btn-primary btn-block" type="submit">Sign In</button>
+						
+						<a id="signmeup" onClick="s()" href="#">New around here?</a>
+						<a id="logmein" onClick="l()" href="#" style="display:none;">Already have an account?</a>
+						<div id="error"></div>
+						
+					</form>
+					<div id="emailed" style="display: none">
+						<h2>Success!</h2>
+						An email has been sent to <a id="address"></a>.<br> If you did not receive an email after a few seconds,<br>
+						check your spam folder or click
+						<a onClick="resend()" href="#">here</a> to resend.
+						
+					</div>
+					
+				</div>
+			</div>
+		</div>
+		<div id="loader" style="display: none"></div>
+		
+		<div id="screen" style="display: none"></div>
+		
+		<script>
+			$(document).ready(function(){
+				$('[data-toggle="tooltip"]').tooltip(); 
+			});					
+		</script>	
+	</body>
+	
+	
+</html>

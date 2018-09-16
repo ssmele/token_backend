@@ -134,11 +134,24 @@ class GetAllContracts(DataQuery):
         super().__init__()
 
 
+class GetAllContractsForEth(DataQuery):
+    def __init__(self):
+        self.sql_text = """
+            SELECT c.con_id, c.i_id, c.con_tx, c.con_addr, c.con_abi, i.username
+            FROM contracts c, issuers i 
+            WHERE c.i_id = i.i_id;
+        """
+
+        self.schema_out = None
+        super().__init__()
+
+
 def insert_bulk_tokens(num_to_create, contract_deets, sesh):
     """
     This method inserts the original token contract given the deets and creates the tokens related to it.
     :param num_to_create: Number of tokens to create off this contract.
     :param contract_deets: Details for contract creation.
+    :param sesh: The database session
     :return:
     """
     # Insert the contract.
