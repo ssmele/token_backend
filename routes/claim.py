@@ -21,7 +21,8 @@ url_prefix = '/claim'
 @requires_geth
 @requires_db
 @load_with_schema(ClaimRequest)
-@claim_docs.document(url_prefix, 'POST', 'Method to claim a token of of a contract.', input_schema=ClaimRequest)
+@claim_docs.document(url_prefix, 'POST', 'Method to claim a token of of a contract.',
+                     input_schema=ClaimRequest, req_c_jwt=True)
 def claims(data):
     results, msg = claim_token_for_user(data['con_id'], g.collector_info['c_id'], data.get('constraints', {}), g.sesh)
     if results:

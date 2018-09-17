@@ -28,7 +28,7 @@ from routes.collector import collector_bp, collector_docs
 from routes.issuer import issuer_bp, issuer_docs
 from routes.ping import ping, ping_docs
 from routes.claim import claim_bp, claim_docs
-from routes.contract import contract_bp, contract_docs
+from routes.contract import contract_bp, contract_docs, constraint_bp
 from routes.login import login_bp, login_docs
 from routes.explore import explore_bp, explore_docs
 from routes.analytics import analytics_bp
@@ -44,6 +44,7 @@ app.register_blueprint(login_bp)
 app.register_blueprint(explore_bp)
 app.register_blueprint(analytics_bp)
 app.register_blueprint(frontend_bp)
+app.register_blueprint(constraint_bp)
 
 
 @app.before_request

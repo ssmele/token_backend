@@ -30,7 +30,8 @@ def get_collector_by_username(username):
 
 @collector_bp.route(url_prefix + '/collection', methods=['GET'])
 @collector_docs.document(url_prefix + '/collection', 'GET',
-                         'This method returns a list of tokens in the collectors collection. Needs JWT.')
+                         'This method returns a list of tokens in the collectors collection.',
+                         req_c_jwt=True)
 @requires_db
 @verify_collector_jwt
 def get_collection():
@@ -68,7 +69,8 @@ class Collector(Resource):
     @requires_db
     @collector_docs.document(url_prefix, 'GET',
                              "Method to retrieve collector information. Requires jwt from login/creation account.",
-                             url_params={'c_id': 'c_id of collector to search for.'})
+                             url_params={'c_id': 'c_id of collector to search for.'},
+                             req_c_jwt=True)
     def get(self):
         collector = GetCollectorByCID().execute_n_fetchone({'c_id': g.collector_info['c_id']}, close_connection=True)
         if collector:

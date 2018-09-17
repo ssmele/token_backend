@@ -13,15 +13,20 @@ class BlueprintDocumentation:
 
     class Endpoint:
 
-        def __init__(self, endpoint, endpoint_type, description, input_schema=None, output_schema=None, url_params=None):
+        def __init__(self, endpoint, endpoint_type, description,
+                     input_schema=None, output_schema=None, url_params=None,
+                     req_i_jwt=False, req_c_jwt=False):
             self.endpoint = endpoint
             self.endpoint_type = endpoint_type
             self.description = description
             self.input_schema = input_schema.doc_load_info if input_schema is not None else None
             self.output_schema = output_schema.doc_dump_info if output_schema is not None else None
             self.url_params = url_params
+            self.req_i_jwt = req_i_jwt
+            self.req_c_jwt = req_c_jwt
 
-    def document(self, endpoint, endpoint_type, description, input_schema=None, output_schema=None, url_params=None):
+    def document(self, endpoint, endpoint_type, description, input_schema=None, output_schema=None, url_params=None,
+                 req_i_jwt=False, req_c_jwt=False):
         """
         This method is used for documenting blueprint endpoints.
         :param endpoint: Name of endpoint.
@@ -34,7 +39,8 @@ class BlueprintDocumentation:
         """
         def decorator(endpoint_func):
             self.registered_endpoints[endpoint] = self.Endpoint(endpoint, endpoint_type, description,
-                                                                input_schema, output_schema, url_params)
+                                                                input_schema, output_schema, url_params,
+                                                                req_i_jwt, req_c_jwt)
             return endpoint_func
         return decorator
 

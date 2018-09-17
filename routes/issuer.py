@@ -54,7 +54,8 @@ class Issuer(Resource):
     @verify_issuer_jwt
     @requires_db
     @issuer_docs.document(url_prefix, 'GET',
-                          "Method to retrieve issuer information. Requires jwt from login/creation account.")
+                          "Method to retrieve issuer information. Requires jwt from login/creation account.",
+                          req_i_jwt=True)
     def get(self):
         issuer = GetIssuerByIID().execute_n_fetchone({'i_id': g.issuer_info['i_id']}, close_connection=True)
         if issuer:

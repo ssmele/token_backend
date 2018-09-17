@@ -27,7 +27,9 @@ class ContractRequest(Schema):
         'i_id': {'type': 'int', 'desc': 'i_id of the issuer that this contract should be deployed under.'},
         'name': {'type': 'string', 'desc': 'Name for the new token contract.'},
         'description': {'type': 'string', 'desc': 'Description of the new token contract being deployed'},
-        'num_created': {'type': 'int', 'desc': 'desired password for collector creation.'}
+        'num_created': {'type': 'int', 'desc': 'desired password for collector creation.'},
+        'constraints': Constraints.doc_load_info,
+        'INFO (NOT APART OF REQUEST)' : {'time_format': CONSTRAINT_DATETIME_FORMAT, 'radius metric': 'meters'}
     }
 
 
@@ -47,6 +49,12 @@ class GetContractResponse(Schema):
     @post_dump
     def add_picture_path(self, data):
         data['pic_location'] = request.url_root + 'contract/image=' + data['pic_location']
+
+    doc_dump_info = {
+        'con_id': '1', 'i_id': '2', 'con_hash': "", 'name': '', 'description': '', 'num_created': 20,
+        'pic_location': 'url to pic', 'status': 'status of contract',
+        'constraints': Constraints.doc_load_info
+    }
 
 
 class InsertNewContract(DataQuery):
