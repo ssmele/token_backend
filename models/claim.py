@@ -1,13 +1,13 @@
 from marshmallow import Schema, fields
-from models.constraints import validate_code
+from models.constraints import validate_code, CONSTRAINT_DATETIME_FORMAT, LocationConstraint
 
 from utils.db_utils import DataQuery
 
 
 class ClaimConstraintRequest(Schema):
     code = fields.Str(required=False, validate=validate_code)
-    time = fields.DateTime(required=False)
-    location = fields.Number(required=False)
+    time = fields.DateTime(CONSTRAINT_DATETIME_FORMAT, required=False)
+    location = fields.Nested(LocationConstraint, only=['latitude', 'longitude'], required=False)
 
 
 class ClaimRequest(Schema):

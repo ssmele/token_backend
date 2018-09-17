@@ -1,15 +1,17 @@
-from marshmallow import Schema, fields
+from datetime import datetime
+
+import mpu
+from marshmallow import Schema, fields, pre_dump
 from marshmallow.validate import ValidationError
 
 from utils.db_utils import DataQuery
 
+CONSTRAINT_DATETIME_FORMAT = '%Y-%m-%d %I:%M:%S'
+CODE_LENGTH = 6
+
 
 class ConstraintBase(Schema):
     con_id = fields.Int(required=True)
-
-
-# TODO: Need to move this so it also validates the input.
-CODE_LENGTH = 6
 
 
 def validate_code(code):
@@ -27,20 +29,28 @@ class UniqueCodeConstraint(ConstraintBase):
 
 class TimeConstraint(ConstraintBase):
     tc_id = fields.Int(required=True)
-    start = fields.DateTime(required=True)
-    end = fields.DateTime(required=True)
+    start = fields.DateTime(CONSTRAINT_DATETIME_FORMAT, required=True)
+    end = fields.DateTime(CONSTRAINT_DATETIME_FORMAT, required=True)
+
+    # Need this or parsing issue occurs during database queries with results that contain Scheme.
+    @pre_dump
+    def handle_datetime(self, data):
+        data['start'] = datetime.strptime(data['start'], CONSTRAINT_DATETIME_FORMAT)
+        data['end'] = datetime.strptime(data['end'], CONSTRAINT_DATETIME_FORMAT)
 
 
 class LocationConstraint(ConstraintBase):
     lc_id = fields.Int(required=True)
     latitude = fields.Number(required=True)
     longitude = fields.Number(required=True)
+    radius = fields.Number(required=True)
 
 
 class Constraints(Schema):
     code_constraints = fields.Nested(UniqueCodeConstraint, only=['code'], required=False, many=True)
     time_constraints = fields.Nested(TimeConstraint, only=['start', 'end'], required=False, many=True)
-    location_constraints = fields.Nested(LocationConstraint, only=['latitude', 'longitude'], required=False, many=True)
+    location_constraints = fields.Nested(LocationConstraint, only=['latitude', 'longitude', 'radius'],
+                                         required=False, many=True)
 
 
 class GetUniqueCodeConstraints(DataQuery):
@@ -59,7 +69,7 @@ class GetTimeConstraints(DataQuery):
 
     def __init__(self):
         self.sql_text = """
-        select * 
+        select con_id, tc_id, start, end
         from time_claim 
         where con_id = :con_id
         """
@@ -79,9 +89,52 @@ class GetLocationConstraints(DataQuery):
         super().__init__()
 
 
+class InsertUniqueCodeConstraint(DataQuery):
+
+    def __init__(self):
+        self.sql_text = """
+        INSERT INTO unique_code_claim(con_id, code) values(:con_id, :code);
+        """
+
+        self.schema_out = None
+        super().__init__()
+
+
+class InsertLocationConstraint(DataQuery):
+
+    def __init__(self):
+        self.sql_text = """
+        INSERT INTO location_claim (con_id, latitude, longitude, radius) 
+        values(:con_id, :latitude, :longitude, :radius);
+        """
+
+        self.schema_out = None
+        super().__init__()
+
+
+class InsertTimeConstraint(DataQuery):
+
+    def __init__(self):
+        self.sql_text = """
+        INSERT INTO time_claim(con_id, start, end) values(:con_id, :start, :end) 
+        """
+
+        self.schema_out = None
+        super().__init__()
+
+
 def validate_uni_code_constraints(con_id, code):
+    """
+    This method validates that the collector has one of the unique codes required to claim this token.
+    :param con_id: con_id of contract to check constraints against.
+    :param code: code given by collector.
+    :return: Boolean if validation is successful
+    """
     # Get all possible unique code constraints
     ucs = GetUniqueCodeConstraints().execute_n_fetchall({'con_id': con_id})
+
+    if code is None:
+        return False
 
     # If there are not codes associated with this contract then we are good.
     if len(ucs) == 0:
@@ -96,35 +149,83 @@ def validate_uni_code_constraints(con_id, code):
 
 
 def validate_time_constraints(con_id, time):
+    """
+    This method validates that the collector is attempting a claim at a valid time.
+    :param con_id: con_id of contract to check constraints against.
+    :param time: time of attempted claim.
+    :return: Boolean if validation is successful
+    """
     # Get all possible time constraints.
-    time_constraints = GetTimeConstraints().execute_n_fetch_all({'con_id': con_id})
+    time_constraints = GetTimeConstraints().execute_n_fetchall({'con_id': con_id}, load_out=True)
 
     if len(time_constraints) == 0:
         return True
 
+    if time is None:
+        return False
+
     # Go through and see if we find one. # BEAUTIFUL FIRST MATCH EXPRESSION.
-    valid_times = next((t for t in time_constraints if t.start < time > t.end), None)
+    valid_times = next((t for t in time_constraints if t['start'] < time < t['end']), None)
     if valid_times:
         return True
     else:
         return False
 
 
-def validate_location_constraints(con_id, lat, long):
-    # Get all possible location contraints.
-    location_constraints = GetLocationConstraints().execute_n_fetch_all({'con_id': con_id})
+def validate_location_constraints(con_id, loc_constraint):
+    """
+    This method validates that the given location is near enough one of the location constraints.
+    :param con_id: con_id of contract to check constraints against.
+    :param loc_constraint: location of collector
+    :return: Boolean if validation is successful
+    """
+    # Get all possible location constraints.
+    location_constraints = GetLocationConstraints().execute_n_fetchall({'con_id': con_id})
 
     if len(location_constraints) == 0:
         return True
 
-    # See if find a match.
-    valid_locations = next((l for l in location_constraints if near_enough(l.longitude, l.latitude, lat, long)), None)
+    if not loc_constraint:
+        return False
 
+    # See if find a match.
+    valid_locations = next((l for l in location_constraints if near_enough(l['latitude'], l['longitude'],
+                                                                           loc_constraint['latitude'],
+                                                                           loc_constraint['longitude'],
+                                                                           l['radius'])),
+                           None)
     if valid_locations:
         return True
     else:
         return False
 
 
-def near_enough(dest_long, dest_lat, g_lat, g_long):
-    pass
+def near_enough(dest_lat, dest_long, g_lat, g_long, radius):
+    """
+    Takes the distance between two pairs of latitude, and longitude to see if they are close enough together.
+    :param dest_lat: lat of one pair.
+    :param dest_long: long of one pair.
+    :param g_lat: lat of another pair.
+    :param g_long: long of another pair.
+    :param radius: maximum distance between the two points for them to be considered near.
+    :return: Boolean
+    """
+    if mpu.haversine_distance((dest_lat, dest_long), (g_lat, g_long)) <= radius:
+        return True
+    else:
+        return False
+
+
+def get_all_constraints(con_id):
+    """
+    This method gets all the constraints associated with a given contract.
+    :param con_id: con_id to identify the contract.
+    :return: a python dictionary of the constraints.
+    """
+    ucs = GetUniqueCodeConstraints().execute_n_fetchall({'con_id': con_id})
+    time_constraints = GetTimeConstraints().execute_n_fetchall({'con_id': con_id})
+    location_constraints = GetLocationConstraints().execute_n_fetchall({'con_id': con_id})
+
+    return Constraints().dump({'location_constraints': location_constraints,
+                               'time_constraints': time_constraints,
+                               'code_constraints': ucs})

@@ -2,9 +2,12 @@ from enum import Enum
 
 from flask import request
 from marshmallow import Schema, fields, post_dump
+from sqlalchemy.exc import SQLAlchemyError
 
 from utils.db_utils import DataQuery
-from models.constraints import Constraints
+from utils.utils import log_kv, LOG_ERROR
+from models.constraints import Constraints, InsertLocationConstraint, \
+    InsertTimeConstraint, InsertUniqueCodeConstraint, CONSTRAINT_DATETIME_FORMAT
 
 
 class ClaimTypes(Enum):
@@ -62,17 +65,6 @@ class InsertToken(DataQuery):
     def __init__(self):
         self.sql_text = """
         INSERT INTO tokens(con_id, t_hash, status) values(:con_id, :tok_hash, 'N');
-        """
-
-        self.schema_out = None
-        super().__init__()
-
-
-class InsertUniqueCodeConstraint(DataQuery):
-
-    def __init__(self):
-        self.sql_txt = """
-        INSERT INTO unique_code_claim (con_id, code) values(:con_id, :code)
         """
 
         self.schema_out = None
@@ -168,24 +160,65 @@ def insert_bulk_tokens(num_to_create, contract_deets, sesh):
 
 
 def process_constraints(constraints, con_id):
+    """
+    This method handles all the processing of the constraints passed in by issuers.
+    :param constraints: Constraints to process.
+    :param con_id: con_id of contract to associated constraints with.
+    :return: None
+    """
     if 'code_constraints' in constraints:
         process_unique_code_constraints(constraints['code_constraints'], con_id)
-
     if 'time_constraints' in constraints:
-        process_time_constraints(constraints['time_constraints'])
-
+        process_time_constraints(constraints['time_constraints'], con_id)
     if 'location_constraints' in constraints:
-        process_location_constraints(constraints['location_constraints'])
+        process_location_constraints(constraints['location_constraints'], con_id)
 
 
 def process_unique_code_constraints(uc_constraints, con_id):
+    """
+    This method inserts all of the code constraints into the database associated to given con_id.
+    :param uc_constraints: codes to add
+    :param con_id: con_id of contract to associate constraints to.
+    :return: None
+    """
     for uc in uc_constraints:
-        InsertUniqueCodeConstraint().execute({'con_id': con_id, 'code': uc['code']})
+        try:
+            InsertUniqueCodeConstraint().execute({'con_id': con_id, 'code': uc['code']})
+        except SQLAlchemyError as e:
+            log_kv(LOG_ERROR, {'message': 'Exception trying to add code constraint.',
+                               'contract_con_id': con_id, 'exception': str(e), 'constraints': uc_constraints})
+            continue
 
 
-def process_time_constraints(time_constraints):
-    pass
+def process_time_constraints(time_constraints, con_id):
+    """
+    This method inserts all of the time constraints into the database associated to given con_id.
+    :param time_constraints: time constraints to add.
+    :param con_id: con_id of contract to associate constraints to.
+    :return:
+    """
+    for tc in time_constraints:
+        try:
+            InsertTimeConstraint().execute({'con_id': con_id, 'start': tc['start'].strftime(CONSTRAINT_DATETIME_FORMAT),
+                                            'end': tc['end'].strftime(CONSTRAINT_DATETIME_FORMAT)})
+        except SQLAlchemyError as e:
+            log_kv(LOG_ERROR, {'message': 'Exception trying to add time constraint.', 'contract_con_id': con_id,
+                               'exception': str(e), 'constraints': time_constraints})
+            continue
 
 
-def process_location_constraints(location_constraints):
-    pass
+def process_location_constraints(location_constraints, con_id):
+    """
+    This method inserts all of the location constraints into the database associated to given con_id.
+    :param location_constraints: location constraints to add.
+    :param con_id: con_id of contract to associate constraints to.
+    :return:
+    """
+    for lc in location_constraints:
+        try:
+            InsertLocationConstraint().execute({'con_id': con_id, 'latitude': lc['latitude'],
+                                                'longitude': lc['longitude'], 'radius': lc['radius']})
+        except SQLAlchemyError as e:
+            log_kv(LOG_ERROR, {'message': 'Exception trying to add location constraint.', 'contract_con_id': con_id,
+                               'exception': str(e), 'constraints': location_constraints})
+            continue

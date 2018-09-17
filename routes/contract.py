@@ -3,7 +3,8 @@ from flask_restful import Api, Resource
 
 from ether.geth_keeper import GethException
 from models.contract import ContractRequest, ClaimTypes, GetContractByConID, \
-    GetContractByName, insert_bulk_tokens, GetContractsByIssuerID, process_constraints
+    GetContractByName, GetContractsByIssuerID, process_constraints, insert_bulk_tokens
+from models.constraints import get_all_constraints
 from models.issuer import GetIssuerInfo
 from routes import requires_geth
 from utils.db_utils import requires_db
@@ -32,7 +33,7 @@ class Contract(Resource):
 
         :return: HTTP response
         """
-        data = ContractRequest().load(request.form)
+        data = ContractRequest().loads(request.form['json_data'])
         if data['num_created'] > MAX_TOKEN_LIMIT:
             return error_response("Could not create a token contract with that many individual token. Max is {}"
                                   .format(MAX_TOKEN_LIMIT))
@@ -110,8 +111,10 @@ def server_image(image):
                         "Method to retrieve contract information by con_id. Requires issuer verification.")
 def get_contract_by_con_id(con_id):
     contract = GetContractByConID().execute_n_fetchone({'con_id': con_id}, close_connection=True)
+    constraints = get_all_constraints(con_id)
     if contract:
-        return success_response(contract)
+        contract.update({'constraints': constraints})
+        return success_response({'contract': contract})
     else:
         return error_response(status="Couldn't retrieve contract with that con_id", status_code=-1, http_code=200)
 

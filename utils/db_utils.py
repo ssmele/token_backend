@@ -88,20 +88,16 @@ class DataQuery:
 
             if schema_out:
                 # If we got an object then we need to try and parse it into an python dict.
-                return self.schema_out.dump(rv)
+                return self.schema_out.dump(dict(rv))
             else:
-                # Else get original Datatype returned by SqlAlchemy.
-                row = {}
-                for key, val in zip(rv.keys(), rv):
-                    row[key] = str(val) if isinstance(val, (bytes, bytearray)) else val
-                return row
+                return dict(rv)
 
         # If we encounter an error return None
         except Exception as e:
             log_kv(LOG_ERROR, {'error': 'error executing query', 'exception': str(e)}, exception=True)
             return None
 
-    def execute_n_fetchall(self, binds, sesh=None, schema_out=True, close_connection=False):
+    def execute_n_fetchall(self, binds, sesh=None, schema_out=True, close_connection=False, load_out=False):
         """
         Querys and fetch's all rows from the query results.
         :param binds: Binds to use for query.
@@ -124,18 +120,14 @@ class DataQuery:
             if close_connection:
                 sesh.close()
 
+            # If we got an object then we need to try and parse it into an python dict.
             if schema_out:
-                # If we got an object then we need to try and parse it into an python dict.
-                return self.schema_out.dump(rv, many=True)
+                if load_out:
+                    return self.schema_out.load(list(map(dict, rv)), many=True)
+                else:
+                    return self.schema_out.dump(list(map(dict, rv)), many=True)
             else:
-                # Else get original DataType returned by SqlAlchemy.
-                rows = []
-                for rv_row in rv:
-                    row = {}
-                    for key, val in zip(rv_row.keys(), rv_row):
-                        row[key] = str(val) if isinstance(val, (bytes, bytearray)) else val
-                    rows.append(row)
-                return rows
+                return list(map(dict, rv))
 
         # If we encounter an error return None
         except Exception as e:

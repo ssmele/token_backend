@@ -66,7 +66,7 @@ def handle_bad_request(e):
 @app.route('/docs')
 def docs():
     """
-    This endpoint simple servers the documenation to the user. The universe is gonna end from heat death anyway f the
+    This endpoint simple servers the documentation to the user. The universe is gonna end from heat death anyway f the
     rules and smoke dope for life.
     :return:
     """

@@ -47,18 +47,13 @@ def claim_token_for_user(con_id, c_id, constraints, sesh):
         if DoesCollectorOwnToken().execute_n_fetchone({'con_id': con_id, 'c_id': c_id}, schema_out=False):
             return False, 'User already has token'
 
-        # Enforcing claim constraints..
-        # Unique Code Constraints.
+        # Enforcing claim constraints.
         if not validate_uni_code_constraints(con_id, constraints.get('code', None)):
             return False, "Constraint Failed: Code provided does not match any codes required to claim this token."
-
-        # Time Constraints # TODO: Figure out how to compare the times.
-        # if not validate_time_constraints():
-        #    return False, 'Invalid Time'
-
-        # Location Claims # TODO: Figure out how to compare the distances.
-        # if not validate_location_constraints():
-        #    return False, 'Invalid Location'
+        if not validate_time_constraints(con_id, constraints.get('time', None)):
+            return False, 'Constraint Failed: This token is unclaimable at this time.'
+        if not validate_location_constraints(con_id, constraints.get('location', None)):
+            return False, 'Constraint Failed: Not within the appropriate location to obtain this token.'
 
         # Make sure a token is available and that it has info
         avail_token = GetAvailableToken().execute_n_fetchone({'con_id': con_id}, sesh=sesh)
@@ -67,8 +62,8 @@ def claim_token_for_user(con_id, c_id, constraints, sesh):
             return False, 'No available tokens'
 
         # Claim the token and update the database
-        tx_hash = g.geth.claim_token(token_info['con_addr'], token_info['con_abi'], token_info['c_hash'],
-                                     avail_token['t_id'])
+        tx_hash = g.geth.claim_token(token_info['con_addr'], token_info['con_abi'],
+                                     token_info['c_hash'], avail_token['t_id'])
         rows_updated = SetToken().execute(
             {'con_id': con_id, 't_hash': tx_hash, 't_id': avail_token['t_id'], 'c_id': c_id}, sesh=sesh)
 

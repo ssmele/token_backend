@@ -32,6 +32,7 @@ CREATE TABLE location_claim(
   con_id INTEGER,
   latitude REAL,
   longitude REAL,
+  radius REAL,
   FOREIGN KEY (con_id) REFERENCES contracts(con_id)
 )
 
