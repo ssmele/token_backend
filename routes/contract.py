@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from flask import Blueprint, g, request
 from flask_restful import Api, Resource
 
@@ -62,6 +64,9 @@ class Contract(Resource):
         data.update({'pic_location': file_location})
 
         try:
+            # Get the received constraints in array format for the smart contract
+            code_constraints, date_constraints, loc_constraints = self.get_contraints(data)
+
             # Issue the contract on the ETH network
             issuer = GetIssuerInfo().execute_n_fetchone(binds={'i_id': g.issuer_info['i_id']})
             data['con_tx'], data['con_abi'] = g.geth.issue_contract(issuer['i_hash'],
@@ -69,7 +74,10 @@ class Contract(Resource):
                                                                     name=data['name'],
                                                                     desc=data['description'],
                                                                     img_url=data['pic_location'],
-                                                                    num_tokes=data['num_created'])
+                                                                    num_tokes=data['num_created'],
+                                                                    code_reqs=code_constraints,
+                                                                    date_reqs=date_constraints,
+                                                                    loc_reqs=loc_constraints)
 
             # Insert into the database
             con_id = insert_bulk_tokens(data['num_created'], data, g.sesh)
@@ -87,6 +95,42 @@ class Contract(Resource):
             g.sesh.rollback()
             print(str(e))
             return error_response("Couldn't create new contract. Exception {}".format(str(e)))
+
+    @staticmethod
+    def get_contraints(data):
+        """ Gets the constraints for the contract creation
+
+        :param data: The data received in the contract POST method
+        :return: Tuple of (code_constraints, time_constraints, and location_constraints) - all arrays
+        """
+        code_constraints = []
+        date_constraints = []
+        loc_constraints = []
+
+        if 'constraints' in data:
+            constraints = data['constraints']
+
+            # Check code constraints
+            if 'code_constraints' in constraints:
+                for cc in constraints['code_constraints']:
+                    code_constraints.append(cc['code'])
+
+            # Check date constraints
+            if 'time_constraints' in constraints:
+                for tc in constraints['time_constraints']:
+                    start = int((tc['start'] - datetime(1970, 1, 1)).total_seconds())
+                    end = int((tc['end'] - datetime(1970, 1, 1)).total_seconds())
+                    date_constraints.append(start)
+                    date_constraints.append(end)
+
+            # Check locations constraints
+            if 'location_constraints' in constraints:
+                for lc in constraints['location_constraints']:
+                    loc_constraints.append(int(lc['latitude']))
+                    loc_constraints.append(int(lc['longitude']))
+                    loc_constraints.append(int(lc['radius']))
+
+        return code_constraints, date_constraints, loc_constraints
 
     @contract_docs.document(url_prefix, 'GET',
                             'Method to get all contracts deployed by the issuer verified in the jwt.',

@@ -62,9 +62,12 @@ def claim_token_for_user(con_id, c_id, constraints, sesh):
         if not avail_token and not token_info:
             return False, 'No available tokens'
 
+        # Get claim attributes
+        code = constraints.get('code', None)
+
         # Claim the token and update the database
         tx_hash = g.geth.claim_token(token_info['con_addr'], token_info['con_abi'],
-                                     token_info['c_hash'], avail_token['t_id'])
+                                     token_info['c_hash'], avail_token['t_id'], code=code)
         rows_updated = SetToken().execute(
             {'con_id': con_id, 't_hash': tx_hash, 't_id': avail_token['t_id'], 'c_id': c_id}, sesh=sesh)
 

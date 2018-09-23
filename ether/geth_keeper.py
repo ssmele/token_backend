@@ -1,7 +1,7 @@
 import os
 from binascii import hexlify, unhexlify
+from datetime import datetime
 from json import dumps, loads
-from time import time
 from uuid import uuid4
 
 from solc import compile_source
@@ -208,7 +208,7 @@ class GethKeeper(object):
 
             # Get the claim requirements to send
             code = bytes(code) if code else bytes('000000')
-            date = int(time())
+            date = int((datetime.now() - datetime(1970, 1, 1)).total_seconds())
 
             # Send the token specified by token_id to the user
             tx_hash = contract.functions.sendToken(user_address, token_id, code, date).transact(
