@@ -33,6 +33,7 @@ from routes.login import login_bp, login_docs
 from routes.explore import explore_bp, explore_docs
 from routes.analytics import analytics_bp
 from routes.frontend import frontend_bp
+from routes.trade import trade_bp
 
 # Registering blueprints.
 app.register_blueprint(collector_bp)
@@ -45,6 +46,7 @@ app.register_blueprint(explore_bp)
 app.register_blueprint(analytics_bp)
 app.register_blueprint(frontend_bp)
 app.register_blueprint(constraint_bp)
+app.register_blueprint(trade_bp)
 
 
 @app.before_request

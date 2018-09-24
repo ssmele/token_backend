@@ -65,3 +65,25 @@ CREATE TABLE  wallets (
   hash CHAR(42) NOT NULL CHECK(length(hash) == 42),
   priv_key TEXT NOT NULL
 );
+
+
+
+CREATE TABLE trade (
+        tr_id INTEGER  PRIMARY KEY AUTOINCREMENT,
+        trader_c_id INTEGER NOT NULL,
+        tradee_c_id INTEGER NOT NULL,
+        status CHAR(1) NOT NULL DEFAULT 'R',
+        FOREIGN KEY (trader_c_id) REFERENCES collectors(c_id),
+        FOREIGN KEY (tradee_c_id) REFERENCES collectors(c_id)
+);
+
+CREATE TABLE trade_item (
+  tr_id INTEGER,
+  con_id INTEGER,
+  t_id INTEGER,
+  owner INTEGER,
+  FOREIGN KEY (tr_id) REFERENCES trade(tr_id),
+  FOREIGN KEY (con_id) REFERENCES contracts(con_id),
+  FOREIGN KEY (t_id) REFERENCES tokens(t_id),
+  FOREIGN KEY (owner) REFERENCES collectors(c_id)
+)
