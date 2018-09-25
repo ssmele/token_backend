@@ -40,6 +40,7 @@
 		// var url = "localhost:8088";
 		
 		function form()	{
+			$("error").text("");
 			$('#loader').show();
 			$('#screen').show();
 			if(login){
@@ -56,6 +57,7 @@
 				function(data,status){				
 					
 					if(status == "success"){
+						$("#error").text("");
 						$(".wave").animate({opacity:0},100);
 						document.cookie = data.resp_data.jwt;
 						console.log(document.cookie); // read
@@ -116,6 +118,7 @@
 						//$("#target").hide();
 						//$("#address").html(address); 
 						//$("#emailed").show();	
+						$("#error").text("");
 						l();
 					}
 				},
