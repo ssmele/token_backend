@@ -128,19 +128,7 @@
 				<div class="form-group row">
 				<textarea type="" class="form-control" id="desc" placeholder="Description" rows="3" name="description" required></textarea>
 				</div>
-				<div class="form-group row">
-				<input type="" class="form-control" id="code" name="code_constraint" placeholder="Code Constraint 'XXXXXX'" required>
-				</div>
-				<div class="form-group row">
-				<input type="" class="form-control" id="time" name="start_time" placeholder="Start time" required>
-				<input type="" class="form-control" id="time" name="end_time" placeholder="End time" required>
-				</div>
-				<div class="form-group row">
-				<input type="" class="form-control" id="coords" name="latitude" placeholder="latitude" required>
-				<input type="" class="form-control" id="coords" name="longitude" placeholder="longitude" required>
-				<input type="" class="form-control" id="radius" type="number" min="1" max="1000" name="radius" placeholder="radius" required>
-
-				</div>
+				
 				<script>
 				$("#name").change(function(){
 				$('#token_name').html($("#name").val());
@@ -184,15 +172,84 @@
 				
 				
 				</div>
-				
 				<div class="form-group row">
-				<div class="form-check disabled">
-				<input class="form-check-input" type="radio" name="exampleRadios" id="exampleRadios3" value="option3" checked>
-				<label class="form-check-label" for="exampleRadios3" >
-				Claimable by anyone
-				</label>
-				</div>				
-				</div>					
+					<div class="form-check disabled">
+					<input class="form-check-input" type="radio" name="exampleRadios" id="exampleRadios3" value="option3" checked>
+					<label class="form-check-label" for="exampleRadios3" >
+					Claimable by anyone
+					</label>
+					</div>				
+				</div>
+				<div class="form-group row">
+
+				<button class="btn btn-primary" type="button" data-toggle="collapse" data-target="#collapseExample" aria-expanded="false" aria-controls="collapseExample">
+					Advanced Options
+				</button>
+			</div>
+
+				<div class="collapse" id="collapseExample">
+				<div class="form-group row">
+				<input type="" class="form-control" id="code" name="code_constraint" placeholder="Code Constraint 'XXXXXX'" required>
+				</div>
+				<div class="form-group row">
+				<input type="" class="form-control" id="time" name="start_time" placeholder="Start time" required>
+				<input type="" class="form-control" id="time" name="end_time" placeholder="End time" required>
+				</div>
+			</div>
+			<p>Choose Location</p>
+					<div id="mapid" style="width: 600px; height: 400px;"></div>
+					<script>
+							var map = L.map('mapid').setView([20, 0], 1);
+					
+						  L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
+							  attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
+						  }).addTo(map);
+					
+						  var geocoder = L.Control.geocoder({
+								  defaultMarkGeocode: false
+							  })
+							  .on('markgeocode', function(e) {
+								  var mark = e.geocode.center;
+								  console.log(e.geocode);
+								  marker.setLatLng(mark);
+								  circle.setLatLng(mark);
+								  map.setView(mark, 2);
+							  })
+							  .addTo(map);
+					
+					  var latlng = [0,0];
+					  var marker = L.marker([0,0]);
+					  var circle = L.circle([0,0], {
+					  radius: 100
+					})
+					  marker.addTo(map)
+					  circle.addTo(map)
+					
+						function onMapClick(e) {
+						marker.setLatLng(e.latlng);
+						circle.setLatLng(e.latlng);
+						latlng = e.latlng;
+						console.log(latlng);
+						}
+					
+						map.on('click', onMapClick);
+					</script>
+					
+					<script>
+						function updateSlider(slideAmount) {
+							var sliderDiv = document.getElementById("sliderAmount");
+							//sliderDiv.innerHTML = slideAmount;
+							circle.setRadius(slideAmount);
+							console.log(circle.radius);
+						}
+					</script>
+					<br>
+					<p>Radius</p>
+					<input id="slide" type="range" min="100" max="700000" step="70" value="100" onchange="updateSlider(this.value)">
+					<div id="sliderAmount"></div>
+							
+				
+						
 				<div class="form-group row">
 				
 				<button type="submit" class="btn btn-primary">Publish</button>
