@@ -124,6 +124,19 @@
 				<div class="form-group row">
 				<textarea type="" class="form-control" id="desc" placeholder="Description" rows="3" name="description" required></textarea>
 				</div>
+				<div class="form-group row">
+				<input type="" class="form-control" id="code" name="code_constraint" placeholder="Code Constraint 'XXXXXX'" required>
+				</div>
+				<div class="form-group row">
+				<input type="" class="form-control" id="time" name="start_time" placeholder="Start time" required>
+				<input type="" class="form-control" id="time" name="end_time" placeholder="End time" required>
+				</div>
+				<div class="form-group row">
+				<input type="" class="form-control" id="coords" name="latitude" placeholder="latitude" required>
+				<input type="" class="form-control" id="coords" name="longitude" placeholder="longitude" required>
+				<input type="" class="form-control" id="radius" type="number" min="1" max="1000" name="radius" placeholder="radius" required>
+
+				</div>
 				<script>
 				$("#name").change(function(){
 				$('#token_name').html($("#name").val());
