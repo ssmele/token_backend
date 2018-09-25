@@ -20,6 +20,9 @@ def update_contracts(rows, session):
             status, addr = 'F', None
             if success:
                 status, addr = 'S', contract_addr
+                print('Contract mined - contract_id: {c_id}'.format(c_id=row['con_id']))
+            else:
+                print('Contract failed!! - contract_id: {c_id}'.format(c_id=row['con_id']))
             # Update the status and contract address
             session.execute("update contracts set status = :new_status, con_addr = :con_addr where con_id = :this_id",
                                 {'new_status': 'S', 'con_addr': addr, 'this_id': row['con_id']})
@@ -40,6 +43,9 @@ def update_tokens(rows, session):
             status = 'F'
             if success:
                 status = 'S'
+                print('Token claim mined - token_id: {t_id}'.format(t_id=row['t_id']))
+            else:
+                print('Token claim failed!! - token_id: {t_id}'.format(t_id=row['t_id']))
             # Update the status
             session.execute("update tokens set status = :new_status where t_id = :this_id",
                             {'new_status': status, 'this_id': row['t_id']})
