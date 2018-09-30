@@ -184,8 +184,8 @@ class GethKeeper(object):
         :return: The address of the transaction
         """
         try:
-            log_kv(LOG_INFO, {'message': 'calling claim token', 'user_address': user_address, 'token_id': token_id,
-                              'contract_addr': contract_addr, 'json_abi': json_abi})
+            # log_kv(LOG_INFO, {'message': 'calling claim token', 'user_address': user_address, 'token_id': token_id,
+            #                   'contract_addr': contract_addr, 'json_abi': json_abi})
             # Convert the addresses
             contract_addr = self._w3.toChecksumAddress(contract_addr)
             user_address = self._w3.toChecksumAddress(user_address)
