@@ -13,7 +13,7 @@ from routes import requires_geth
 from utils.db_utils import requires_db
 from utils.doc_utils import BlueprintDocumentation
 from utils.image_utils import save_file, serve_file, ImageFolders
-from utils.utils import success_response, error_response
+from utils.utils import success_response, error_response, log_kv, LOG_WARNING, LOG_INFO, LOG_ERROR, LOG_DEBUG
 from utils.verify_utils import verify_issuer_jwt
 
 contract_bp = Blueprint('contract', __name__)
@@ -49,6 +49,8 @@ class Contract(Resource):
 
         # Check to ensure we are not over the max token limit.
         if data['num_created'] > MAX_TOKEN_LIMIT:
+            log_kv(LOG_WARNING, {'warning': 'issuer tried to create contract over limit',
+                                 'issuer_id': g.issuer_info['i_id'], 'num_tokens': data['num_created']})
             return error_response("Could not create a token contract with that many individual token. Max is {}"
                                   .format(MAX_TOKEN_LIMIT))
 
@@ -89,13 +91,18 @@ class Contract(Resource):
                 process_constraints(data['constraints'], con_id)
 
             g.sesh.commit()
+            log_kv(LOG_INFO, {'message': 'succesfully issued contract!', 'issuer_id': g.issuer_info['i_id']})
             return success_response('Success in issuing token!', http_code=201)
         except GethException as e:
             g.sesh.rollback()
+            log_kv(LOG_ERROR, {'error': 'a geth_exception occurred while issuing contract',
+                               'issuer_id': g.issuer_info['i_id'], 'exception': e.exception,
+                               'exc_message': e.message})
             return error_response(e.message)
         except Exception as e:
             g.sesh.rollback()
-            print(str(e))
+            log_kv(LOG_ERROR, {'error': 'an exception occurred while issuing contract',
+                               'issuer_id': g.issuer_info['i_id'], 'exception': str(e)})
             return error_response("Couldn't create new contract. Exception {}".format(str(e)))
 
     @staticmethod
@@ -146,8 +153,11 @@ class Contract(Resource):
         """
         contracts = GetContractsByIssuerID().execute_n_fetchall({'i_id': g.issuer_info['i_id']}, close_connection=True)
         if contracts is not None:
+            log_kv(LOG_INFO, {'message': 'succesfully retrieved issuer\'s contracts',
+                              'issuer_id': g.issuer_info['i_id']})
             return success_response({'contracts': contracts})
         else:
+            log_kv(LOG_WARNING, {'warning': 'could not get contract for issuer', 'issuer_id': g.issuer_info['i_id']})
             return error_response(status="Couldn't retrieve contract with that con_id", status_code=-1, http_code=200)
 
 
@@ -170,9 +180,11 @@ def get_contract_by_con_id(con_id):
     contract = GetContractByConID().execute_n_fetchone({'con_id': con_id}, close_connection=True)
     constraints = get_all_constraints(con_id)
     if contract:
+        log_kv(LOG_DEBUG, {'debug': 'successfully retrieved contract', 'contract_id': con_id})
         contract.update({'constraints': constraints})
         return success_response({'contract': contract})
     else:
+        log_kv(LOG_WARNING, {'warning': 'could not find contract', 'contract_id': con_id})
         return error_response(status="Couldn't retrieve contract with that con_id", status_code=-1, http_code=200)
 
 
@@ -185,8 +197,10 @@ def get_contract_by_con_id(con_id):
 def get_contract_by_name(name):
     contracts_by_name = GetContractByName().execute_n_fetchall({'name': '%'+name+'%'}, close_connection=True)
     if contracts_by_name is not None:
+        log_kv(LOG_DEBUG, {'debug': 'found contract by name', 'contract_name': name})
         return success_response({'contracts': contracts_by_name})
     else:
+        log_kv(LOG_WARNING, {'warning': 'could not find contract by name', 'contract_name': name})
         return error_response(status="Couldn't retrieve contract with that con_id", status_code=-1, http_code=200)
 
 

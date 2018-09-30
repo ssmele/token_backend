@@ -8,6 +8,7 @@ from solc import compile_source
 from web3 import Web3, IPCProvider
 from web3.contract import ConciseContract
 from ether.contract_source import CONTRACT
+from utils.utils import log_kv, LOG_INFO
 
 # To use correctly install python3 and set as interpreter
 # Install geth with the rinkeby test network and pip install web3
@@ -214,6 +215,8 @@ class GethKeeper(object):
         :return: The address of the transaction
         """
         try:
+            log_kv(LOG_INFO, {'message': 'calling claim token', 'user_address': user_address, 'token_id': token_id,
+                              'contract_addr': contract_addr, 'json_abi': json_abi})
             # Convert the addresses
             contract_addr = self._w3.toChecksumAddress(contract_addr)
             user_address = self._w3.toChecksumAddress(user_address)

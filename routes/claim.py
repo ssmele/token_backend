@@ -8,7 +8,7 @@ from models.constraints import validate_uni_code_constraints, validate_time_cons
 from routes import load_with_schema, requires_geth
 from utils.db_utils import requires_db
 from utils.doc_utils import BlueprintDocumentation
-from utils.utils import success_response, error_response, log_kv, LOG_ERROR
+from utils.utils import success_response, error_response, log_kv, LOG_WARNING, LOG_INFO, LOG_ERROR
 from utils.verify_utils import verify_collector_jwt
 
 claim_bp = Blueprint('claim', __name__)
@@ -49,6 +49,7 @@ def claim_token_for_user(con_id, c_id, lat, long, constraints, sesh):
     try:
         # Check to see if this collector already has this token.
         if DoesCollectorOwnToken().execute_n_fetchone({'con_id': con_id, 'c_id': c_id}, schema_out=False):
+            log_kv(LOG_WARNING, {'warning': 'user already has token', 'contract_id': con_id, 'collector_id': c_id})
             return False, 'User already has token'
 
         # Enforcing claim constraints.
@@ -63,7 +64,12 @@ def claim_token_for_user(con_id, c_id, lat, long, constraints, sesh):
         avail_token = GetAvailableToken().execute_n_fetchone({'con_id': con_id}, sesh=sesh)
         token_info = GetTokenInfo().execute_n_fetchone({'con_id': con_id, 'c_id': c_id}, sesh=sesh)
         if not avail_token and not token_info:
+            log_kv(LOG_INFO, {'message': 'no tokens are available', 'contract_id': con_id, 'collector_id': c_id})
             return False, 'No available tokens'
+
+        # Claim the token and update the database
+        log_kv(LOG_INFO, {'message': 'claiming ethereum token', 'token_id': avail_token['t_id'],
+                          'collector_id': c_id})
 
         # Get claim attributes
         code = constraints.get('code', None)
@@ -79,13 +85,14 @@ def claim_token_for_user(con_id, c_id, lat, long, constraints, sesh):
 
         # Make sure a row was updated
         if rows_updated == 1:
+            log_kv(LOG_INFO, {'message': 'successfully claimed token', 'contract_id': con_id, 'collector_id': c_id})
             return True, 'Token has been claimed!'
 
     except GethException as e:
-        log_kv(LOG_ERROR, {'error': 'Geth exception while trying to claim token.',
-                           'exception': str(e)}, exception=True)
+        log_kv(LOG_ERROR, {'error': 'a geth_exception occurred while claiming token', 'exception': e.exception,
+                           'exc_message': e.message, 'contract_id': con_id, 'collector_id': c_id}, exception=True)
         return False, 'Geth Error:' + e.exception
     except Exception as e:
-        log_kv(LOG_ERROR, {'error': 'Non geth exception while trying to claim token.',
-                           'exception': str(e)}, exception=True)
+        log_kv(LOG_ERROR, {'error': 'an exception occurred while claiming token', 'exception': str(e),
+                           'contract_id': con_id, 'collector_id': c_id}, exception=True)
         return False, str(e) + traceback.format_exc()
