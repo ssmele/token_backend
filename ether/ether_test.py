@@ -18,7 +18,7 @@ if __name__ == '__main__':
     while contract_addr is None:
         print('waiting for contract mine')
         sleep(5)
-        contract_addr = gk.check_contract_mine(tx_hash)
+        _, _, contract_addr = gk.check_contract_mine(tx_hash)
 
     print('------------------------CONTRACT_CREATED-------------------------')
     print('contract_addr: {0}'.format(contract_addr))
@@ -42,11 +42,12 @@ if __name__ == '__main__':
 
     print('tx_hash: {0}'.format(tx_hash))
 
+    tx_hash = unhexlify(tx_hash)
     receipt = None
-    while receipt is None:
+    while not receipt:
         print('waiting for claim mine')
         sleep(5)
-        receipt = gk.check_claim_mine(tx_hash)
+        receipt = gk._w3.eth.getTransactionReceipt(tx_hash)
 
     print('-----------RECEIPT-----------')
     print('receipt: {0}'.format(receipt))
