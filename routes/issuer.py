@@ -41,7 +41,7 @@ class Issuer(Resource):
             data['i_hash'], data['i_priv_key'] = g.geth.create_account()
 
             # TODO: EXTEND THIS TO TAKE MORE VALUES FROM THE USER. ONLY HAVE TO CHANGE MARSHMALLOW OBEJCT. (HOPEFULLY)
-            issuer = create_issuer(data, g.sesh)
+            issuer = create_issuer(data)
             g.sesh.commit()
             return success_response({'jwt': generate_jwt(issuer)}, http_code=201)
         except GethException as ge:
@@ -54,7 +54,8 @@ class Issuer(Resource):
     @verify_issuer_jwt
     @requires_db
     @issuer_docs.document(url_prefix, 'GET',
-                          "Method to retrieve issuer information. Requires jwt from login/creation account.")
+                          "Method to retrieve issuer information. Requires jwt from login/creation account.",
+                          req_i_jwt=True)
     def get(self):
         issuer = GetIssuerByIID().execute_n_fetchone({'i_id': g.issuer_info['i_id']}, close_connection=True)
         if issuer:

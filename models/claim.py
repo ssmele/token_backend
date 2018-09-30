@@ -1,4 +1,5 @@
 from marshmallow import Schema, fields
+from models.constraints import validate_code, CONSTRAINT_DATETIME_FORMAT, LocationConstraint
 
 from utils.db_utils import DataQuery
 
@@ -9,15 +10,29 @@ class Location(Schema):
     longitude = fields.Number(required=True)
 
 
+class ClaimConstraintRequest(Schema):
+    code = fields.Str(required=False, validate=validate_code)
+    time = fields.DateTime(CONSTRAINT_DATETIME_FORMAT, required=False)
+    location = fields.Nested(LocationConstraint, only=['latitude', 'longitude'], required=False)
+
+
 class ClaimRequest(Schema):
     con_id = fields.Int(required=True)
     location = fields.Nested(Location, required=True)
 
+    constraints = fields.Nested(ClaimConstraintRequest, required=False)
+
     doc_load_info = {
         'con_id': "integer",
         'location': {'latitude': 'decimal(8,6)',
-                     'longitude': 'decimal(9,6)'}
-    }
+                     'longitude': 'decimal(9,6)',
+        'constraints': {'code': '123ABC',
+                        'location': {'latitude': 123.00002, 'longitude': 1233.4004},
+                        'time': '2018-12-22 03:12:58'},
+        'INFO (Not apart of request': {'constraints': {'code-info': 'exactly 6 digits alphanumeric',
+                                                       'location-info': 'latitude, and longitude as floats',
+                                                       'time-info': CONSTRAINT_DATETIME_FORMAT}}}}
+
 
 class GetTokenInfoInternal(Schema):
     """ Schema for Token info for the ETH network """

@@ -1,9 +1,13 @@
+from datetime import datetime
+
 from flask import Blueprint, g, request
 from flask_restful import Api, Resource
 
 from ether.geth_keeper import GethException
+from marshmallow import ValidationError
 from models.contract import ContractRequest, ClaimTypes, GetContractByConID, \
-    GetContractByName, insert_bulk_tokens, GetContractsByIssuerID
+    GetContractByName, GetContractsByIssuerID, process_constraints, insert_bulk_tokens, GetContractResponse
+from models.constraints import get_all_constraints
 from models.issuer import GetIssuerInfo
 from routes import requires_geth
 from utils.db_utils import requires_db
@@ -26,13 +30,21 @@ class Contract(Resource):
     @requires_geth
     @contract_docs.document(url_prefix+" ", 'POST',
                             'Method to start a request to issue a new token on the eth network.'
-                            ' This will also create all new tokens associated with the method.', ContractRequest)
+                            ' This will also create all new tokens associated with the method.',
+                            input_schema=ContractRequest,
+                            req_i_jwt=True)
     def post(self):
         """ Method to use for post requests to the /contract method.
 
         :return: HTTP response
         """
-        data = ContractRequest().load(request.form)
+        try:
+            # Parse out the data from the contract request.
+            data = ContractRequest().loads(request.form['json_data'])
+        except ValidationError as er:
+            return error_response('Validation Failed', errors=er.messages)
+
+        # Check to ensure we are not over the max token limit.
         if data['num_created'] > MAX_TOKEN_LIMIT:
             return error_response("Could not create a token contract with that many individual token. Max is {}"
                                   .format(MAX_TOKEN_LIMIT))
@@ -52,6 +64,9 @@ class Contract(Resource):
         data.update({'pic_location': file_location})
 
         try:
+            # Get the received constraints in array format for the smart contract
+            code_constraints, date_constraints, loc_constraints = self.get_contraints(data)
+
             # Issue the contract on the ETH network
             issuer = GetIssuerInfo().execute_n_fetchone(binds={'i_id': g.issuer_info['i_id']})
             data['con_tx'], data['con_abi'] = g.geth.issue_contract(issuer['i_hash'],
@@ -59,9 +74,17 @@ class Contract(Resource):
                                                                     name=data['name'],
                                                                     desc=data['description'],
                                                                     img_url=data['pic_location'],
-                                                                    num_tokes=data['num_created'])
+                                                                    num_tokes=data['num_created'],
+                                                                    code_reqs=code_constraints,
+                                                                    date_reqs=date_constraints,
+                                                                    loc_reqs=loc_constraints)
+
             # Insert into the database
-            insert_bulk_tokens(data['num_created'], data, g.sesh)
+            con_id = insert_bulk_tokens(data['num_created'], data, g.sesh)
+
+            # If constraints were passed in we need to process them.
+            if 'constraints' in data:
+                process_constraints(data['constraints'], con_id)
 
             g.sesh.commit()
             return success_response('Success in issuing token!', http_code=201)
@@ -73,8 +96,45 @@ class Contract(Resource):
             print(str(e))
             return error_response("Couldn't create new contract. Exception {}".format(str(e)))
 
+    @staticmethod
+    def get_contraints(data):
+        """ Gets the constraints for the contract creation
+
+        :param data: The data received in the contract POST method
+        :return: Tuple of (code_constraints, time_constraints, and location_constraints) - all arrays
+        """
+        code_constraints = []
+        date_constraints = []
+        loc_constraints = []
+
+        if 'constraints' in data:
+            constraints = data['constraints']
+
+            # Check code constraints
+            if 'code_constraints' in constraints:
+                for cc in constraints['code_constraints']:
+                    code_constraints.append(cc['code'])
+
+            # Check date constraints
+            if 'time_constraints' in constraints:
+                for tc in constraints['time_constraints']:
+                    start = int((tc['start'] - datetime(1970, 1, 1)).total_seconds())
+                    end = int((tc['end'] - datetime(1970, 1, 1)).total_seconds())
+                    date_constraints.append(start)
+                    date_constraints.append(end)
+
+            # Check locations constraints
+            if 'location_constraints' in constraints:
+                for lc in constraints['location_constraints']:
+                    loc_constraints.append(int(lc['latitude']))
+                    loc_constraints.append(int(lc['longitude']))
+                    loc_constraints.append(int(lc['radius']))
+
+        return code_constraints, date_constraints, loc_constraints
+
     @contract_docs.document(url_prefix, 'GET',
-                            'Method to get all contracts deployed by the issuer verified in the jwt.')
+                            'Method to get all contracts deployed by the issuer verified in the jwt.',
+                            req_i_jwt=True)
     @requires_db
     @verify_issuer_jwt
     def get(self):
@@ -102,11 +162,14 @@ def server_image(image):
 @verify_issuer_jwt
 @requires_db
 @contract_docs.document(url_prefix + '/con_id=<int:con_id>', 'GET',
-                        "Method to retrieve contract information by con_id. Requires issuer verification.")
+                        "Method to retrieve contract information by con_id. Constraint info included.",
+                        output_schema=GetContractResponse, req_i_jwt=True)
 def get_contract_by_con_id(con_id):
     contract = GetContractByConID().execute_n_fetchone({'con_id': con_id}, close_connection=True)
+    constraints = get_all_constraints(con_id)
     if contract:
-        return success_response(contract)
+        contract.update({'constraints': constraints})
+        return success_response({'contract': contract})
     else:
         return error_response(status="Couldn't retrieve contract with that con_id", status_code=-1, http_code=200)
 
@@ -115,10 +178,29 @@ def get_contract_by_con_id(con_id):
 @verify_issuer_jwt
 @requires_db
 @contract_docs.document(url_prefix + '/name=<string:name>', 'GET',
-                        "Method to retrieve contract information by names like it.")
+                        "Method to retrieve contract information by names like it.",
+                        req_i_jwt=True)
 def get_contract_by_name(name):
     contracts_by_name = GetContractByName().execute_n_fetchall({'name': '%'+name+'%'}, close_connection=True)
     if contracts_by_name is not None:
         return success_response({'contracts': contracts_by_name})
     else:
         return error_response(status="Couldn't retrieve contract with that con_id", status_code=-1, http_code=200)
+
+
+# Constraints endpoint
+constraint_bp = Blueprint('constraint', __name__)
+constraint_url_prefix = '/contract/constraints'
+
+
+class Constraint(Resource):
+
+    def put(self, data):
+        raise NotImplemented
+
+    def delete(self):
+        raise NotImplemented
+
+
+constraint_api = Api(constraint_bp)
+constraint_api.add_resource(Constraint, constraint_url_prefix)

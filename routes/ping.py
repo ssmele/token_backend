@@ -17,13 +17,15 @@ def pings():
 
 @ping.route(url_prefix+'_issuer_a', methods=['GET'])
 @verify_issuer_jwt
-@ping_docs.document(url_prefix+'_issuer_a', 'GET', description='Ping that requires collector verification.')
+@ping_docs.document(url_prefix+'_issuer_a', 'GET', description='Ping that requires collector verification.',
+                    req_i_jwt=True)
 def issuer_a_ping():
     return success_response("pong for i_id:{}".format(g.issuer_info['i_id']))
 
 
 @ping.route(url_prefix+'_collector_a', methods=['GET'])
 @verify_collector_jwt
-@ping_docs.document('collector_a_'+url_prefix, 'GET', description='Ping that requires collector verification.')
+@ping_docs.document('collector_a_'+url_prefix, 'GET', description='Ping that requires collector verification.',
+                    req_c_jwt=True)
 def collector_a_ping():
     return success_response("pong for c_id:{}".format(g.collector_info['c_id']))

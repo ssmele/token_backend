@@ -33,7 +33,7 @@ def percent_claimed(con_id):
 
     # Get contract.
     data = g.sesh.execute("""select num_created from contracts where contracts.con_id = :contract_id;""",
-                           {"contract_id": con_id}).fetchall()
+                          {"contract_id": con_id}).fetchall()
 
     # Check that the data is there
     if len(data) == 0:
