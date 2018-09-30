@@ -22,7 +22,8 @@ from ether.contract_source import CONTRACT
 # To run console on existing node:    geth --rinkeby --datadir=/usr/apps/Ethereum attach
 
 
-# IPC_LOCATION = '/home/stone/.ethereum/rinkeby/geth.ipc'
+#IPC_LOCATION = '/home/anna/.ethereum/rinkeby/geth.ipc'
+#IPC_LOCATION = '/home/stone/.ethereum/rinkeby/geth.ipc'
 
 
 IPC_LOCATION = os.getenv('IPC_LOC', '/usr/apps/Ethereum/rinkeby/geth.ipc')

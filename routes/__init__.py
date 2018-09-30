@@ -13,7 +13,7 @@ def requires_geth(f):
     """
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        if current_app.config['USE_MOCK']:
+        if current_app.config.get('USE_MOCK', False):
             g.geth = MockGethKeeper()
         else:
             g.geth = GethKeeper()

@@ -100,7 +100,7 @@ class InsertUniqueCodeConstraint(DataQuery):
 
     def __init__(self):
         self.sql_text = """
-        INSERT INTO unique_code_claim(con_id, code) values(:con_id, :code);
+        INSERT INTO unique_code_claim(con_id, unique_code) values(:con_id, :code);
         """
 
         self.schema_out = None
