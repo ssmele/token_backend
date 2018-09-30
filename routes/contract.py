@@ -5,7 +5,7 @@ from flask_restful import Api, Resource
 
 from ether.geth_keeper import GethException
 from marshmallow import ValidationError
-from models.contract import ContractRequest, ClaimTypes, GetContractByConID, \
+from models.contract import ContractRequest, GetContractByConID, \
     GetContractByName, GetContractsByIssuerID, process_constraints, insert_bulk_tokens, GetContractResponse
 from models.constraints import get_all_constraints
 from models.issuer import GetIssuerInfo
@@ -30,7 +30,10 @@ class Contract(Resource):
     @requires_geth
     @contract_docs.document(url_prefix+" ", 'POST',
                             'Method to start a request to issue a new token on the eth network.'
-                            ' This will also create all new tokens associated with the method.',
+                            ' This will also create all new tokens associated with the method.'
+                            'This method requires a multipart form. The two possible form values are token_image which '
+                            'should be an image, and json_data. The json_data form should contain a json object '
+                            'matching the method request json fields below.',
                             input_schema=ContractRequest,
                             req_i_jwt=True)
     def post(self):
@@ -50,8 +53,7 @@ class Contract(Resource):
                                   .format(MAX_TOKEN_LIMIT))
 
         # Update the original data given after validation for contract creation binds.
-        data.update({'claim_type': ClaimTypes.SIMPLE.value,
-                     'i_id': g.issuer_info['i_id']})
+        data.update({'i_id': g.issuer_info['i_id']})
 
         # If we have an image save it.
         file_location = None

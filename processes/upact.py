@@ -40,6 +40,8 @@ def update_tokens(rows, session):
             status = 'F'
             if success:
                 status = 'S'
+
+            # TODO: UPDATE GAS_COST here too.
             # Update the status
             session.execute("update tokens set status = :new_status where t_id = :this_id",
                             {'new_status': status, 'this_id': row['t_id']})

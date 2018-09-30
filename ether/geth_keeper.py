@@ -59,7 +59,8 @@ class MockGethKeeper(object):
         return True, True
 
     def claim_token(self, *args, **kwargs):
-        return hexlify(1)
+        return hexlify(1), MAX_GAS_PRICE
+
 
 class GethKeeper(object):
     def __init__(self):
@@ -233,7 +234,7 @@ class GethKeeper(object):
 
             # Lock the issuers account and return
             self._w3.personal.lockAccount(self._root_acct)
-            return hexlify(tx_hash)
+            return hexlify(tx_hash), gas_price
         except Exception as e:
             raise GethException(str(e), message='Could not send token')
 

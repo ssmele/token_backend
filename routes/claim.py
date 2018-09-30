@@ -68,11 +68,11 @@ def claim_token_for_user(con_id, c_id, lat, long, constraints, sesh):
         # Get claim attributes
         code = constraints.get('code', None)
 
-        # TODO: Update this to be the actual gas price.
-        gas_price = .4
+        # Attempt to claim the token on the eth network.
+        tx_hash, gas_price = g.geth.claim_token(token_info['con_addr'], token_info['con_abi'],
+                                                token_info['c_hash'], avail_token['t_id'], code=code)
 
-        tx_hash = g.geth.claim_token(token_info['con_addr'], token_info['con_abi'],
-                                     token_info['c_hash'], avail_token['t_id'], code=code)
+        # Persist the changes in the database.
         rows_updated = SetToken().execute(
             {'con_id': con_id, 'latitude': lat, 'longitude': long, 'gas_price': gas_price,
              't_hash': tx_hash, 't_id': avail_token['t_id'], 'c_id': c_id}, sesh=sesh)
@@ -80,6 +80,7 @@ def claim_token_for_user(con_id, c_id, lat, long, constraints, sesh):
         # Make sure a row was updated
         if rows_updated == 1:
             return True, 'Token has been claimed!'
+
     except GethException as e:
         log_kv(LOG_ERROR, {'error': 'Geth exception while trying to claim token.',
                            'exception': str(e)}, exception=True)

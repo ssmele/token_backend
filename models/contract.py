@@ -10,12 +10,6 @@ from models.constraints import Constraints, InsertLocationConstraint, \
     InsertTimeConstraint, InsertUniqueCodeConstraint, CONSTRAINT_DATETIME_FORMAT
 
 
-class ClaimTypes(Enum):
-    SIMPLE = 'S'
-    LOCATION = 'L'
-    CODE = 'C'
-
-
 class ContractRequest(Schema):
     name = fields.Str(required=True)
     description = fields.Str(required=True)
@@ -24,12 +18,12 @@ class ContractRequest(Schema):
     constraints = fields.Nested(Constraints, required=False)
 
     doc_load_info = {
-        'i_id': {'type': 'int', 'desc': 'i_id of the issuer that this contract should be deployed under.'},
         'name': {'type': 'string', 'desc': 'Name for the new token contract.'},
         'description': {'type': 'string', 'desc': 'Description of the new token contract being deployed'},
         'num_created': {'type': 'int', 'desc': 'desired password for collector creation.'},
         'constraints': Constraints.doc_load_info,
-        'INFO (NOT APART OF REQUEST)' : {'time_format': CONSTRAINT_DATETIME_FORMAT, 'radius metric': 'meters'}
+        'INFO (NOT APART OF REQUEST)' : {'time_format': CONSTRAINT_DATETIME_FORMAT, 'radius metric': 'meters',
+                                         'constraints': 'The constraints are optional'}
     }
 
 
@@ -40,7 +34,6 @@ class GetContractResponse(Schema):
     name = fields.Str(required=True)
     description = fields.Str(required=True)
     num_created = fields.Int(required=True)
-    claim_type = fields.Str(required=True)
     pic_location = fields.Str(required=True)
     status = fields.Str(required=True)
 
@@ -61,8 +54,8 @@ class InsertNewContract(DataQuery):
 
     def __init__(self):
         self.sql_text = """
-        INSERT INTO contracts(i_id, con_tx, con_abi, name, description, num_created, claim_type, pic_location) 
-        VALUES(:i_id, :con_tx, :con_abi,  :name, :description, :num_created, :claim_type, :pic_location);
+        INSERT INTO contracts(i_id, con_tx, con_abi, name, description, num_created, pic_location) 
+        VALUES(:i_id, :con_tx, :con_abi,  :name, :description, :num_created, :pic_location);
         """
         self.schema_out = None
         super().__init__()

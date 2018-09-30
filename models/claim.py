@@ -25,13 +25,13 @@ class ClaimRequest(Schema):
     doc_load_info = {
         'con_id': "integer",
         'location': {'latitude': 'decimal(8,6)',
-                     'longitude': 'decimal(9,6)',
+                     'longitude': 'decimal(9,6)'},
         'constraints': {'code': '123ABC',
                         'location': {'latitude': 123.00002, 'longitude': 1233.4004},
                         'time': '2018-12-22 03:12:58'},
         'INFO (Not apart of request': {'constraints': {'code-info': 'exactly 6 digits alphanumeric',
                                                        'location-info': 'latitude, and longitude as floats',
-                                                       'time-info': CONSTRAINT_DATETIME_FORMAT}}}}
+                                                       'time-info': CONSTRAINT_DATETIME_FORMAT}}}
 
 
 class GetTokenInfoInternal(Schema):

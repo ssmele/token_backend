@@ -24,7 +24,6 @@ CREATE TABLE contracts (
   name CHAR(50) NOT NULL,
   description TEXT,
   num_created INTEGER NOT NULL,
-  claim_type CHAR(1) NOT NULL,
   pic_location varchar(35) NOT NULL,
   creation_ts DATE DEFAULT (strftime('%Y-%m-%d %H:%M:%S')),
   status CHAR(1) NOT NULL DEFAULT 'P',
@@ -34,8 +33,8 @@ CREATE TABLE contracts (
 CREATE TABLE location_claim(
   lc_id INTEGER PRIMARY KEY AUTOINCREMENT,
   con_id INTEGER,
-  latitude REAL,
-  longitude REAL,
+  latitude DECIMAL(8,6),
+  longitude DECIMAL(9,6),
   radius REAL,
   FOREIGN KEY (con_id) REFERENCES contracts(con_id)
 )
@@ -43,8 +42,8 @@ CREATE TABLE location_claim(
 CREATE TABLE time_claim(
   tc_id INTEGER PRIMARY KEY AUTOINCREMENT,
   con_id INTEGER,
-  start TEXT,
-  end TEXT,
+  start DATE NOT NULL ,
+  end DATE NOT NULL ,
   FOREIGN KEY (con_id) REFERENCES contracts(con_id)
 )
 
@@ -62,6 +61,7 @@ CREATE TABLE tokens (
   owner_c_id INTEGER,
   claim_ts DATE,
   gas_price FLOAT,
+  gas_cost FLOAT,
   latitude DECIMAL(8,6),
   longitude DECIMAL(9,6),
   status CHAR(1) NOT NULL DEFAULT 'N',
@@ -77,21 +77,22 @@ CREATE TABLE  wallets (
 
 
 CREATE TABLE trade (
-        tr_id INTEGER  PRIMARY KEY AUTOINCREMENT,
-        trader_c_id INTEGER NOT NULL,
-        tradee_c_id INTEGER NOT NULL,
-        status CHAR(1) NOT NULL DEFAULT 'R',
-        FOREIGN KEY (trader_c_id) REFERENCES collectors(c_id),
-        FOREIGN KEY (tradee_c_id) REFERENCES collectors(c_id)
+tr_id INTEGER  PRIMARY KEY AUTOINCREMENT,
+trader_c_id INTEGER NOT NULL,
+tradee_c_id INTEGER NOT NULL,
+status CHAR(1) NOT NULL DEFAULT 'R',
+creation_ts DATE DEFAULT  (strftime('%Y-%m-%d %H:%M:%S')),
+FOREIGN KEY (trader_c_id) REFERENCES collectors(c_id),
+FOREIGN KEY (tradee_c_id) REFERENCES collectors(c_id)
 );
 
 CREATE TABLE trade_item (
-  tr_id INTEGER,
-  con_id INTEGER,
-  t_id INTEGER,
-  owner INTEGER,
-  FOREIGN KEY (tr_id) REFERENCES trade(tr_id),
-  FOREIGN KEY (con_id) REFERENCES contracts(con_id),
-  FOREIGN KEY (t_id) REFERENCES tokens(t_id),
-  FOREIGN KEY (owner) REFERENCES collectors(c_id)
+tr_id INTEGER,
+con_id INTEGER,
+t_id INTEGER,
+owner INTEGER,
+FOREIGN KEY (tr_id) REFERENCES trade(tr_id),
+FOREIGN KEY (con_id) REFERENCES contracts(con_id),
+FOREIGN KEY (t_id) REFERENCES tokens(t_id),
+FOREIGN KEY (owner) REFERENCES collectors(c_id)
 )

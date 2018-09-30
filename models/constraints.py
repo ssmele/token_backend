@@ -6,7 +6,7 @@ from marshmallow.validate import ValidationError
 
 from utils.db_utils import DataQuery
 
-CONSTRAINT_DATETIME_FORMAT = '%Y-%m-%d %I:%M:%S'
+CONSTRAINT_DATETIME_FORMAT = '%Y-%m-%d %H:%M:%S'
 CODE_LENGTH = 6
 
 
