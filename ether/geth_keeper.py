@@ -43,6 +43,23 @@ class GethException(Exception):
         self.message = message
 
 
+class MockGethKeeper(object):
+
+    def create_account(self, *args, **kwargs):
+        return 0, 123
+
+    def issue_contract(self, *args, **kwargs):
+        return hexlify(123), '{}'
+
+    def check_contract_mine(self, *args, **kwargs):
+        return True, True, 123
+
+    def check_claim_mine(self, *args, **kwargs):
+        return True, True
+
+    def claim_token(self, *args, **kwargs):
+        return hexlify(1)
+
 class GethKeeper(object):
     def __init__(self):
         # TODO: remove middleware when moving to main ethereum network

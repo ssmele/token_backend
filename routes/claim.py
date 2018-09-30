@@ -7,7 +7,7 @@ from models.claim import ClaimRequest, DoesCollectorOwnToken, GetTokenInfo, GetA
 from routes import load_with_schema, requires_geth
 from utils.db_utils import requires_db
 from utils.doc_utils import BlueprintDocumentation
-from utils.utils import success_response, error_response
+from utils.utils import success_response, error_response, log_kv, LOG_ERROR
 from utils.verify_utils import verify_collector_jwt
 
 claim_bp = Blueprint('claim', __name__)
@@ -22,7 +22,8 @@ url_prefix = '/claim'
 @load_with_schema(ClaimRequest)
 @claim_docs.document(url_prefix, 'POST', 'Method to claim a token of of a contract.', input_schema=ClaimRequest)
 def claims(data):
-    results, msg = claim_token_for_user(data['con_id'], g.collector_info['c_id'], g.sesh)
+    results, msg = claim_token_for_user(data['con_id'], g.collector_info['c_id'],
+                                        data['location']['latitude'], data['location']['longitude'], g.sesh)
     if results:
         g.sesh.commit()
         return success_response(msg)
@@ -31,11 +32,13 @@ def claims(data):
         return error_response(msg)
 
 
-def claim_token_for_user(con_id, c_id, sesh):
+def claim_token_for_user(con_id, c_id, lat, long, sesh):
     """ Attempts to claim a token for the given user
 
     :param con_id: The contract_id of the token
     :param c_id: The collector_id of the collecting user
+    :param lat: latitude of user during claim attempt.
+    :param long: longitude of user during claim attempt.
     :param sesh: The database session to use
     :return: True if the claim request was successful, False if otherwise
     """
@@ -54,13 +57,22 @@ def claim_token_for_user(con_id, c_id, sesh):
         # Claim the token and update the database
         tx_hash = g.geth.claim_token(token_info['con_addr'], token_info['con_abi'], token_info['c_hash'],
                                      avail_token['t_id'])
+
+        # TODO: Update this to be the actual gas price.
+        gas_price = .4
+
         rows_updated = SetToken().execute(
-            {'con_id': con_id, 't_hash': tx_hash, 't_id': avail_token['t_id'], 'c_id': c_id}, sesh=sesh)
+            {'con_id': con_id, 'latitude': lat, 'longitude': long, 'gas_price': gas_price,
+             't_hash': tx_hash, 't_id': avail_token['t_id'], 'c_id': c_id}, sesh=sesh)
 
         # Make sure a row was updated
         if rows_updated == 1:
             return True, 'Token has been claimed!'
     except GethException as e:
-        return False, 'GETH !!!' + e.exception
+        log_kv(LOG_ERROR, {'error': 'Geth exception while trying to claim token.',
+                           'exception': str(e)}, exception=True)
+        return False, 'Geth Error:' + e.exception
     except Exception as e:
+        log_kv(LOG_ERROR, {'error': 'Non geth exception while trying to claim token.',
+                           'exception': str(e)}, exception=True)
         return False, str(e) + traceback.format_exc()

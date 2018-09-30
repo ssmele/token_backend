@@ -1,9 +1,9 @@
 from functools import wraps
 
-from flask import request, jsonify, g
+from flask import request, jsonify, g, current_app
 from marshmallow import ValidationError
 
-from ether.geth_keeper import GethKeeper
+from ether.geth_keeper import GethKeeper, MockGethKeeper
 
 
 def requires_geth(f):
@@ -13,7 +13,10 @@ def requires_geth(f):
     """
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        g.geth = GethKeeper()
+        if current_app.config['USE_MOCK']:
+            g.geth = MockGethKeeper()
+        else:
+            g.geth = GethKeeper()
         return f(*args, **kwargs)
     return decorated_function
 

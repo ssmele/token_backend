@@ -68,7 +68,3 @@ def error_response(status="Error", status_code=-1, http_code=400):
     except Exception as e:
         log_kv(LOG_ERROR, {'error': 'could not build error response', 'exception': str(e)})
         raise e
-
-# TODO: Make Error Handler
-# TODO: Make db getter
-# TODO: Make Authenticator

@@ -4,13 +4,20 @@ from utils.db_utils import DataQuery
 
 
 # ------------------------------SCHEMAS-------------------------------
+class Location(Schema):
+    latitude = fields.Number(required=True)
+    longitude = fields.Number(required=True)
+
+
 class ClaimRequest(Schema):
     con_id = fields.Int(required=True)
+    location = fields.Nested(Location, required=True)
 
     doc_load_info = {
-        'con_id': {'type': 'int', 'desc': 'con_id of contract in which you want to claim a token from.'},
+        'con_id': "integer",
+        'location': {'latitude': 'decimal(8,6)',
+                     'longitude': 'decimal(9,6)'}
     }
-
 
 class GetTokenInfoInternal(Schema):
     """ Schema for Token info for the ETH network """
@@ -48,7 +55,11 @@ class SetToken(DataQuery):
         UPDATE tokens
         SET owner_c_id = :c_id,
           status = 'P',
-          t_hash = :t_hash
+          t_hash = :t_hash,
+          latitude = :latitude,
+          longitude = :longitude,
+          gas_price = :gas_price,
+          claim_ts = strftime('%Y-%m-%d %H:%M:%S')
         WHERE con_id = :con_id
           AND t_id = :t_id;
         """
