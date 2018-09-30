@@ -54,6 +54,8 @@ def claim_token_for_user(con_id, c_id, sesh):
             return False, 'No available tokens'
 
         # Claim the token and update the database
+        log_kv(LOG_INFO, {'message': 'claiming ethereum token', 'token_id': avail_token['t_id'],
+                          'collector_id': c_id})
         tx_hash = g.geth.claim_token(token_info['con_addr'], token_info['con_abi'], token_info['c_hash'],
                                      avail_token['t_id'])
         rows_updated = SetToken().execute(
