@@ -8,7 +8,6 @@ from solc import compile_source
 from web3 import Web3, IPCProvider
 from web3.contract import ConciseContract
 from ether.contract_source import CONTRACT
-from utils.utils import log_kv, LOG_INFO
 
 # To use correctly install python3 and set as interpreter
 # Install geth with the rinkeby test network and pip install web3
@@ -23,8 +22,8 @@ from utils.utils import log_kv, LOG_INFO
 # To run console on existing node:    geth --rinkeby --datadir=/usr/apps/Ethereum attach
 
 
-#IPC_LOCATION = '/home/anna/.ethereum/rinkeby/geth.ipc'
-#IPC_LOCATION = '/home/stone/.ethereum/rinkeby/geth.ipc'
+# IPC_LOCATION = '/home/anna/.ethereum/rinkeby/geth.ipc'
+# IPC_LOCATION = '/home/stone/.ethereum/rinkeby/geth.ipc'
 
 
 IPC_LOCATION = os.getenv('IPC_LOC', '/usr/apps/Ethereum/rinkeby/geth.ipc')
@@ -92,7 +91,6 @@ class GethKeeper(object):
         except Exception as e:
             raise GethException(str(e), 'Could not create account')
 
-    # TODO: should gas_price not be a member?
     def issue_contract(self, issuer_acct_num, issuer_name='', name='', symbol='TOKE', desc='',
                        img_url='', num_tokes=0, code_reqs=None, date_reqs=None, loc_reqs=None, gas_price=MAX_GAS_PRICE):
         """ Creates, compiles, and deploys a smart contract with the given attributes
@@ -172,7 +170,7 @@ class GethKeeper(object):
         """ Returns if there is a receipt and if the transaction succeeded
 
         :param tx_hash: The transaction hash
-        :return: Tuple - (got_receipt, did_succeed)
+        :return: Tuple - (got_receipt, did_succeed, receipt)
         """
         try:
             # Get the transaction receipt
@@ -180,8 +178,8 @@ class GethKeeper(object):
             tx_receipt = self._w3.eth.getTransactionReceipt(tx_hash)
             if tx_receipt:
                 # Return got_receipt, and succeeded
-                return True, tx_receipt['status'] == 1
-            return False, False
+                return True, tx_receipt['status'] == 1, tx_receipt
+            return False, False, None
         except Exception as e:
             raise GethException(str(e), message='Could not check transaction receipt')
 
@@ -215,8 +213,6 @@ class GethKeeper(object):
         :return: The address of the transaction
         """
         try:
-            log_kv(LOG_INFO, {'message': 'calling claim token', 'user_address': user_address, 'token_id': token_id,
-                              'contract_addr': contract_addr, 'json_abi': json_abi})
             # Convert the addresses
             contract_addr = self._w3.toChecksumAddress(contract_addr)
             user_address = self._w3.toChecksumAddress(user_address)
@@ -309,6 +305,23 @@ class GethKeeper(object):
             return contract, token_id
         return None
 
+    def get_user_from_token_id(self, contract_addr, json_abi, token_id):
+        """ Gets the address of the user who owns the given token_id for the given contract
+
+        :param contract_addr: The address of the contract
+        :param json_abi: The ABI for the contract
+        :param token_id: The token_id of the token of interest
+        :return: An address of the user who owns it or zero bytes
+        """
+        contract_addr = self._w3.toChecksumAddress(contract_addr)
+        try:
+            contract_abi = loads(json_abi)['abi']
+            contract = self._w3.eth.contract(address=contract_addr, abi=contract_abi,
+                                             ContractFactoryClass=ConciseContract)
+            return contract.getUserFromTokenID(token_id)
+        except Exception as e:
+            raise GethException(str(e), message='Could not get an instance of the contract')
+
     def kill_contract(self, contract_addr, json_abi, gas_price=MAX_GAS_PRICE):
         """ Kills the given contract
 
@@ -334,7 +347,3 @@ class GethKeeper(object):
             return hexlify(tx_hash)
         except Exception as e:
             raise GethException(str(e), message='Could not kill contract!!!')
-
-# TODO: Add function to cancel a transaction
-# TODO: Add function to replace a transaction
-# TODO: Add functionality to dynamically get best gas price

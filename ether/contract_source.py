@@ -72,52 +72,57 @@ contract issuer_contract {
     /* GETTERS AND SETTERS */
     
     // Function to get issuer_name
-    function issuerName() public constant returns (string) {
+    function issuerName() public view returns (string) {
         return issuer_name;
     }
     
     // Function to get contract name
-    function name() public constant returns (string) {
+    function name() public view returns (string) {
         return contract_name;
     }
     
     // Function to return the token's symbol
-    function symbol() public constant returns (string) {
+    function symbol() public view returns (string) {
         return contract_symbol;
     }
     
     // Function to get description
-    function description() public constant returns (string) {
+    function description() public view returns (string) {
         return contract_description;
     }
     
     // Function to get image URL
-    function imageURL() public constant returns (string) {
+    function imageURL() public view returns (string) {
         return img_url;
     }
     
     // Function to get the number of tokens
-    function totalSupply() public constant returns (uint) {
+    function totalSupply() public view returns (uint) {
         return num_tokes;
     }
     
     // Function to get the remaining # of tokens
-    function remainingTokens() public constant returns (uint) {
+    function remainingTokens() public view returns (uint) {
         return remaining_tokes;
     }
     
     // Function to determine if a user owns a token 
-    function ownsToken(address _user) public constant returns (bool) {
+    function ownsToken(address _user) public view returns (bool) {
         return owns_token[_user];
     }
     
     // Function to get a user's token_id
-    function getUsersToken(address _user) public constant returns (uint256) {
+    function getUsersToken(address _user) public view returns (uint256) {
         return owners_token[_user];
     }
     
+    // Function to get a user from a token_id
+    function getUserFromTokenID(uint _token_id) public view returns (address) {
+        return token_owners[_token_id];
+    }
+    
     // Gets the number of date ranges set
-    function num_dates() public constant returns (uint) {
+    function num_dates() public view returns (uint) {
         return date_reqs.length;
     }
     
@@ -128,7 +133,7 @@ contract issuer_contract {
     }
     
     // Gets the number of code requirements
-    function num_codes() public constant returns (uint) {
+    function num_codes() public view returns (uint) {
         return code_reqs.length;
     }
     
@@ -138,12 +143,12 @@ contract issuer_contract {
     }
     
     // Gets the number of location requirements
-    function num_locations() public constant returns (uint) {
+    function num_locations() public view returns (uint) {
         return loc_reqs.length;
     }
     
     // Gets the location at the given index as (lat, long, radius)
-    function get_location(uint index ) public view returns (int256, int256, int256) {
+    function get_location(uint index) public view returns (int256, int256, int256) {
         LocationReq storage loc = loc_reqs[index];
         return (loc.latitude, loc.longitude, loc.radius);
     }

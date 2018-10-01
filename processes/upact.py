@@ -1,16 +1,81 @@
 #!/usr/bin/python
 import sys
+
+from utils.db_utils import DataQuery
+
 sys.path.insert(0, '/usr/apps/token/backend/backend/')
 from ether.geth_keeper import GethKeeper
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.engine import create_engine
 
 
-def update_contracts(rows, session):
+class UpdateContractStatus(DataQuery):
+    """ Updates the status and address of a contract
+
+    **binds**:
+        * new_status: The status to update to
+        * con_addr: The address of the contract
+        * this_id: The database's contract_id for this contract
+    """
+
+    def __init__(self):
+        self.sql_text = """
+            UPDATE contracts 
+            SET status = :new_status, 
+              con_addr = :con_addr 
+            WHERE con_id = :this_id;
+        """
+        super().__init__()
+
+
+class UpdateTokenStatus(DataQuery):
+    """ Updates the status and gas_cost of a token
+
+    **binds**:
+        * new_status: The new status of the token
+        * gas_cost: The total gas consumed by the transaction
+        * this_id: The ID of the token
+    """
+
+    def __init__(self):
+        self.sql_text = """
+            UPDATE tokens 
+            SET status = :new_status, 
+              gas_cost = :gas_cost 
+            WHERE t_id = :this_id
+        """
+        super().__init__()
+
+
+class GetPendingContracts(DataQuery):
+    """ Gets all pending contracts """
+
+    def __init__(self):
+        self.sql_text = """
+            SELECT con_id, con_tx 
+            FROM contracts 
+            WHERE status = 'P'
+        """
+        super().__init__()
+
+
+class GetPendingTokens(DataQuery):
+    """ Gets all pending tokens """
+
+    def __init__(self):
+        self.sql_text = """
+            SELECT t_id, t_hash 
+            FROM tokens 
+            WHERE status = 'P' 
+              AND t_hash IS NOT NULL
+        """
+        super().__init__()
+
+
+def update_contracts(rows):
     """ Updates contract status and address if an issue has been processed. 'S' = Success, 'F' = Failure
 
     :param rows: The rows to iterate over
-    :param session: The database object to use
     """
     for row in rows:
         print('working on contract - contract_id: {c_id}'.format(c_id=row['con_id']))
@@ -24,31 +89,30 @@ def update_contracts(rows, session):
             else:
                 print('Contract failed!! - contract_id: {c_id}'.format(c_id=row['con_id']))
             # Update the status and contract address
-            session.execute("update contracts set status = :new_status, con_addr = :con_addr where con_id = :this_id",
-                                {'new_status': 'S', 'con_addr': addr, 'this_id': row['con_id']})
+            UpdateContractStatus().execute({'new_status': 'S', 'con_addr': addr, 'this_id': row['con_id']}, sesh=sess)
     sess.commit()
 
 
-def update_tokens(rows, session):
+def update_tokens(rows):
     """ Updates token status if a claim has been processed. Sets status to 'S' on success or 'F' on failure
 
     :param rows: The rows to iterate over
-    :param session: The database session object to use
     """
     for row in rows:
         print('working on token - token_id: {t_id}'.format(t_id=row['t_id']))
         # Try to get the transaction receipt
-        has_receipt, success = geth.check_claim_mine(row['t_hash'])
+        has_receipt, success, receipt = geth.check_claim_mine(row['t_hash'])
         if has_receipt:
             status = 'F'
             if success:
                 status = 'S'
-                print('Token claim mined - token_id: {t_id}'.format(t_id=row['t_id']))
+                gas_cost = receipt['gasUsed']
+                print('Token claim mined - token_id: {t_id}, gas_used: {gas}'.format(t_id=row['t_id'], gas=gas_cost))
             else:
+                gas_cost = None
                 print('Token claim failed!! - token_id: {t_id}'.format(t_id=row['t_id']))
             # Update the status
-            session.execute("update tokens set status = :new_status where t_id = :this_id",
-                            {'new_status': status, 'this_id': row['t_id']})
+            UpdateTokenStatus().execute({'new_status': status, 'gas_cost': gas_cost, 'this_id': row['t_id']}, sesh=sess)
     sess.commit()
 
 
@@ -64,11 +128,10 @@ if __name__ == '__main__':
 
     # Get contracts with pending status (for updating contracts)
     sess = Session()
-    contract_rows = sess.execute("select con_id, con_tx from contracts where status = 'P'")
-    update_contracts(contract_rows, sess)
+    contract_rows = GetPendingContracts().execute({}, sess)
+    update_contracts(contract_rows)
 
     # Get tokens with pending status (for updating claimed tokens)
-    sess = Session()
-    token_rows = sess.execute("select t_id, t_hash from tokens where status = 'P' and t_hash is not NULL")
-    update_tokens(token_rows, sess)
+    token_rows = GetPendingTokens().execute({}, sess)
+    update_tokens(token_rows)
     sess.close()
