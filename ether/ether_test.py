@@ -7,15 +7,18 @@ if __name__ == '__main__':
     gk = GethKeeper()
 
     create_contract = False
-    claim_token = False
+    claim_token = True
 
     contract_addr = None
     json_abi = None
 
     if create_contract:
+        lat = 40.7608
+        lon = 111.8910
+        radius = 50
         tx_hash, json_abi = gk.issue_contract('0xff95b24806e3d93afc628c4bb684fd245e9853e9',
                                               issuer_name='tesla', desc='token for tesla', img_url='http://google.com',
-                                              num_tokes=5)
+                                              num_tokes=5, loc_reqs=[lat, lon, radius])
 
         print('tx_hash: {0}'.format(tx_hash))
         print('---------------------------------------------------------------')
@@ -42,13 +45,13 @@ if __name__ == '__main__':
 
     # Address and ABI of an already created contract
     if not create_contract:
-        contract_addr = '0x1A4e4465A13161682978B99907FbE4AdC64CFED4'
+        contract_addr = '0x04dC54EC9EBcdf4cc0209604e84191a673cde983'
         json_abi = '{"abi": [{"constant": true, "inputs": [], "name": "num_codes", "outputs": [{"name": "", "type": "uint256"}], "payable": false, "stateMutability": "view", "type": "function"}, {"constant": true, "inputs": [], "name": "name", "outputs": [{"name": "", "type": "string"}], "payable": false, "stateMutability": "view", "type": "function"}, {"constant": true, "inputs": [], "name": "num_locations", "outputs": [{"name": "", "type": "uint256"}], "payable": false, "stateMutability": "view", "type": "function"}, {"constant": true, "inputs": [], "name": "num_dates", "outputs": [{"name": "", "type": "uint256"}], "payable": false, "stateMutability": "view", "type": "function"}, {"constant": true, "inputs": [], "name": "totalSupply", "outputs": [{"name": "", "type": "uint256"}], "payable": false, "stateMutability": "view", "type": "function"}, {"constant": true, "inputs": [{"name": "_user", "type": "address"}], "name": "ownsToken", "outputs": [{"name": "", "type": "bool"}], "payable": false, "stateMutability": "view", "type": "function"}, {"constant": true, "inputs": [], "name": "issuerName", "outputs": [{"name": "", "type": "string"}], "payable": false, "stateMutability": "view", "type": "function"}, {"constant": false, "inputs": [], "name": "kill", "outputs": [], "payable": false, "stateMutability": "nonpayable", "type": "function"}, {"constant": false, "inputs": [{"name": "_to", "type": "address"}, {"name": "_tokenId", "type": "uint256"}, {"name": "code", "type": "bytes6"}, {"name": "date", "type": "uint256"}], "name": "sendToken", "outputs": [], "payable": false, "stateMutability": "nonpayable", "type": "function"}, {"constant": true, "inputs": [], "name": "description", "outputs": [{"name": "", "type": "string"}], "payable": false, "stateMutability": "view", "type": "function"}, {"constant": true, "inputs": [], "name": "symbol", "outputs": [{"name": "", "type": "string"}], "payable": false, "stateMutability": "view", "type": "function"}, {"constant": true, "inputs": [{"name": "_user", "type": "address"}], "name": "getUsersToken", "outputs": [{"name": "", "type": "uint256"}], "payable": false, "stateMutability": "view", "type": "function"}, {"constant": true, "inputs": [{"name": "_token_id", "type": "uint256"}], "name": "getUserFromTokenID", "outputs": [{"name": "", "type": "address"}], "payable": false, "stateMutability": "view", "type": "function"}, {"constant": true, "inputs": [], "name": "imageURL", "outputs": [{"name": "", "type": "string"}], "payable": false, "stateMutability": "view", "type": "function"}, {"constant": true, "inputs": [{"name": "index", "type": "uint256"}], "name": "get_code", "outputs": [{"name": "", "type": "bytes6"}], "payable": false, "stateMutability": "view", "type": "function"}, {"constant": true, "inputs": [{"name": "index", "type": "uint256"}], "name": "get_date_range", "outputs": [{"name": "", "type": "uint256"}, {"name": "", "type": "uint256"}], "payable": false, "stateMutability": "view", "type": "function"}, {"constant": true, "inputs": [{"name": "index", "type": "uint256"}], "name": "get_location", "outputs": [{"name": "", "type": "int256"}, {"name": "", "type": "int256"}, {"name": "", "type": "int256"}], "payable": false, "stateMutability": "view", "type": "function"}, {"constant": true, "inputs": [], "name": "remainingTokens", "outputs": [{"name": "", "type": "uint256"}], "payable": false, "stateMutability": "view", "type": "function"}, {"inputs": [{"name": "_owner", "type": "address"}, {"name": "_in", "type": "string"}, {"name": "_cn", "type": "string"}, {"name": "_ts", "type": "string"}, {"name": "_cd", "type": "string"}, {"name": "_iu", "type": "string"}, {"name": "_it", "type": "uint256"}, {"name": "_codes", "type": "bytes6[]"}, {"name": "_dates", "type": "uint256[]"}, {"name": "_locs", "type": "int256[]"}], "payable": false, "stateMutability": "nonpayable", "type": "constructor"}]}'
 
 
     if claim_token:
         # Claim the token for that user
-        tx_hash, gas_price = gk.claim_token(contract_addr, json_abi, "0x5672812c8d38093900d95b383d8b31d73c34fae4", 360)
+        tx_hash, gas_price = gk.claim_token(contract_addr, json_abi, "0x9db3052c0173adada374173a0286f7855222a713", 362, code='123ABC')
 
         print('tx_hash: {0}, gas_price: {1}'.format(tx_hash, gas_price))
 

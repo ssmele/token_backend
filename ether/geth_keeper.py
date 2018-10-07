@@ -110,7 +110,7 @@ class GethKeeper(object):
         :param gas_price: Willing gas price to pay - default: MAX_GAS_PRICE (2000000000)
         :return: Tuple - (transaction_hash, json_abi) as (string, string)
         """
-        code_reqs = [bytes(code) for code in code_reqs] if code_reqs else []
+        code_reqs = [bytes(code, 'utf8') for code in code_reqs] if code_reqs else []
         date_reqs = [int(date) for date in date_reqs] if date_reqs else []
         loc_reqs = [int(loc * 1000000) for loc in loc_reqs] if loc_reqs else []
 
