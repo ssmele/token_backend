@@ -225,7 +225,7 @@ class GethKeeper(object):
             self._w3.personal.unlockAccount(self._root_acct, self._root_priv_key, duration=ACCT_UNLOCK_DUR)
 
             # Get the claim requirements to send
-            code = bytes(code) if code else bytes('000000')
+            code = bytes(code, 'utf8') if code else bytes('000000', 'utf8')
             date = int((datetime.now() - datetime(1970, 1, 1)).total_seconds())
 
             # Send the token specified by token_id to the user

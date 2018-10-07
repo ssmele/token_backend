@@ -48,9 +48,9 @@ if __name__ == '__main__':
     # print('GOT RESULT: {}'.format(res))
     
     # Claim the token for that user
-    tx_hash = gk.claim_token(contract_addr, json_abi, "0xa98951bca663936e6275c41683078237302f1f02", 359)
+    tx_hash, gas_price = gk.claim_token(contract_addr, json_abi, "0x5672812c8d38093900d95b383d8b31d73c34fae4", 360)
 
-    print('tx_hash: {0}'.format(tx_hash))
+    print('tx_hash: {0}, gas_price: {1}'.format(tx_hash, gas_price))
 
     tx_hash = unhexlify(tx_hash)
     receipt = None
