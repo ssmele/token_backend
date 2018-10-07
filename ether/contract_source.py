@@ -1,5 +1,5 @@
 CONTRACT = """
-pragma solidity ^0.4.25;
+pragma solidity ^0.4.0;
     
 contract issuer_contract {
 
@@ -40,7 +40,7 @@ contract issuer_contract {
     mapping(address => uint256) private owners_token;  // Holds the token owned by a user
 
     // Constructor
-    constructor(address _owner, string _in, string _cn, string _ts, string _cd, 
+    function issuer_contract(address _owner, string _in, string _cn, string _ts, string _cd, 
             string _iu, uint256 _it, bytes6[] _codes, uint[] _dates, int256[] _locs) public {
         // Set attributes
         issuer_name = _in;
