@@ -28,11 +28,12 @@ from routes.collector import collector_bp, collector_docs
 from routes.issuer import issuer_bp, issuer_docs
 from routes.ping import ping, ping_docs
 from routes.claim import claim_bp, claim_docs
-from routes.contract import contract_bp, contract_docs
+from routes.contract import contract_bp, contract_docs, constraint_bp
 from routes.login import login_bp, login_docs
 from routes.explore import explore_bp, explore_docs
 from routes.analytics import analytics_bp
 from routes.frontend import frontend_bp
+from routes.trade import trade_bp
 
 # Registering blueprints.
 app.register_blueprint(collector_bp)
@@ -44,6 +45,8 @@ app.register_blueprint(login_bp)
 app.register_blueprint(explore_bp)
 app.register_blueprint(analytics_bp)
 app.register_blueprint(frontend_bp)
+app.register_blueprint(constraint_bp)
+app.register_blueprint(trade_bp)
 
 
 @app.before_request
@@ -66,7 +69,7 @@ def handle_bad_request(e):
 @app.route('/docs')
 def docs():
     """
-    This endpoint simple servers the documenation to the user. The universe is gonna end from heat death anyway f the
+    This endpoint simple servers the documentation to the user. The universe is gonna end from heat death anyway f the
     rules and smoke dope for life.
     :return:
     """

@@ -35,10 +35,12 @@ what a base response will look like.</p>
 {% for bp in bp_docs %}
     <h1><u><em>{{ bp.bp_name }} Methods:</em></u></h1>
     {% for key, value in bp.registered_endpoints.items() %}
-        <h2> {{ key }} [{{ value.endpoint_type }}]</h2>
+        <h2> {{ key }} [{{ value.endpoint_type }}]
+            {% if value.req_i_jwt %} <span style="color: green"> [ISSUER JWT REQUIRED] </span>{% endif %}
+            {% if value.req_c_jwt %} <span style="color: #ffdd00"> [COLLECTOR JWT REQUIRED] </span>{% endif %}</h2>
         <u><p> Description:</p></u> <p>{{ value.description }}</p>
         {% if value.input_schema %}
-            <u><em><p>Method Form Data:</p></em></u>
+            <u><em><p>Method Request Json Fields:</p></em></u>
             <table style="width: 100%">
             <tr><th>Param Name</th><th>Param Description</th></tr>
             {% for k, v in value.input_schema.items() %}
@@ -54,6 +56,18 @@ what a base response will look like.</p>
             <table style="width: 100%">
             <tr><th>Param Name</th><th>Param Description</th></tr>
             {% for k, v in value.url_params.items() %}
+                <tr>
+                    <th>{{ k }}</th>
+                    <th><pre>{{ v|tojson_pretty|safe }}</pre></th>
+                </tr>
+            {% endfor %}
+            </table>
+        {% endif %}
+        {% if value.output_schema %}
+            <u><em><p>Method Response Json Fields:</p></em></u>
+            <table style="width: 100%">
+            <tr><th>Param Name</th><th>Param Description</th></tr>
+            {% for k, v in value.output_schema.items() %}
                 <tr>
                     <th>{{ k }}</th>
                     <th><pre>{{ v|tojson_pretty|safe }}</pre></th>

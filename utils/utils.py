@@ -58,17 +58,13 @@ def success_response_dict(resp_data=None, status="Success", status_code=0):
     return {'resp_data': resp_data, 'status': status, 'status_code': status_code}
 
 
-def error_response(status="Error", status_code=-1, http_code=400):
+def error_response(status="Error", status_code=-1, http_code=400, **kwargs):
     log_kv(LOG_WARNING, {'warning': 'returning error response', 'status': status, 'status_code': status_code,
-                         'http_code': http_code})
+                         'http_code': http_code, **kwargs})
     try:
-        resp = jsonify({'status': status, 'status_code': status_code})
+        resp = jsonify({'status': status, 'status_code': status_code, **kwargs})
         resp.status_code = http_code
         return resp
     except Exception as e:
         log_kv(LOG_ERROR, {'error': 'could not build error response', 'exception': str(e)})
         raise e
-
-# TODO: Make Error Handler
-# TODO: Make db getter
-# TODO: Make Authenticator

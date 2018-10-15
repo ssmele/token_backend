@@ -33,7 +33,7 @@ def percent_claimed(con_id):
 
     # Get contract.
     data = g.sesh.execute("""select num_created from contracts where contracts.con_id = :contract_id;""",
-                           {"contract_id": con_id}).fetchall()
+                          {"contract_id": con_id}).fetchall()
 
     # Check that the data is there
     if len(data) == 0:
@@ -51,3 +51,10 @@ def percent_claimed(con_id):
         'num_unclaimed': num_created-num_claimed,
         'num_created': num_created
     })
+
+
+@analytics_bp.route(url_prefix + '/map' + '/<con_id>', methods=['GET'])
+@verify_issuer_jwt
+@requires_db
+def claimed_coordinates(con_id):
+    return success_response()

@@ -1,5 +1,6 @@
 import os
 from binascii import hexlify, unhexlify
+from datetime import datetime
 from json import dumps, loads
 from uuid import uuid4
 
@@ -21,6 +22,7 @@ from ether.contract_source import CONTRACT
 # To run console on existing node:    geth --rinkeby --datadir=/usr/apps/Ethereum attach
 
 
+# IPC_LOCATION = '/home/anna/.ethereum/rinkeby/geth.ipc'
 # IPC_LOCATION = '/home/stone/.ethereum/rinkeby/geth.ipc'
 
 
@@ -41,6 +43,24 @@ class GethException(Exception):
     def __init__(self, exception, message=''):
         self.exception = exception
         self.message = message
+
+
+class MockGethKeeper(object):
+
+    def create_account(self, *args, **kwargs):
+        return 0, 123
+
+    def issue_contract(self, *args, **kwargs):
+        return hexlify(123), '{}'
+
+    def check_contract_mine(self, *args, **kwargs):
+        return True, True, 123
+
+    def check_claim_mine(self, *args, **kwargs):
+        return True, True
+
+    def claim_token(self, *args, **kwargs):
+        return hexlify(1), MAX_GAS_PRICE
 
 
 class GethKeeper(object):
@@ -71,9 +91,8 @@ class GethKeeper(object):
         except Exception as e:
             raise GethException(str(e), 'Could not create account')
 
-    # TODO: should gas_price not be a member?
     def issue_contract(self, issuer_acct_num, issuer_name='', name='', symbol='TOKE', desc='',
-                       img_url='', num_tokes=0, gas_price=MAX_GAS_PRICE):
+                       img_url='', num_tokes=0, code_reqs=None, date_reqs=None, loc_reqs=None, gas_price=MAX_GAS_PRICE):
         """ Creates, compiles, and deploys a smart contract with the given attributes
 
         :param issuer_acct_num: The issuer's account hash
@@ -83,12 +102,19 @@ class GethKeeper(object):
         :param desc: The contract description - default: empty string
         :param img_url: Contract image url as a string - default: empty string
         :param num_tokes: Contract's number of tokens - default: 0
+        :param code_reqs: Array of codes needed to claim the token - default: None
+        :param date_reqs: Array of date ranges of when the token is available as [start_1, end_1, start_2, ...]
+                          - default: None
+        :param loc_reqs: Array of locations the token can be claimed at as [lat_1, long_1, rad_1, ...]
+                          - default: None
         :param gas_price: Willing gas price to pay - default: MAX_GAS_PRICE (2000000000)
         :return: Tuple - (transaction_hash, json_abi) as (string, string)
         """
+        code_reqs = [bytes(code, 'utf8') for code in code_reqs] if code_reqs else []
+        date_reqs = [int(date) for date in date_reqs] if date_reqs else []
+        loc_reqs = [int(loc * 1000000) for loc in loc_reqs] if loc_reqs else []
+
         try:
-            # TODO: Have a different function to generate solidity code
-            # TODO: Change transfer and accept code
             # Compile the source code
             contract_source_code = CONTRACT
             compiled_sol = compile_source(contract_source_code)
@@ -105,8 +131,10 @@ class GethKeeper(object):
             # Instantiate, deploy, and get the transaction hash of the contract
             contract = self._w3.eth.contract(abi=contract_interface['abi'], bytecode=contract_interface['bin'])
 
+            # Call the constructor of the contract
             tx_hash = contract.constructor(issuer_acct_num, issuer_name, name, symbol, desc, img_url,
-                                           num_tokes).transact({'from': self._root_acct, 'gasPrice': gas_price})
+                                           num_tokes, code_reqs, date_reqs, loc_reqs)\
+                .transact({'from': self._root_acct, 'gasPrice': gas_price})
 
             # Lock the issuer's account back up and return the transaction hash
             self._w3.personal.lockAccount(self._root_acct)
@@ -142,7 +170,7 @@ class GethKeeper(object):
         """ Returns if there is a receipt and if the transaction succeeded
 
         :param tx_hash: The transaction hash
-        :return: Tuple - (got_receipt, did_succeed)
+        :return: Tuple - (got_receipt, did_succeed, receipt)
         """
         try:
             # Get the transaction receipt
@@ -150,8 +178,8 @@ class GethKeeper(object):
             tx_receipt = self._w3.eth.getTransactionReceipt(tx_hash)
             if tx_receipt:
                 # Return got_receipt, and succeeded
-                return True, tx_receipt['status'] == 1
-            return False, False
+                return True, tx_receipt['status'] == 1, tx_receipt
+            return False, False, None
         except Exception as e:
             raise GethException(str(e), message='Could not check transaction receipt')
 
@@ -173,13 +201,14 @@ class GethKeeper(object):
         except Exception as e:
             raise GethException(str(e), message='Could not get contract instance')
 
-    def claim_token(self, contract_addr, json_abi, user_address, token_id, gas_price=MAX_GAS_PRICE):
+    def claim_token(self, contract_addr, json_abi, user_address, token_id, code=None, gas_price=MAX_GAS_PRICE):
         """ Function for a user to claim a token
 
         :param contract_addr: The address of the contract
         :param json_abi: The contract's application binary interface as a json string
         :param user_address: The receiving user's address
         :param token_id: The id of the token  !!! Can't be 0 !!!
+        :param code: The unique identifier the user is using to claim - default: None
         :param gas_price: The gas price to use - default: MAX_GAS_PRICE (2000000000)
         :return: The address of the transaction
         """
@@ -195,13 +224,17 @@ class GethKeeper(object):
             # Unlock the issuers account
             self._w3.personal.unlockAccount(self._root_acct, self._root_priv_key, duration=ACCT_UNLOCK_DUR)
 
+            # Get the claim requirements to send
+            code = bytes(code, 'utf8') if code else bytes('000000', 'utf8')
+            date = int((datetime.now() - datetime(1970, 1, 1)).total_seconds())
+
             # Send the token specified by token_id to the user
-            tx_hash = contract.functions.sendToken(user_address, token_id).transact(
+            tx_hash = contract.functions.sendToken(user_address, token_id, code, date).transact(
                 {'from': self._root_acct, 'gasPrice': gas_price})
 
             # Lock the issuers account and return
             self._w3.personal.lockAccount(self._root_acct)
-            return hexlify(tx_hash)
+            return hexlify(tx_hash), gas_price
         except Exception as e:
             raise GethException(str(e), message='Could not send token')
 
@@ -272,6 +305,23 @@ class GethKeeper(object):
             return contract, token_id
         return None
 
+    def get_user_from_token_id(self, contract_addr, json_abi, token_id):
+        """ Gets the address of the user who owns the given token_id for the given contract
+
+        :param contract_addr: The address of the contract
+        :param json_abi: The ABI for the contract
+        :param token_id: The token_id of the token of interest
+        :return: An address of the user who owns it or zero bytes
+        """
+        contract_addr = self._w3.toChecksumAddress(contract_addr)
+        try:
+            contract_abi = loads(json_abi)['abi']
+            contract = self._w3.eth.contract(address=contract_addr, abi=contract_abi,
+                                             ContractFactoryClass=ConciseContract)
+            return contract.getUserFromTokenID(token_id)
+        except Exception as e:
+            raise GethException(str(e), message='Could not get an instance of the contract')
+
     def kill_contract(self, contract_addr, json_abi, gas_price=MAX_GAS_PRICE):
         """ Kills the given contract
 
@@ -297,7 +347,3 @@ class GethKeeper(object):
             return hexlify(tx_hash)
         except Exception as e:
             raise GethException(str(e), message='Could not kill contract!!!')
-
-# TODO: Add function to cancel a transaction
-# TODO: Add function to replace a transaction
-# TODO: Add functionality to dynamically get best gas price
