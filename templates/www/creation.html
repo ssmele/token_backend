@@ -91,7 +91,7 @@
 					
 					formData.append("token_image", $('input[type=file]')[0].files[0]);
 					
-					console.log(formData)
+					console.log(formData);
 					$.ajaxSetup({
 						headers: {
 							'Authorization': document.cookie
@@ -236,9 +236,9 @@
 					  var marker = L.marker([0,0]);
 					  var circle = L.circle([0,0], {
 					  radius: 100
-					})
-					  marker.addTo(map)
-					  circle.addTo(map)
+					});
+					  marker.addTo(map);
+					  circle.addTo(map);
 					
 						function onMapClick(e) {
 						marker.setLatLng(e.latlng);

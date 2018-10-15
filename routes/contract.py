@@ -60,8 +60,8 @@ class Contract(Resource):
         # If we have an image save it.
         file_location = None
         if 'token_image' in request.files:
-            file = request.files['token_image']
-            file_location = save_file(file,  'CONTRACTS', g.issuer_info['i_id'])
+            file_location = save_file(request.files['token_image'],  ImageFolders.CONTRACTS.value,
+                                      g.issuer_info['i_id'])
 
         if file_location is None:
             file_location = 'default.png'

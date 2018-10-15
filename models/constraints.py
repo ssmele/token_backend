@@ -140,12 +140,13 @@ def validate_uni_code_constraints(con_id, code):
     # Get all possible unique code constraints
     ucs = GetUniqueCodeConstraints().execute_n_fetchall({'con_id': con_id})
 
-    if code is None:
-        return False
-
     # If there are not codes associated with this contract then we are good.
     if len(ucs) == 0:
         return True
+
+    # If we found codes and their is no codes given then we automatically fail validation.
+    if code is None:
+        return False
 
     # Go through and see if our code matches any.
     valid_codes = next((t for t in ucs if code == t['code']), None)
