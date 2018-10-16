@@ -132,7 +132,12 @@
 					formData.append("num_created",num_created);
 					formData.append("constraints",constraints);
 					formData.append("token_image", $('input[type=file]')[0].files[0]);
+<<<<<<< HEAD
 					console.log(formData)
+=======
+					
+					console.log(formData);
+>>>>>>> 6e332a3df2ac3cf263bd9d2ce556671b05ec57a2
 					$.ajaxSetup({
 						headers: {
 							'Authorization': document.cookie
@@ -277,9 +282,9 @@
 					  var marker = L.marker([0,0]);
 					  var circle = L.circle([0,0], {
 					  radius: 100
-					})
-					  marker.addTo(map)
-					  circle.addTo(map)
+					});
+					  marker.addTo(map);
+					  circle.addTo(map);
 					
 						function onMapClick(e) {
 						marker.setLatLng(e.latlng);

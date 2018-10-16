@@ -64,6 +64,7 @@ class MockGethKeeper(object):
 
 
 class GethKeeper(object):
+
     def __init__(self):
         # TODO: remove middleware when moving to main ethereum network
         try:
@@ -133,7 +134,7 @@ class GethKeeper(object):
 
             # Call the constructor of the contract
             tx_hash = contract.constructor(issuer_acct_num, issuer_name, name, symbol, desc, img_url,
-                                           num_tokes, code_reqs, date_reqs, loc_reqs)\
+                                           num_tokes, code_reqs, date_reqs, loc_reqs) \
                 .transact({'from': self._root_acct, 'gasPrice': gas_price})
 
             # Lock the issuer's account back up and return the transaction hash
