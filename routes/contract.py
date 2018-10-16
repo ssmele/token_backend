@@ -69,10 +69,14 @@ class Contract(Resource):
 
         try:
             # Get the received constraints in array format for the smart contract
-            code_constraints, date_constraints, loc_constraints = self.get_contraints(data)
+            code_constraints, date_constraints, loc_constraints = self.get_constraints(data)
 
             # Issue the contract on the ETH network
             issuer = GetIssuerInfo().execute_n_fetchone(binds={'i_id': g.issuer_info['i_id']})
+            # Ensure we retrieved an issuer.
+            if issuer is None:
+                error_response('Failed to retrieve issuer specified.')
+
             data['con_tx'], data['con_abi'] = g.geth.issue_contract(issuer['i_hash'],
                                                                     issuer_name=issuer['username'],
                                                                     name=data['name'],
@@ -106,7 +110,7 @@ class Contract(Resource):
             return error_response("Couldn't create new contract. Exception {}".format(str(e)))
 
     @staticmethod
-    def get_contraints(data):
+    def get_constraints(data):
         """ Gets the constraints for the contract creation
 
         :param data: The data received in the contract POST method
@@ -155,6 +159,11 @@ class Contract(Resource):
         if contracts is not None:
             log_kv(LOG_INFO, {'message': 'succesfully retrieved issuer\'s contracts',
                               'issuer_id': g.issuer_info['i_id']})
+
+            # Add the constraints to the contract object.
+            for contract in contracts:
+                contract.update({'constraints': get_all_constraints(contract['con_id'])})
+
             return success_response({'contracts': contracts})
         else:
             log_kv(LOG_WARNING, {'warning': 'could not get contract for issuer', 'issuer_id': g.issuer_info['i_id']})
