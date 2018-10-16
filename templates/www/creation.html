@@ -82,6 +82,7 @@
 				var radius;
 
 				function formatDate(time){
+					if(time == "") return ""
 					var temp = time.split(" ");
 					var day = temp[1].split("/");
 					var time = temp[0].split(":");
@@ -91,12 +92,13 @@
 				function publish(){
 					$('#loader').show();
 					$('#screen').show();
-					var name = $("#name").val();
-					var num_created = $("#count").val();
-					var description = $("#desc").val();     
-					var start_time = formatDate($("#starttime").val());
-					var end_time = formatDate($("#endtime").val());     
-					var code = $("#code").val();     
+					var name = $("#name").val()
+					var num_created = $("#count").val() 
+					var description = $("#desc").val()
+					var start_time = formatDate($("#starttime").val())
+					var end_time = formatDate($("#endtime").val())     
+					var code = ""
+					code = $("#code").val()   
 		
 					console.log("start_time = " + start_time);
 					console.log("end_time = " + end_time);
@@ -104,40 +106,42 @@
 					console.log("latitude = " + latitude);
 					console.log("longitude = " + longitude);
 					console.log("radius = " + radius);
-					constraints = {
-    					"code_constraints": [
-        					{
-           						"code": code
-        					}
-    					],
-    					"time_constraints": [
-        					{
-            					"start": start_time,
-            					"end": end_time
-        					}
-    					],
-    					"location_constraints": [
+					var codes = []
+					if(code.length == 6){
+						codes = [{"code": code}]
+					}
+					var times = []
+					if(start_time != "" && end_time != ""){
+						times = [{ "start": start_time, "end": end_time }]
+					}
+					var locs = []
+					if(latitude != null && longitude != null && radius != null){
+						locs = [
        						{
             					"latitude": latitude,
            						"longitude": longitude,
-            					"radius": radius
+								"radius": radius
         					}
     					]
 					}
-
-
-					var formData = new FormData();
-					formData.append("name",name);
-					formData.append("description",description);						
-					formData.append("num_created",num_created);
-					formData.append("constraints",constraints);
-					formData.append("token_image", $('input[type=file]')[0].files[0]);
-<<<<<<< HEAD
-					console.log(formData)
-=======
+					var constraints = {
+    					"code_constraints": codes,
+    					"time_constraints": times,
+    					"location_constraints": locs 
+					}
 					
-					console.log(formData);
->>>>>>> 6e332a3df2ac3cf263bd9d2ce556671b05ec57a2
+					json_data = {
+    					"name": name,
+    					"description": description,
+						"num_created": num_created,
+						"constraints": constraints
+					}
+					var formData = new FormData();
+
+					formData.append("json_data",JSON.stringify(json_data));
+					formData.append("token_image", $('input[type=file]')[0].files[0]);
+
+					console.log(formData)
 					$.ajaxSetup({
 						headers: {
 							'Authorization': document.cookie
