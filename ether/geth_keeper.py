@@ -51,7 +51,7 @@ class MockGethKeeper(object):
         return 0, 123
 
     def issue_contract(self, *args, **kwargs):
-        return hexlify(123), '{}'
+        return hexlify(b'a2'), '{}'
 
     def check_contract_mine(self, *args, **kwargs):
         return True, True, 123
@@ -60,7 +60,7 @@ class MockGethKeeper(object):
         return True, True
 
     def claim_token(self, *args, **kwargs):
-        return hexlify(1), MAX_GAS_PRICE
+        return hexlify(b'a2'), MAX_GAS_PRICE
 
 
 class GethKeeper(object):

@@ -37,7 +37,7 @@ CREATE TABLE location_claim(
   longitude DECIMAL(9,6),
   radius REAL,
   FOREIGN KEY (con_id) REFERENCES contracts(con_id)
-)
+);
 
 CREATE TABLE time_claim(
   tc_id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -45,14 +45,14 @@ CREATE TABLE time_claim(
   start DATE NOT NULL ,
   end DATE NOT NULL ,
   FOREIGN KEY (con_id) REFERENCES contracts(con_id)
-)
+);
 
 CREATE TABLE unique_code_claim(
   uc_id INTEGER PRIMARY KEY AUTOINCREMENT,
   con_id INTEGER,
-  unique_code TEXT,
+  code TEXT,
   FOREIGN KEY (con_id) REFERENCES contracts(con_id)
-)
+);
 
 CREATE TABLE tokens (
   t_id INTEGER PRIMARY KEY AUTOINCREMENT,
