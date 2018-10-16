@@ -186,8 +186,9 @@ def server_image(image):
                         "Method to retrieve contract information by con_id. Constraint info included.",
                         output_schema=GetContractResponse, req_i_jwt=True)
 def get_contract_by_con_id(con_id):
-    contract = GetContractByConID().execute_n_fetchone({'con_id': con_id}, close_connection=True)
+    contract = GetContractByConID().execute_n_fetchone({'con_id': con_id})
     constraints = get_all_constraints(con_id)
+    g.sesh.close()
     if contract:
         log_kv(LOG_DEBUG, {'debug': 'successfully retrieved contract', 'contract_id': con_id})
         contract.update({'constraints': constraints})
