@@ -100,6 +100,8 @@ def create_trade_request(tr):
         tradee_item.update({'tr_id': tr_id, 'owner': tr['tradee']['c_id']})
         InsertTradeItem().execute(tradee_item)
 
+    return tr_id
+
 
 def is_valid_trade_items(trade_items):
     """

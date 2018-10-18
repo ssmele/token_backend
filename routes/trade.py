@@ -63,7 +63,8 @@ class Trade(Resource):
                     return error_response("Collector making request for token the tradee doesn't have ownership of.")
 
             # If we are dealing with a valid trade request persist it within the database.
-            create_trade_request(data)
+            new_tr_id = create_trade_request(data)
+            data.update({'tr_id': new_tr_id})
             g.sesh.commit()
             return success_response(resp_data={'trade_info': data},
                                     status='Trade request sent.',
