@@ -62,6 +62,9 @@ class MockGethKeeper(object):
     def claim_token(self, *args, **kwargs):
         return hexlify(b'a2'), MAX_GAS_PRICE
 
+    def get_users_token_id(self, *args, **kwargs):
+        return -1
+
 
 class GethKeeper(object):
 

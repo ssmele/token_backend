@@ -23,6 +23,7 @@ CREATE TABLE contracts (
   con_abi BLOB NOT NULL,
   name CHAR(50) NOT NULL,
   description TEXT,
+  tradable BOOLEAN NOT NULL DEFAULT true,
   num_created INTEGER NOT NULL,
   pic_location varchar(35) NOT NULL,
   creation_ts DATE DEFAULT (strftime('%Y-%m-%d %H:%M:%S')),

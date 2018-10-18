@@ -21,7 +21,7 @@ class DeleteTradeRequest(Schema):
 
 
 class TradeResponseRequest(Schema):
-    tr_id = fields.Boolean(required=True)
+    tr_id = fields.Int(required=True)
     accept = fields.Boolean(required=True)
 
     doc_load_info = {'tr_id': 'integer (tr_id of trade request to respond to)',
@@ -59,7 +59,7 @@ def check_active_trade_item(c_id, con_id, t_id):
     :param t_id: token to see if active.
     :return: Boolean representing tokens active status in another trade.
     """
-    if CheckActiveTradeItem().execute_n_fetchone({'c_id': c_id, 'con_id': con_id, 't_id': t_id}):
+    if CheckActiveTradeItem().execute_n_fetchone({'c_id': c_id, 'con_id': con_id, 't_id': t_id}, schema_out=False):
         return True
     else:
         return False
@@ -67,14 +67,14 @@ def check_active_trade_item(c_id, con_id, t_id):
 
 def check_trade_item_ownership(c_id, con_id, t_id):
     """
-    This method checks to ensure given c_id owns a token with a given con_id,
+    This method checks to ensure given c_id own s a token with a given con_id,
     and t_id.
     :param c_id: c_id of collector to ensure has ownership.
     :param con_id: con_id that token should be under.
     :param t_id: t_id that the collector should have ownership over.
     :return: Boolean that represents ownership status.
     """
-    if CheckOwnership().execute_n_fetchone({'c_id': c_id, 'con_id': con_id, 't_id': t_id}):
+    if CheckOwnership().execute_n_fetchone({'c_id': c_id, 'con_id': con_id, 't_id': t_id}, schema_out=False):
         return True
     else:
         return False
@@ -137,13 +137,13 @@ class CheckActiveTradeItem(DataQuery):
 
     def __init__(self):
         self.sql_text = """
-        select * from trade_item
-        where trade_item.tr_id in (select trade.tr_id from trade
-                                   where trade.trader_c_id = :c_id
-                                   and trade.status = '{}')
-        and trade_item.con_id = :con_id
-        and trade_item.t_id = :t_id
-        and trade_item.owner = :c_id;
+        select * from trade_item, trade
+        where trade_item.tr_id = trade.tr_id
+        and status = '{}'
+        and trader_c_id = :c_id
+        and con_id = :con_id
+        and t_id = :t_id
+        and owner = :c_id;
         """.format(TradeStatus.REQUESTED.value)
         self.schema_out = None
         super().__init__()
@@ -157,7 +157,7 @@ class CheckOwnership(DataQuery):
         where t_id = :t_id
         and owner_c_id = :c_id
         and con_id = :con_id
-        and status = 'S';
+        and status = 'S'
         """
         self.schema_out = None
         super().__init__()
@@ -208,7 +208,7 @@ class GetTradeByTRID(DataQuery):
     def __init__(self):
         self.sql_text = """
         select * from trade
-        where trade.tr_id = :tr_id;
+        where trade.tr_id = :tr_id
         """
         self.schema_out = None
         super().__init__()
@@ -247,9 +247,35 @@ class GetActiveTradeRequests(DataQuery):
     def __init__(self):
         self.sql_text = """
         select tr_id from trade 
-        where trader_c_id = :c_id
-        or tradee_c_id = :c_id
-        and status = '{}'
-        """.format(TradeStatus.REQUESTED.value)
+        where (trader_c_id = :c_id
+        or tradee_c_id = :c_id)
+        and status in ('R', 'A');
+        """
+        self.schema_out = None
+        super().__init__()
+
+
+class UpdateOwnership(DataQuery):
+
+    def __init__(self):
+        self.sql_text = """
+        update tokens
+        set owner_c_id = :new_owner
+        where con_id = :con_id
+        and t_id = :t_id
+        and owner_c_id = :prev_owner;
+        """
+        self.schema_out = None
+        super().__init__()
+
+
+class GetUntradables(DataQuery):
+
+    def __init__(self):
+        self.sql_text = """
+        select con_id from contracts 
+        where con_id in (:con_ids)
+        and tradable = 0;
+        """
         self.schema_out = None
         super().__init__()

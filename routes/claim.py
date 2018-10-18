@@ -63,7 +63,7 @@ def claim_token_for_user(con_id, c_id, lat, long, constraints, sesh):
         # Make sure a token is available and that it has info
         avail_token = GetAvailableToken().execute_n_fetchone({'con_id': con_id}, sesh=sesh)
         token_info = GetTokenInfo().execute_n_fetchone({'con_id': con_id, 'c_id': c_id}, sesh=sesh)
-        if not avail_token and not token_info:
+        if not avail_token or not token_info:
             log_kv(LOG_INFO, {'message': 'no tokens are available', 'contract_id': con_id, 'collector_id': c_id})
             return False, 'No available tokens'
 
