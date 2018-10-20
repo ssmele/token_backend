@@ -127,12 +127,12 @@ if __name__ == '__main__':
 
     # Get contracts with pending status (for updating contracts)
     sess = Session()
-    contract_rows = GetPendingContracts().execute_n_fetchall({}, sess)
+    contract_rows = GetPendingContracts().execute_n_fetchall({}, sess, schema_out=False)
     if contract_rows:
         update_contracts(contract_rows)
 
     # Get tokens with pending status (for updating claimed tokens)
-    token_rows = GetPendingTokens().execute_n_fetchall({}, sess)
+    token_rows = GetPendingTokens().execute_n_fetchall({}, sess, schema_out=False)
 
     if token_rows:
         update_tokens(token_rows)
