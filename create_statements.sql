@@ -96,4 +96,4 @@ FOREIGN KEY (tr_id) REFERENCES trade(tr_id),
 FOREIGN KEY (con_id) REFERENCES contracts(con_id),
 FOREIGN KEY (t_id) REFERENCES tokens(t_id),
 FOREIGN KEY (owner) REFERENCES collectors(c_id)
-)
+);
