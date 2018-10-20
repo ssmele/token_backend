@@ -81,6 +81,8 @@ CREATE TABLE trade (
 tr_id INTEGER  PRIMARY KEY AUTOINCREMENT,
 trader_c_id INTEGER NOT NULL,
 tradee_c_id INTEGER NOT NULL,
+trader_eth_offer FLOAT DEFAULT 0.0,
+tradee_eth_offer FLOAT DEFAULT 0.0,
 status CHAR(1) NOT NULL DEFAULT 'R',
 creation_ts DATE DEFAULT  (strftime('%Y-%m-%d %H:%M:%S')),
 FOREIGN KEY (trader_c_id) REFERENCES collectors(c_id),
