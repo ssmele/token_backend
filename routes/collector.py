@@ -74,15 +74,24 @@ class Collector(Resource):
 
     @verify_collector_jwt
     @requires_db
+    @requires_geth
     @collector_docs.document(url_prefix, 'GET',
                              "Method to retrieve collector information. Requires jwt from login/creation account.",
                              url_params={'c_id': 'c_id of collector to search for.'},
                              req_c_jwt=True)
     def get(self):
         collector = GetCollectorByCID().execute_n_fetchone({'c_id': g.collector_info['c_id']}, close_connection=True)
+
         if collector:
-            log_kv(LOG_INFO, {'message': 'successfully retrieved collector account',
-                              'collector_id': g.collector_info['c_id']})
+            # Try and get out the eth balance.
+            try:
+                balance = g.geth.get_eth_balance(collector['c_hash'])
+            except GethException as e:
+                log_kv(LOG_ERROR, {'error': "Couldn't retrieve eth balance", 'c_id': g.collector_info['c_id'],
+                                   'exception': str(e)}, exception=True)
+                balance = 'Not available at this time.'
+
+            collector.update({'eth_balance': balance})
             return success_response(collector)
         else:
             log_kv(LOG_WARNING, {'warning': 'could not get collector account',

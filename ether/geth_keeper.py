@@ -65,6 +65,9 @@ class MockGethKeeper(object):
     def get_users_token_id(self, *args, **kwargs):
         return -1
 
+    def get_eth_balance(self, *args, **kwargs):
+        return 10
+
 
 class GethKeeper(object):
 

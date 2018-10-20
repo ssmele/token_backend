@@ -60,12 +60,23 @@ class Issuer(Resource):
 
     @verify_issuer_jwt
     @requires_db
+    @requires_geth
     @issuer_docs.document(url_prefix, 'GET',
                           "Method to retrieve issuer information. Requires jwt from login/creation account.",
                           req_i_jwt=True)
     def get(self):
         issuer = GetIssuerByIID().execute_n_fetchone({'i_id': g.issuer_info['i_id']}, close_connection=True)
+
         if issuer:
+            # Try and get out the eth balance.
+            try:
+                balance = g.geth.get_eth_balance(issuer['i_hash'])
+            except GethException as e:
+                log_kv(LOG_ERROR, {'error': "Couldnt retrieve eth balance", 'i_id': g.issuer_info['i_id'],
+                                   'exception': str(e)}, exception=True)
+                balance = 'Not available at this time.'
+
+            issuer.update({'eth_balance': balance})
             return success_response(issuer)
         else:
             log_kv(LOG_WARNING, {'warning': 'could not find issuer account', 'issuer_id': g.issuer_info['i_id']})
