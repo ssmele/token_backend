@@ -326,6 +326,19 @@ class GethKeeper(object):
         except Exception as e:
             raise GethException(str(e), message='Could not get an instance of the contract')
 
+    def get_eth_balance(self, user_address):
+        """ Returns the balance for the given issuer
+
+        :param user_address: The address of the user's wallet
+        :return: Integer representing the user's balance in wei
+        """
+        try:
+            user_address = self._w3.toChecksumAddress(user_address)
+            balance = self._w3.eth.getBalance(user_address)
+            return balance
+        except Exception as e:
+            raise GethException(str(e), message='Could not get eth balance')
+
     def kill_contract(self, contract_addr, json_abi, gas_price=MAX_GAS_PRICE):
         """ Kills the given contract
 
