@@ -335,7 +335,8 @@ class GethKeeper(object):
         try:
             user_address = self._w3.toChecksumAddress(user_address)
             balance = self._w3.eth.getBalance(user_address)
-            return balance
+            balance = balance / 1000000000000000000
+            return round(balance, 8)
         except Exception as e:
             raise GethException(str(e), message='Could not get eth balance')
 
