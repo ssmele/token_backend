@@ -14,6 +14,7 @@ class ContractRequest(Schema):
     name = fields.Str(required=True)
     description = fields.Str(required=True)
     num_created = fields.Int(required=True)
+    tradable = fields.Boolean(required=True)
 
     constraints = fields.Nested(Constraints, required=False)
 
@@ -21,6 +22,7 @@ class ContractRequest(Schema):
         'name': {'type': 'string', 'desc': 'Name for the new token contract.'},
         'description': {'type': 'string', 'desc': 'Description of the new token contract being deployed'},
         'num_created': {'type': 'int', 'desc': 'desired password for collector creation.'},
+        'tradable': {'type': 'boolean', 'desc': 'boolean to determine if token is tradable.'},
         'constraints': Constraints.doc_load_info,
         'INFO (NOT APART OF REQUEST)' : {'time_format': CONSTRAINT_DATETIME_FORMAT, 'radius metric': 'meters',
                                          'constraints': 'The constraints are optional'}
@@ -35,6 +37,7 @@ class GetContractResponse(Schema):
     description = fields.Str(required=True)
     num_created = fields.Int(required=True)
     pic_location = fields.Str(required=True)
+    tradable = fields.Boolean(required=True)
     status = fields.Str(required=True)
 
     username = fields.Str(dump_only=True)
@@ -54,8 +57,8 @@ class InsertNewContract(DataQuery):
 
     def __init__(self):
         self.sql_text = """
-        INSERT INTO contracts(i_id, con_tx, con_abi, name, description, num_created, pic_location) 
-        VALUES(:i_id, :con_tx, :con_abi,  :name, :description, :num_created, :pic_location);
+        INSERT INTO contracts(i_id, con_tx, con_abi, name, description, tradable, num_created, pic_location) 
+        VALUES(:i_id, :con_tx, :con_abi,  :name, :description, :tradable, :num_created, :pic_location);
         """
         self.schema_out = None
         super().__init__()

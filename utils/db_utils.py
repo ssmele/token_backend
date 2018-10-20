@@ -87,6 +87,8 @@ class DataQuery:
                 sesh.close()
 
             if schema_out:
+                if self.schema_out is None:
+                    raise ValueError('No schema to parse with.')
                 # If we got an object then we need to try and parse it into an python dict.
                 return self.schema_out.dump(dict(rv))
             else:
@@ -122,6 +124,9 @@ class DataQuery:
 
             # If we got an object then we need to try and parse it into an python dict.
             if schema_out:
+                if self.schema_out is None:
+                    raise ValueError('No schema to parse with.')
+
                 if load_out:
                     return self.schema_out.load(list(map(dict, rv)), many=True)
                 else:

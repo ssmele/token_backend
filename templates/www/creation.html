@@ -45,7 +45,7 @@
 		</header>
 		<div class="spacing"></div>
 		
-		<div class="col-lg-7 offset-lg-2">
+		<div class="col-lg-8 offset-lg-2">
 			<div class="row align-items-center justify-content-center">
 				
 				<h1 class='display-4'>Token Creation</h1>
@@ -77,20 +77,70 @@
 			<script>
 				//var url = "localhost:8088"
 				var url = "167.99.26.0:80";
-				
+				var longitude;
+				var latitude;
+				var radius;
+
+				function formatDate(time){
+					if(time == "") return ""
+					var temp = time.split(" ");
+					var day = temp[1].split("/");
+					var time = temp[0].split(":");
+					return day[2] + "-" + day[0] + "-" + day[1] + " " + time[0] + ":" + time[1] + ":00"
+				}
+
 				function publish(){
 					$('#loader').show();
 					$('#screen').show();
-					var name = $("#name").val();
-					var num_created = $("#count").val();
-					var description = $("#desc").val();
+					var name = $("#name").val()
+					var num_created = $("#count").val() 
+					var description = $("#desc").val()
+					var start_time = formatDate($("#starttime").val())
+					var end_time = formatDate($("#endtime").val())     
+					var code = ""
+					code = $("#code").val()   
+		
+					console.log("start_time = " + start_time);
+					console.log("end_time = " + end_time);
+					console.log("code = " + code);
+					console.log("latitude = " + latitude);
+					console.log("longitude = " + longitude);
+					console.log("radius = " + radius);
+					var codes = []
+					if(code.length == 6){
+						codes = [{"code": code}]
+					}
+					var times = []
+					if(start_time != "" && end_time != ""){
+						times = [{ "start": start_time, "end": end_time }]
+					}
+					var locs = []
+					if(latitude != null && longitude != null && radius != null){
+						locs = [
+       						{
+            					"latitude": latitude,
+           						"longitude": longitude,
+								"radius": radius
+        					}
+    					]
+					}
+					var constraints = {
+    					"code_constraints": codes,
+    					"time_constraints": times,
+    					"location_constraints": locs 
+					}
+					
+					json_data = {
+    					"name": name,
+    					"description": description,
+						"num_created": num_created,
+						"constraints": constraints
+					}
 					var formData = new FormData();
-					formData.append("name",name);
-					formData.append("num_created",num_created);
-					formData.append("description",description);						
-					
+
+					formData.append("json_data",JSON.stringify(json_data));
 					formData.append("token_image", $('input[type=file]')[0].files[0]);
-					
+
 					console.log(formData)
 					$.ajaxSetup({
 						headers: {
@@ -191,14 +241,14 @@
 
 				<div class="collapse" id="collapseExample">
 				<div class="form-group row">
-				<input type="" class="form-control" id="code" name="code_constraint" placeholder="Code Constraint 'XXXXXX'" required>
+				<input type="" class="form-control" id="code" name="code_constraint" placeholder="Code Constraint 'XXXXXX'">
 				</div>
 				<div class="form-group row">
-				<input type="" class="form-control" id="starttime" name="start_time" placeholder="Start time" required>
+				<input type="" class="form-control" id="starttime" name="start_time" placeholder="Start time">
 				</div>
 				<div class="form-group row">
 
-				<input type="" class="form-control" id="endtime" name="end_time" placeholder="End time" required>
+				<input type="" class="form-control" id="endtime" name="end_time" placeholder="End time">
 				</div>
 				<script>
 					$( "#starttime" ).datetimepicker();
@@ -236,14 +286,16 @@
 					  var marker = L.marker([0,0]);
 					  var circle = L.circle([0,0], {
 					  radius: 100
-					})
-					  marker.addTo(map)
-					  circle.addTo(map)
+					});
+					  marker.addTo(map);
+					  circle.addTo(map);
 					
 						function onMapClick(e) {
 						marker.setLatLng(e.latlng);
 						circle.setLatLng(e.latlng);
 						latlng = e.latlng;
+						latitude = latlng.lat;
+						longitude = latlng.lng;
 						console.log(latlng);
 						}
 					
@@ -255,7 +307,8 @@
 							var sliderDiv = document.getElementById("sliderAmount");
 							//sliderDiv.innerHTML = slideAmount;
 							circle.setRadius(slideAmount);
-							console.log(circle.radius);
+							console.log(circle.getRadius());
+							radius = circle.getRadius();
 						}
 					</script>
 					</div>

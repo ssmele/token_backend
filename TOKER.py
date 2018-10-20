@@ -33,7 +33,7 @@ from routes.login import login_bp, login_docs
 from routes.explore import explore_bp, explore_docs
 from routes.analytics import analytics_bp
 from routes.frontend import frontend_bp
-from routes.trade import trade_bp
+from routes.trade import trade_bp, trade_docs
 
 # Registering blueprints.
 app.register_blueprint(collector_bp)
@@ -74,7 +74,8 @@ def docs():
     :return:
     """
     app.jinja_env.filters['tojson_pretty'] = to_pretty_json
-    blueprint_doc_list = [collector_docs, issuer_docs, contract_docs, login_docs, ping_docs, claim_docs, explore_docs]
+    blueprint_doc_list = [collector_docs, issuer_docs, contract_docs, login_docs, ping_docs, claim_docs, explore_docs,
+                          trade_docs]
     return render_template('documentation.html', bp_docs=blueprint_doc_list, base_resp=success_response_dict({}))
 
 

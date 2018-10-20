@@ -60,8 +60,8 @@ class Contract(Resource):
         # If we have an image save it.
         file_location = None
         if 'token_image' in request.files:
-            file = request.files['token_image']
-            file_location = save_file(file,  'CONTRACTS', g.issuer_info['i_id'])
+            file_location = save_file(request.files['token_image'],  ImageFolders.CONTRACTS.value,
+                                      g.issuer_info['i_id'])
 
         if file_location is None:
             file_location = 'default.png'
@@ -69,10 +69,14 @@ class Contract(Resource):
 
         try:
             # Get the received constraints in array format for the smart contract
-            code_constraints, date_constraints, loc_constraints = self.get_contraints(data)
+            code_constraints, date_constraints, loc_constraints = self.get_constraints(data)
 
             # Issue the contract on the ETH network
             issuer = GetIssuerInfo().execute_n_fetchone(binds={'i_id': g.issuer_info['i_id']})
+            # Ensure we retrieved an issuer.
+            if issuer is None:
+                error_response('Failed to retrieve issuer specified.')
+
             data['con_tx'], data['con_abi'] = g.geth.issue_contract(issuer['i_hash'],
                                                                     issuer_name=issuer['username'],
                                                                     name=data['name'],
@@ -106,7 +110,7 @@ class Contract(Resource):
             return error_response("Couldn't create new contract. Exception {}".format(str(e)))
 
     @staticmethod
-    def get_contraints(data):
+    def get_constraints(data):
         """ Gets the constraints for the contract creation
 
         :param data: The data received in the contract POST method
@@ -155,6 +159,11 @@ class Contract(Resource):
         if contracts is not None:
             log_kv(LOG_INFO, {'message': 'succesfully retrieved issuer\'s contracts',
                               'issuer_id': g.issuer_info['i_id']})
+
+            # Add the constraints to the contract object.
+            for contract in contracts:
+                contract.update({'constraints': get_all_constraints(contract['con_id'])})
+
             return success_response({'contracts': contracts})
         else:
             log_kv(LOG_WARNING, {'warning': 'could not get contract for issuer', 'issuer_id': g.issuer_info['i_id']})
@@ -177,8 +186,9 @@ def server_image(image):
                         "Method to retrieve contract information by con_id. Constraint info included.",
                         output_schema=GetContractResponse, req_i_jwt=True)
 def get_contract_by_con_id(con_id):
-    contract = GetContractByConID().execute_n_fetchone({'con_id': con_id}, close_connection=True)
+    contract = GetContractByConID().execute_n_fetchone({'con_id': con_id})
     constraints = get_all_constraints(con_id)
+    g.sesh.close()
     if contract:
         log_kv(LOG_DEBUG, {'debug': 'successfully retrieved contract', 'contract_id': con_id})
         contract.update({'constraints': constraints})
