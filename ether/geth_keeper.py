@@ -66,6 +66,7 @@ class MockGethKeeper(object):
         return -1
 
     def get_eth_balance(self, *args, **kwargs):
+        #raise GethException('yeet', 'yeet')
         return 10
 
 

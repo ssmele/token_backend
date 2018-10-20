@@ -73,7 +73,7 @@ class Issuer(Resource):
                 balance = g.geth.get_eth_balance(issuer['i_hash'])
             except GethException as e:
                 log_kv(LOG_ERROR, {'error': "Couldnt retrieve eth balance", 'i_id': g.issuer_info['i_id'],
-                                   'exception': str(e)}, exception=True)
+                                   'exception': e.exception, 'geth_message': e.message}, exception=True)
                 balance = 'Not available at this time.'
 
             issuer.update({'eth_balance': balance})

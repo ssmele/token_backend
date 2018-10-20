@@ -88,7 +88,7 @@ class Collector(Resource):
                 balance = g.geth.get_eth_balance(collector['c_hash'])
             except GethException as e:
                 log_kv(LOG_ERROR, {'error': "Couldn't retrieve eth balance", 'c_id': g.collector_info['c_id'],
-                                   'exception': str(e)}, exception=True)
+                                   'exception': e.exception, 'geth_message': e.message}, exception=True)
                 balance = 'Not available at this time.'
 
             collector.update({'eth_balance': balance})
