@@ -29,8 +29,11 @@ def log_kv(log_level, data, exception=False):
     if exception:
         data['trace_back'] = traceback.format_exc()
 
-    if hasattr(g, 'log_id'):
-        data['request_id'] = g.log_id
+    try:
+        if hasattr(g, 'log_id'):
+            data['request_id'] = g.log_id
+    except RuntimeError:
+        pass
 
     # Build the message to log and log it
     log_str = ''

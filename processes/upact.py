@@ -1,9 +1,8 @@
 #!/usr/bin/python
 import sys
 
-from utils.db_utils import DataQuery
-
 sys.path.insert(0, '/usr/apps/token/backend/backend/')
+from utils.db_utils import DataQuery
 from ether.geth_keeper import GethKeeper
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.engine import create_engine
@@ -128,10 +127,13 @@ if __name__ == '__main__':
 
     # Get contracts with pending status (for updating contracts)
     sess = Session()
-    contract_rows = GetPendingContracts().execute({}, sess)
-    update_contracts(contract_rows)
+    contract_rows = GetPendingContracts().execute_n_fetchall({}, sess)
+    if contract_rows:
+        update_contracts(contract_rows)
 
     # Get tokens with pending status (for updating claimed tokens)
-    token_rows = GetPendingTokens().execute({}, sess)
-    update_tokens(token_rows)
+    token_rows = GetPendingTokens().execute_n_fetchall({}, sess)
+
+    if token_rows:
+        update_tokens(token_rows)
     sess.close()
