@@ -64,6 +64,9 @@ class Trade(Resource):
 
             # If we are dealing with a valid trade request persist it within the database.
             new_tr_id = create_trade_request(data)
+
+            # TODO: transfer trader items to intermittent account
+
             data.update({'tr_id': new_tr_id})
             g.sesh.commit()
             return success_response(resp_data={'trade_info': data},
@@ -96,6 +99,8 @@ class Trade(Resource):
             log_kv(LOG_INFO, {'info': "Attempted deletion of trade request not owned by authorized collector",
                               'c_id': g.collector_info['c_id']})
             return error_response('Authorized collector does not have ownership over this trade.')
+
+        # TODO: transfer items back from intermittent account
 
         # If identity has be verified update the status.
         data.update({'new_status': TradeStatus.CANCELED.value})
@@ -159,6 +164,8 @@ class Trade(Resource):
                         else:
                             prev_owner, new_owner = tradee_c_id, trader_c_id
 
+                        # TODO: transfer ownership using geth_keeper
+
                         # Update the ownership.
                         upt_cnt = UpdateOwnership().execute({'con_id': trade_item['con_id'], 't_id': trade_item['t_id'],
                                                              'new_owner': new_owner, 'prev_owner': prev_owner})
@@ -207,6 +214,9 @@ class Trade(Resource):
                     return error_response(status='Unable to decline trade request.')
         # Logic for declining the request.
         else:
+
+            # TODO: transfer items back from intermittent account
+
             # Perform logic to decline the trade.
             data.update({'new_status': TradeStatus.DECLINED.value})
             if UpdateTradeStatus().execute(data):
