@@ -130,6 +130,61 @@ class GetAllContracts(DataQuery):
         super().__init__()
 
 
+class GetProximityContracts(Schema):
+    # Stuff off contracts.
+    con_id = fields.Int(required=True)
+    con_hash = fields.Str(required=True)
+    name = fields.Str(required=True)
+    description = fields.Str(required=True)
+    num_created = fields.Int(required=True)
+    pic_location = fields.Str(required=True)
+    tradable = fields.Boolean(required=True)
+    status = fields.Str(required=True)
+
+    # Issuer info.
+    i_id = fields.Int(required=True)
+    username = fields.Str(dump_only=True)
+
+    # Info from location constraints.
+    distance = fields.Float(required=True)
+    radius = fields.Float(required=True)
+    latitude = fields.Float(required=True)
+    longitude = fields.Float(required=True)
+
+
+
+    @post_dump
+    def add_picture_path(self, data):
+        data['pic_location'] = request.url_root + 'contract/image=' + data['pic_location']
+
+    doc_dump_info = {
+        'con_id': '1', 'i_id': '2', 'con_hash': "", 'name': '', 'description': '', 'num_created': 20,
+        'pic_location': 'url to pic', 'status': 'status of contract',
+        'constraints': Constraints.doc_load_info
+    }
+
+
+class GetAllContractsByProximity(DataQuery):
+    def __init__(self):
+        self.sql_text = """
+        SELECT min((((latitude-:latitude)*(latitude-:latitude)) 
+        + ((longitude - :longitude)*(longitude - :longitude))) * 1000)
+        as distance, radius, latitude, longitude,
+        contracts.con_id, contracts.name, contracts.description, contracts.num_created, contracts.pic_location, 
+        contracts.tradable, contracts.status, contracts.con_tx as con_hash,
+        issuers.username, issuers.i_id
+        FROM location_claim, contracts, issuers
+        WHERE location_claim.con_id = contracts.con_id
+        AND issuers.i_id = contracts.i_id
+        GROUP BY location_claim.con_id
+        ORDER BY distance ASC;
+        """
+
+        self.schema_out = GetProximityContracts()
+
+        super().__init__()
+
+
 class GetAllContractsForEth(DataQuery):
     def __init__(self):
         self.sql_text = """

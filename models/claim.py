@@ -9,6 +9,8 @@ class Location(Schema):
     latitude = fields.Number(required=True)
     longitude = fields.Number(required=True)
 
+    doc_load_info = {'latitude': 'decimal(8,6)', 'longitude': 'decimal(9,6)'}
+
 
 class ClaimConstraintRequest(Schema):
     code = fields.Str(required=False, validate=validate_code)
