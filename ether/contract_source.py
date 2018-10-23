@@ -10,7 +10,8 @@ interface ERC165 {
 
 interface ERC721TokenReceiver {
     // Handles the receipt of a Non-Fungible token
-    function onERC721Received(address _operator, address _From, uint256 _token_id, bytes _data) external returns(bytes4);
+    function onERC721Received(address _operator, address _From, uint256 _token_id, bytes _data) 
+            external returns(bytes4);
 }
 
 contract SupportsInterface is ERC165 {
@@ -193,7 +194,8 @@ contract issuer_contract is ERC721, SupportsInterface {
     }
     
     // Does an unsafe transfer 
-    function transferFrom(address _from, address _to, uint256 _token_id) external can_transfer(_token_id) valid_token(_token_id) {
+    function transferFrom(address _from, address _to, uint256 _token_id) external can_transfer(_token_id) 
+            valid_token(_token_id) {
         address token_owner = token_owners[_token_id];
         require(token_owner == _from);
         require(_to != address(0));
