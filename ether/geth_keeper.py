@@ -320,17 +320,19 @@ class GethKeeper(object):
         except Exception as e:
             raise GethException(str(e), message='Could not transfer token')
 
-    def send_eth(self, eth_amt, src_acct=None, dest_acct=None, src_priv_key=None):
+    def send_eth(self, eth_amt, src_acct=None, dest_acct=None, src_priv_key=None, 
+                 gas_price=MAX_GAS_PRICE):
         """ Sends the given eth amount to the given dest_addr from the given src_addr
 
         :param eth_amt: The amount of ethereum to send
         :param src_acct: The address of the source account
         :param dest_acct: The address of the destination account
         :param src_priv_key: The private key of the source account
+        :param gas_price: The gasPrice value to use
         """
         if not src_acct and not dest_acct:
             raise GethException('', 'Need to provide at least a source or destination account')
-        if not src_acct and not src_priv_key:
+        if src_acct and not src_priv_key:
             raise GethException('', 'Need to provide the private key for the specified source account')
 
         # Set the root account if needed and correct the addresses
@@ -350,7 +352,8 @@ class GethKeeper(object):
             transaction = {
                 'to': dest_acct,
                 'from': src_acct,
-                'value': self._w3.toWei(eth_amt, 'ether')
+                'value': self._w3.toWei(eth_amt, 'ether'),
+                'gasPrice': gas_price
             }
             self._w3.personal.unlockAccount(src_acct, src_priv_key, duration=ACCT_UNLOCK_DUR)
             self._w3.eth.sendTransaction(transaction)
