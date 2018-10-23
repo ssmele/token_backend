@@ -91,15 +91,21 @@ class GetIssuerByIID(DataQuery):
 
     def __init__(self):
         self.sql_text = """
-        SELECT i_id, username
+        SELECT *
         FROM issuers
         WHERE i_id = :i_id
         """
 
-        self.schema_out = CreateIssuerRequest()
+        self.schema_out = IssuerInfoRequest()
 
         super().__init__()
 
+
+class IssuerInfoRequest(Schema):
+    i_id = fields.Int(required=True)
+    username = fields.Str(required=True)
+    i_hash = fields.Str(required=True)
+    i_priv_key = fields.Str(required=True)
 
 class GetIssuerLoginDetails(DataQuery):
 

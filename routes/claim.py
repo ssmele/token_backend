@@ -47,11 +47,6 @@ def claim_token_for_user(con_id, c_id, lat, long, constraints, sesh):
     :return: True if the claim request was successful, False if otherwise
     """
     try:
-        # Check to see if this collector already has this token.
-        if DoesCollectorOwnToken().execute_n_fetchone({'con_id': con_id, 'c_id': c_id}, schema_out=False):
-            log_kv(LOG_WARNING, {'warning': 'user already has token', 'contract_id': con_id, 'collector_id': c_id})
-            return False, 'User already has token'
-
         # Enforcing claim constraints.
         if not validate_uni_code_constraints(con_id, constraints.get('code', None)):
             return False, "Constraint Failed: Code provided does not match any codes required to claim this token."

@@ -18,7 +18,7 @@ url_prefix = '/trade'
 
 class Trade(Resource):
 
-    @load_with_schema(TradeRequest)
+    @load_with_schema(TradeRequest, dump=True)
     @requires_db
     @verify_collector_jwt
     @trade_docs.document(url_prefix + ' ', 'POST', 'Method to issue trade request.', input_schema=TradeRequest,
@@ -61,6 +61,8 @@ class Trade(Resource):
                                       'tradee_c_id': data['tradee']['c_id'], 'con_id': t_i['con_id'],
                                       't_id': t_i['t_id']})
                     return error_response("Collector making request for token the tradee doesn't have ownership of.")
+
+            # TODO: Need to add validation for the eth_offer here.
 
             # If we are dealing with a valid trade request persist it within the database.
             new_tr_id = create_trade_request(data)
@@ -243,9 +245,11 @@ class Trade(Resource):
             # Go through and load object into desired format.
             cur_trade = TradeRequest().load({
                 'trader': {'c_id': trade['trader_c_id'],
+                           'eth_offer': trade['trader_eth_offer'],
                            'offers': [{'con_id': t_i['con_id'], 't_id': t_i['t_id']} for t_i in trade_items
                                       if t_i['owner'] == trade['trader_c_id']]},
                 'tradee': {'c_id': trade['tradee_c_id'],
+                           'eth_offer': trade['tradee_eth_offer'],
                            'offers': [{'con_id': t_i['con_id'], 't_id': t_i['t_id']} for t_i in trade_items
                                       if t_i['owner'] == trade['tradee_c_id']]},
                 'status': trade['status'],

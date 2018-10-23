@@ -96,17 +96,20 @@
 					var num_created = $("#count").val() 
 					var description = $("#desc").val()
 					var start_time = formatDate($("#starttime").val())
-					var end_time = formatDate($("#endtime").val())     
+					var end_time = formatDate($("#endtime").val())
+                    var tradable = $('#tradable').is(":checked");
 					var code = ""
 					code = $("#code").val()   
 		
 					console.log("start_time = " + start_time);
 					console.log("end_time = " + end_time);
+					console.log("tradable = " + tradable);
 					console.log("code = " + code);
 					console.log("latitude = " + latitude);
 					console.log("longitude = " + longitude);
 					console.log("radius = " + radius);
 					var codes = []
+
 					if(code.length == 6){
 						codes = [{"code": code}]
 					}
@@ -134,7 +137,8 @@
     					"name": name,
     					"description": description,
 						"num_created": num_created,
-						"constraints": constraints
+						"constraints": constraints,
+                        "tradable": tradable
 					}
 					var formData = new FormData();
 
@@ -224,14 +228,11 @@
 				
 				
 				</div>
-				<div class="form-group row">
-					<div class="form-check disabled">
-					<input class="form-check-input" type="radio" name="exampleRadios" id="exampleRadios3" value="option3" checked>
-					<label class="form-check-label" for="exampleRadios3" >
-					Claimable by anyone
-					</label>
-					</div>				
-				</div>
+                <div class="checkbox">
+                        <label><input id="tradable" type="checkbox" value="">Tradable?</label>
+                </div>
+
+
 				<div class="form-group row">
 
 				<button class="btn btn-primary" type="button" data-toggle="collapse" data-target="#collapseExample" aria-expanded="false" aria-controls="collapseExample">
@@ -259,49 +260,108 @@
 				<div class="form-group row">
 
 			<p>Choose Location</p>
+
 			</div>
+			<form id="radiobuttons">
+				<input type="radio" name="button" value="1" onclick="pinpoint()" checked="true"/> Pinpoint Location <br />
+				<input type="radio" name="button" value="2" onclick="region()"/> Regional Boundary <br />
+			</form>
 			<div class="form-group row">
 
+
+
+
 					<div id="mapid" style="width: 600px; height: 400px;"></div>
+
 					<script>
+					var pin = true;
+					function pinpoint()
+					{
+						  var rad = document.getElementById("slider");
+							rad.style.display = "block";
+							console.log("hello");
+							pin = true;
+							map.removeLayer(boundary);
+
+							latlng = [0,0];
+						  marker = L.marker([0,0]);
+						  circle = L.circle([0,0], {
+						  radius: 100});
+						  marker.addTo(map);
+						  circle.addTo(map);
+					}
+
+					function region()
+					{
+						var rad = document.getElementById("slider");
+						rad.style.display = "none";
+						console.log("other");
+						pin = false;
+						map.removeLayer(marker);
+						map.removeLayer(circle);
+					}
+
+					function getBoundary(name)
+					{
+						$.getJSON('https://nominatim.openstreetmap.org/search?q=' + name + '&polygon_geojson=1&polygon_threshold=0.05&format=json', function(data) {
+							var FoundExtent = data[0].geojson;
+						 		console.log(data[0]);
+						 	  map.removeLayer(boundary);
+						    boundary = L.geoJSON(FoundExtent);
+						    boundary.addTo(map);
+						    map.setView([data[0].lat, data[0].lon], 2);
+						  });
+					}
+
+
 							var map = L.map('mapid').setView([20, 0], 1);
-					
+
 						  L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
 							  attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
 						  }).addTo(map);
-					
+
+							var boundary = new L.geoJSON();
+							      boundary.addTo(map);
+
 						  var geocoder = L.Control.geocoder({
 								  defaultMarkGeocode: false
 							  })
 							  .on('markgeocode', function(e) {
-								  var mark = e.geocode.center;
-								  console.log(e.geocode);
-								  marker.setLatLng(mark);
-								  circle.setLatLng(mark);
-								  map.setView(mark, 2);
+									if (pin) {
+								  	var mark = e.geocode.center;
+								  	console.log(e.geocode);
+								  	marker.setLatLng(mark);
+								  	circle.setLatLng(mark);
+								  	map.setView(mark, 2);
+									}
+									else {
+										getBoundary(e.geocode.name);
+									}
 							  })
 							  .addTo(map);
-					
-					  var latlng = [0,0];
-					  var marker = L.marker([0,0]);
-					  var circle = L.circle([0,0], {
-					  radius: 100
-					});
-					  marker.addTo(map);
-					  circle.addTo(map);
-					
+
+						  var latlng = [0,0];
+						  var marker = L.marker([0,0]);
+						  var circle = L.circle([0,0], {
+						  radius: 100});
+						  marker.addTo(map);
+						  circle.addTo(map);
+
+
 						function onMapClick(e) {
-						marker.setLatLng(e.latlng);
-						circle.setLatLng(e.latlng);
-						latlng = e.latlng;
-						latitude = latlng.lat;
-						longitude = latlng.lng;
-						console.log(latlng);
+							if (pin) {
+								marker.setLatLng(e.latlng);
+								circle.setLatLng(e.latlng);
+								latlng = e.latlng;
+								latitude = latlng.lat;
+								longitude = latlng.lng;
+								console.log(latlng);
+							}
 						}
-					
-						map.on('click', onMapClick);
+
+							map.on('click', onMapClick);
 					</script>
-					
+
 					<script>
 						function updateSlider(slideAmount) {
 							var sliderDiv = document.getElementById("sliderAmount");
@@ -312,16 +372,18 @@
 						}
 					</script>
 					</div>
-					<div class="form-group row" style="margin-bottom: 0;padding-bottom: 0">
 
-					<p>Radius</p>
-					</div>
 					<div class="form-group row">
 
+					<div id="slider" syle="none">
+						<div class="form-group row" style="margin-bottom: 0;padding-bottom: 0">
+
+						<p>Radius</p>
+						</div>
 					<input id="slide" type="range" min="100" max="700000" step="70" value="100" onchange="updateSlider(this.value)">
-					<div id="sliderAmount"></div>
+
 				</div>
-				
+			</div>
 						
 				<div class="form-group row">
 				

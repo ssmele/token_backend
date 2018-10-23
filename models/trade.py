@@ -35,6 +35,7 @@ class TradeItem(Schema):
 
 class TradeInstance(Schema):
     c_id = fields.Int(required=True)
+    eth_offer = fields.Float(default=0.0)
     offers = fields.Nested(TradeItem, many=True, required=True,
                            validate=validate.Length(min=1, error='Must contain one trade item.'))
 
@@ -87,7 +88,9 @@ def create_trade_request(tr):
     :return:
     """
     # Insert the base trade request.
-    InsertTrade().execute({'trader_c_id': tr['trader']['c_id'], 'tradee_c_id': tr['tradee']['c_id']})
+    InsertTrade().execute({'trader_c_id': tr['trader']['c_id'], 'tradee_c_id': tr['tradee']['c_id'],
+                           'trader_eth_offer': tr['trader']['eth_offer'],
+                           'tradee_eth_offer': tr['tradee']['eth_offer']})
     tr_id = g.sesh.execute("select last_insert_rowid() as 'tr_id'").fetchone()['tr_id']
 
     # Insert trade items associated with trader.
@@ -169,8 +172,8 @@ class InsertTrade(DataQuery):
 
     def __init__(self):
         self.sql_text = """
-        INSERT INTO trade(trader_c_id, tradee_c_id)
-        values (:trader_c_id, :tradee_c_id);
+        INSERT INTO trade(trader_c_id, tradee_c_id, trader_eth_offer, tradee_eth_offer)
+        values (:trader_c_id, :tradee_c_id, :trader_eth_offer, :tradee_eth_offer);
         """
         self.schema_out = None
         super().__init__()

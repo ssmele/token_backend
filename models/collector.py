@@ -21,6 +21,13 @@ class CreateCollectorRequest(Schema):
     }
 
 
+class CollectorInfoRequest(Schema):
+    c_id = fields.Int(required=True)
+    username = fields.Str(required=True)
+    c_hash = fields.Str(required=True)
+    c_priv_key = fields.Str(required=True)
+
+
 class LoginCollectorRequest(Schema):
     c_id = fields.Int(dump_only=True)
     username = fields.Str(required=True)
@@ -57,12 +64,12 @@ class GetCollectorByCID(DataQuery):
 
     def __init__(self):
         self.sql_text = """
-        SELECT c_id, username
+        SELECT *
         FROM collectors
         WHERE c_id = :c_id
         """
 
-        self.schema_out = CreateCollectorRequest()
+        self.schema_out = CollectorInfoRequest()
 
         super().__init__()
 

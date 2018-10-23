@@ -27,10 +27,11 @@ def make_error_response(message, status_code=400, **kwargs):
     return response
 
 
-def load_with_schema(schema_cls, **schema_kwargs):
+def load_with_schema(schema_cls, dump=False, **schema_kwargs):
     """
     This decorator parsers fields in the request to the schema given.
     :param schema_cls:
+    :param dump:
     :param schema_kwargs:
     :return:
     """
@@ -40,7 +41,10 @@ def load_with_schema(schema_cls, **schema_kwargs):
             schema = schema_cls(**schema_kwargs)
             json = request.get_json(force=True)
             try:
-                data = schema.load(json)
+                if dump:
+                    data = schema.dump(json)
+                else:
+                    data = schema.load(json)
                 return f(data=data, *args, **kwargs)
             except ValidationError as err:
                 return make_error_response('Validation Failed', errors=err.messages)
