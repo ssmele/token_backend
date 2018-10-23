@@ -6,19 +6,16 @@ from ether.geth_keeper import GethException, GethKeeper
 if __name__ == '__main__':
     gk = GethKeeper()
 
-    create_contract = False
-    claim_token = True
+    create_contract = True
+    claim_token = False
 
     contract_addr = None
     json_abi = None
 
     if create_contract:
-        lat = 40.7608
-        lon = 111.8910
-        radius = 50
         tx_hash, json_abi = gk.issue_contract('0xff95b24806e3d93afc628c4bb684fd245e9853e9',
                                               issuer_name='tesla', desc='token for tesla', img_url='http://google.com',
-                                              num_tokes=5, loc_reqs=[lat, lon, radius])
+                                              num_tokes=5, tradable=False)
 
         print('tx_hash: {0}'.format(tx_hash))
         print('---------------------------------------------------------------')

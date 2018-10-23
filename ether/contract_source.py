@@ -10,7 +10,7 @@ interface ERC165 {
 
 interface ERC721TokenReceiver {
     // Handles the receipt of a Non-Fungible token
-    function onERC721Received(address _operator, address _From, uint256 _tokenID, bytes _data) external returns(bytes4);
+    function onERC721Received(address _operator, address _From, uint256 _token_id, bytes _data) external returns(bytes4);
 }
 
 contract SupportsInterface is ERC165 {
@@ -28,10 +28,10 @@ contract SupportsInterface is ERC165 {
 
 interface ERC721 {
     // This event is emitted when a token is transferred to another address
-    event Transfer(address indexed _from, address indexed _to, uint256 indexed _tokenId);
+    event Transfer(address indexed _from, address indexed _to, uint256 indexed _token_id);
     
     // This event is emitted when a the address is approved for trading
-    event Approval(address indexed _owner, address indexed _approved, uint256 indexed _tokenId);
+    event Approval(address indexed _owner, address indexed _approved, uint256 indexed _token_id);
     
     // Emitted when the owner approves or denies the operator to manage all tokens
     event ApprovalForAll(address indexed _owner, address indexed _operator, bool _approved);
@@ -40,25 +40,25 @@ interface ERC721 {
     function balanceOf(address _owner) external view returns (uint256);
     
     // Returns the address of the owner of the given token
-    function ownerOf(uint256 _tokenId) external view returns (address);
+    function ownerOf(uint256 _token_id) external view returns (address);
     
     // Transfers the token from one address to another
-    function safeTransferFrom(address _from, address _to, uint256 _tokenId, bytes _data) external;
+    function safeTransferFrom(address _from, address _to, uint256 _token_id, bytes _data) external;
     
     // Same as function above, but does not contain optional bytes
-    function safeTransferFrom(address _from, address _to, uint256 _tokenId) external;
+    function safeTransferFrom(address _from, address _to, uint256 _token_id) external;
     
     // Unsafe transfer functionality - must ensure trade receipient is capable of receiving tokens
-    function transferFrom(address _from, address _to, uint256 _tokenId) external;
+    function transferFrom(address _from, address _to, uint256 _token_id) external;
     
     // Sets the approved address for a token
-    function approve(address _approved, uint256 _tokenId) external;
+    function approve(address _approved, uint256 _token_id) external;
     
     // Allows an operator to manage all of the senders assets
     function setApprovalForAll(address _operator, bool _approved) external;
     
     // Gets the approved user address for a token
-    function getApproved(uint256 _tokenId) external view returns (address);
+    function getApproved(uint256 _token_id) external view returns (address);
     
     // Indicates whether the operator is permitted for operating the owner
     function isApprovedForAll(address _owner, address _operator) external view returns (bool);
@@ -123,7 +123,7 @@ contract issuer_contract is ERC721, SupportsInterface {
     // Modifier requiring the sender has rights to transfer the token
     modifier can_transfer(uint256 _token_id) {
         address token_owner = token_owners[_token_id];
-        require((token_owner == msg.sender || getApproved(_token_id) == msg.sender || operators[token_owner][msg.sender]) 
+        require((token_owner == msg.sender || approvals[_token_id] == msg.sender || operators[token_owner][msg.sender]) 
             && is_transferrable);
         _;
     }
@@ -216,10 +216,10 @@ contract issuer_contract is ERC721, SupportsInterface {
     }
     
     // Gets a token's approved address
-    function getApproved(uint256 _token_id) public view valid_token(_token_id) returns (address) {
+    function getApproved(uint256 _token_id) external view returns (address) {
         return approvals[_token_id];
     }
-    
+
     // Returns true if the operator is a valid operator for the owner
     function isApprovedForAll(address _owner, address _operator) external view returns (bool) {
         require(_owner != address(0));
@@ -371,18 +371,18 @@ contract issuer_contract is ERC721, SupportsInterface {
     }
     
     // Function to transfer from creator to another user
-    function sendToken(address _to, uint256 _tokenId, bytes6 code, uint date) public {
+    function sendToken(address _to, uint256 _token_id, bytes6 code, uint date) public {
         address newOwner = _to;
         require((msg.sender == owner) || (msg.sender == root_acct));  // Make sure sender is the creator
         require(owner != newOwner);                                  // Make sure the creator isn't sending to self
         require(newOwner != address(0));                             // Make sure new owner isn't address 0
-        require(token_owners[_tokenId] == address(0));               // Make sure token isn't already owned
+        require(token_owners[_token_id] == address(0));               // Make sure token isn't already owned
         require(remaining_tokes > 0);                                // Make sure there are tokens left
         require(code_permitted(code));                               // Make sure the code is permitted
         require(date_permitted(date));                               // Make sure the date is permitted
         remaining_tokes -= 1;                                        // Decrement the remaining tokens
-        token_owners[_tokenId] = newOwner;                           // Set the tokens owner
-        owners_token[newOwner] = _tokenId;                           // Set the owners token
+        token_owners[_token_id] = newOwner;                           // Set the tokens owner
+        owners_token[newOwner] = _token_id;                           // Set the owners token
     }
     
     // Function to ensure that the date is within the permitted dates
