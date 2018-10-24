@@ -152,7 +152,6 @@ class GetProximityContracts(Schema):
     longitude = fields.Float(required=True)
 
 
-
     @post_dump
     def add_picture_path(self, data):
         data['pic_location'] = request.url_root + 'contract/image=' + data['pic_location']
@@ -182,6 +181,21 @@ class GetAllContractsByProximity(DataQuery):
 
         self.schema_out = GetProximityContracts()
 
+        super().__init__()
+
+
+class GetAllTradableContracts(DataQuery):
+
+    def __init__(self):
+        self.sql_text = """
+        SELECT issuers.i_id, contracts.con_tx as con_hash, contracts.name, contracts.description, contracts.num_created,
+        contracts.pic_location, contracts.tradable, contracts.status, issuers.username, contracts.con_id
+        FROM contracts, issuers
+        WHERE contracts.i_id = issuers.i_id
+        AND contracts.tradable = 1
+        AND contracts.status = 'S';
+        """
+        self.schema_out = GetContractResponse()
         super().__init__()
 
 

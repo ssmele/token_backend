@@ -2,7 +2,7 @@ from flask import Blueprint, g
 from flask_restful import Resource, Api
 
 from ether.geth_keeper import GethException
-from models.collector import CreateCollectorRequest, GetCollectorByUsername, GetCollectorByCID, GetCollection
+from models.collector import CreateCollectorRequest, GetCollectorByUsername, GetCollectorByCID, GetCollection, CollectorInfoRequest
 from models.collector import create_collector
 from routes import load_with_schema, requires_geth
 from utils.db_utils import requires_db
@@ -30,6 +30,7 @@ def get_collector_by_username(username):
         return error_response(status="Couldn't retrieve collector with that username", status_code=-1, http_code=200)
 
 
+# TODO: Let cole know that this token already is in a trade. Status.
 @collector_bp.route(url_prefix + '/collection', methods=['GET'])
 @collector_docs.document(url_prefix + '/collection', 'GET',
                          'This method returns a list of tokens in the collectors collection.',
@@ -52,7 +53,7 @@ class Collector(Resource):
     @requires_db
     @requires_geth
     @collector_docs.document(url_prefix+" ", 'POST', "Method to create collector. Returns jwt for other methods.",
-                             input_schema=CreateCollectorRequest)
+                             input_schema=CreateCollectorRequest())
     def post(self, data):
         try:
             # Create the collector account and bind the hash and private key
@@ -77,8 +78,7 @@ class Collector(Resource):
     @requires_geth
     @collector_docs.document(url_prefix, 'GET',
                              "Method to retrieve collector information. Requires jwt from login/creation account.",
-                             url_params={'c_id': 'c_id of collector to search for.'},
-                             req_c_jwt=True)
+                             url_params={'c_id': 'c_id of collector to search for.'}, req_c_jwt=True)
     def get(self):
         collector = GetCollectorByCID().execute_n_fetchone({'c_id': g.collector_info['c_id']}, close_connection=True)
 

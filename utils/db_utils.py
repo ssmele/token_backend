@@ -39,6 +39,8 @@ class DataQuery:
     schema_out = None
 
     def __init__(self):
+        if self.sql_text is None:
+            raise NotImplementedError("Must provide sql_text")
         self.sql_txt = text(self.sql_text)
 
     def execute(self, binds, sesh=None, close_connection=False):

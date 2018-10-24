@@ -26,8 +26,7 @@ class ClaimRequest(Schema):
 
     doc_load_info = {
         'con_id': "integer",
-        'location': {'latitude': 'decimal(8,6)',
-                     'longitude': 'decimal(9,6)'},
+        'location': Location.doc_load_info,
         'constraints': {'code': '123ABC',
                         'location': {'latitude': 123.00002, 'longitude': 1233.4004},
                         'time': '2018-12-22 03:12:58'},
