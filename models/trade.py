@@ -2,8 +2,9 @@ from marshmallow import Schema, fields, validate
 from flask import g
 from enum import Enum
 
+from ether.geth_keeper import GethException
 from utils.db_utils import DataQuery
-from utils.utils import log_kv, LOG_INFO
+from utils.utils import log_kv, LOG_INFO, LOG_ERROR
 
 
 class TradeStatus(Enum):
@@ -126,6 +127,101 @@ def is_valid_trade_items(trade_items):
                 return False
 
     return True
+
+
+def validate_offer_and_trade(trade_items, tradee_id, trader_id, trader_eth_offer):
+    """ Validate each item in trade_items is correctly owned on the ethereum network and once they are
+    approved then perform the transfers.
+
+    :param trade_items: The array of items up for trade
+    :param tradee_id: The id of the tradee
+    :param trader_id: The id of the trader
+    :param trader_eth_offer: The amount of eth being offered
+    """
+    # TODO: Get estimated gas cost so we can validate there is enough for the transfers!!!
+
+    # Get the account information for both the tradee and trader
+    tradee_info = GetTraderInfo().execute_n_fetchall({'c_id': tradee_id}, schema_out=False)
+    trader_info = GetTraderInfo().execute_n_fetchall({'c_id': trader_id}, schema_out=False)
+    if not tradee_info or not trader_info:
+        raise GethException('', message='Could not get either tradee or trader information')
+
+    tradee_acct, tradee_key = tradee_info['address'], tradee_info['priv_key']
+    trader_acct, trader_key = trader_info['address'], trader_info['priv_key']
+
+    # Validate the eth offer
+    if trader_eth_offer:
+        balance = g.geth.get_eth_balance(trader_acct)
+        if balance <= trader_eth_offer:
+            raise GethException('', message='Trader does not have enough eth to cover the trade')
+
+    # Validate the token offers and store them for the final transferring
+    transfers = []
+    for item in trade_items:
+        acct, key = (tradee_acct, tradee_key) if item['owner'] == tradee_id else (trader_acct, trader_key)
+        to_acct = tradee_acct if acct != tradee_acct else trader_acct
+        contract_info = GetContractInfo().execute_n_fetchall({'t_id': item['t_id']}, schema_out=False)
+        if not contract_info:
+            raise GethException('', message='Could not get contract info for token_id {t_id}'.format(t_id=item['t_id']))
+
+        # Get the contract addr and abi and make sure the account owns the token
+        con_addr, con_abi = contract_info['addr'], contract_info['abi']
+        owner = g.geth.get_user_from_token_id(con_addr, con_abi, item['t_id'])
+        if acct.upper() != owner.upper():
+            raise GethException('', message='Account {acct} does not own token {t_id}'
+                                .format(acct=acct, t_id=item['t_id']))
+
+        # Save the transfer for later
+        transfers.append({
+            'to': to_acct,
+            'from': acct,
+            'key': key,
+            'con_addr': con_addr,
+            'con_abi': con_abi,
+            'token_id': item['t_id']
+        })
+
+    # Perform the eth transfer
+    if trader_eth_offer:
+        try:
+            g.geth.send_eth(trader_eth_offer, src_acct=trader_acct, dest_acct=tradee_acct, src_priv_key=trader_key)
+        except Exception as e:
+            raise GethException(str(e), message='Could not perform ethereum trade')
+
+    # Perform the token transfers
+    for transfer in transfers:
+        try:
+            g.geth.perform_transfer(transfer['con_addr'], transfer['con_abi'], transfer['token_id'],
+                                    src_acct=transfer['from'], dest_acct=transfer['to'],
+                                    src_priv_key=transfer['key'])
+        except Exception as e:
+            raise GethException(str(e), message='Could not perform token transfer for token_id {t_id}'
+                                .format(t_id=transfer['token_id']))
+
+
+class GetContractInfo(DataQuery):
+
+    def __init__(self):
+        self.sql_text = """
+            SELECT c.con_abi AS abi, c.con_addr AS addr
+            FROM contracts c, tokens t
+            WHERE c.con_id = t.con_id
+              AND t.t_id = :t_id;
+        """
+        self.schema_out = None
+        super().__init__()
+
+
+class GetTraderInfo(DataQuery):
+
+    def __init__(self):
+        self.sql_test = """
+            SELECT c_hash AS address, c_priv_key AS priv_key
+            FROM collectors 
+            WHERE c_id = :c_id;
+        """
+        self.schema_out = None
+        super().__init__()
 
 
 class GetTradeItems(DataQuery):
