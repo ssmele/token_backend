@@ -9,7 +9,8 @@ from ether.geth_keeper import GethException
 from routes import load_with_schema
 from models.trade import TradeRequest, DeleteTradeRequest, TradeResponseRequest, GetTradeByTRID, UpdateTradeStatus, \
     TradeStatus, GetTradeItems, InvalidateTradeRequests, GetActiveTradeRequests, UpdateOwnership, GetUntradables, \
-    create_trade_request, check_trade_item_ownership, check_active_trade_item, is_valid_trade_items
+    create_trade_request, check_trade_item_ownership, check_active_trade_item, is_valid_trade_items, \
+    validate_offer_and_trade
 
 trade_bp = Blueprint('trade', __name__)
 trade_docs = BlueprintDocumentation(trade_bp, 'Trade')
@@ -62,10 +63,13 @@ class Trade(Resource):
                                       't_id': t_i['t_id']})
                     return error_response("Collector making request for token the tradee doesn't have ownership of.")
 
-            # TODO: Need to add validation for the eth_offer here.
+            # TODO: Need to add validation for the eth_offer here. - Once tokens are put up for trade
 
             # If we are dealing with a valid trade request persist it within the database.
             new_tr_id = create_trade_request(data)
+
+            # TODO: transfer trader items to intermittent account - Once tokens are put up for trade
+
             data.update({'tr_id': new_tr_id})
             g.sesh.commit()
             return success_response(resp_data={'trade_info': data},
@@ -98,6 +102,8 @@ class Trade(Resource):
             log_kv(LOG_INFO, {'info': "Attempted deletion of trade request not owned by authorized collector",
                               'c_id': g.collector_info['c_id']})
             return error_response('Authorized collector does not have ownership over this trade.')
+
+        # TODO: transfer items back from intermittent account - Once tokens are put up for trade
 
         # If identity has be verified update the status.
         data.update({'new_status': TradeStatus.CANCELED.value})
@@ -183,14 +189,16 @@ class Trade(Resource):
                     g.sesh.rollback()
                     return error_response(status='Error accepting request.')
 
-                # TODO: PLACE ETHEREUM LOGIC HERE. Most likely will work with trade_items object.
                 # Perform the logic on the block chain now.
                 try:
-                    pass
+                    validate_offer_and_trade(trade_items, tradee_c_id, trader_c_id, trade['trader_eth_offer'])
                 except GethException as e:
+                    log_kv(LOG_ERROR, {'error': 'exception while performing trades', 'exception': str(e.exception),
+                                       'message': e.message})
                     g.sesh.rollback()
                     return error_response('Error accepting request. [G]')
                 except Exception as e:
+                    log_kv(LOG_ERROR, {'error': 'exception while performing trades', 'exception': str(e)})
                     g.sesh.rollback()
                     return error_response('Error accepting request. [G]')
 
@@ -209,6 +217,9 @@ class Trade(Resource):
                     return error_response(status='Unable to decline trade request.')
         # Logic for declining the request.
         else:
+
+            # TODO: transfer items back from intermittent account - once tokens are put up for trade
+
             # Perform logic to decline the trade.
             data.update({'new_status': TradeStatus.DECLINED.value})
             if UpdateTradeStatus().execute(data):
