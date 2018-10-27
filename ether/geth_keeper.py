@@ -3,6 +3,7 @@ from binascii import hexlify, unhexlify
 from datetime import datetime
 from json import dumps, loads
 from uuid import uuid4
+from random import randint
 
 from solc import compile_source
 from web3 import Web3, IPCProvider
@@ -60,7 +61,7 @@ class MockGethKeeper(object):
         return True, True
 
     def claim_token(self, *args, **kwargs):
-        return hexlify(b'a2'), MAX_GAS_PRICE
+        return hexlify(b'a2'), randint(0, MAX_GAS_PRICE)
 
     def get_users_token_id(self, *args, **kwargs):
         return -1
