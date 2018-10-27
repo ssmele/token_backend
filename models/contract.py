@@ -40,7 +40,7 @@ class GetContractResponse(Schema):
     tradable = fields.Boolean(required=True)
     status = fields.Str(required=True)
 
-    username = fields.Str(dump_only=True)
+    issuer_username = fields.Str(dump_only=True)
 
     @post_dump
     def add_picture_path(self, data):
@@ -118,12 +118,26 @@ class GetContractByName(DataQuery):
 
 
 class GetAllContracts(DataQuery):
-    def __init__(self):
-        self.sql_text = """
-        SELECT * 
-        FROM contracts, issuers
-        WHERE contracts.i_id = issuers.i_id;
-        """
+
+    def __init__(self, keyword=None):
+        if keyword is not None:
+            self.sql_text = """
+            SELECT contracts.con_id, issuers.i_id, issuers.username as issuer_username, contracts.con_tx as con_hash,
+            contracts.name, contracts.description, contracts.num_created, contracts.pic_location, contracts.tradable,
+            contracts.status
+            FROM contracts, issuers
+            WHERE contracts.i_id = issuers.i_id
+            AND (contracts.name like '%{keyword}%'
+            OR contracts.description like '%{keyword}%');
+            """.format(keyword=keyword)
+        else:
+            self.sql_text = """
+            SELECT contracts.con_id, issuers.i_id, issuers.username as issuer_username, contracts.con_tx as con_hash,
+            contracts.name, contracts.description, contracts.num_created, contracts.pic_location, contracts.tradable,
+            contracts.status
+            FROM contracts, issuers
+            WHERE contracts.i_id = issuers.i_id;
+            """
 
         self.schema_out = GetContractResponse()
 
@@ -143,14 +157,13 @@ class GetProximityContracts(Schema):
 
     # Issuer info.
     i_id = fields.Int(required=True)
-    username = fields.Str(dump_only=True)
+    issuer_username = fields.Str(required=True)
 
     # Info from location constraints.
     distance = fields.Float(required=True)
     radius = fields.Float(required=True)
     latitude = fields.Float(required=True)
     longitude = fields.Float(required=True)
-
 
     @post_dump
     def add_picture_path(self, data):
@@ -171,7 +184,7 @@ class GetAllContractsByProximity(DataQuery):
         as distance, radius, latitude, longitude,
         contracts.con_id, contracts.name, contracts.description, contracts.num_created, contracts.pic_location, 
         contracts.tradable, contracts.status, contracts.con_tx as con_hash,
-        issuers.username, issuers.i_id
+        issuers.username as issuer_username, issuers.i_id
         FROM location_claim, contracts, issuers
         WHERE location_claim.con_id = contracts.con_id
         AND issuers.i_id = contracts.i_id
@@ -184,18 +197,77 @@ class GetAllContractsByProximity(DataQuery):
         super().__init__()
 
 
+class TradableTokenResponse(Schema):
+    # Contract stuff.
+    con_id = fields.Int(required=True)
+    con_hash = fields.Str(required=True)
+    name = fields.Str(required=True)
+    description = fields.Str(required=True)
+    num_created = fields.Int(required=True)
+    pic_location = fields.Str(required=True)
+    tradable = fields.Boolean(required=True)
+    status = fields.Str(required=True)
+
+    # Issuer stuff.
+    issuer_username = fields.Str(required=True)
+    i_id = fields.Int(required=True)
+
+    # Collector Stuff
+    collector_username = fields.Str(required=True)
+    c_id = fields.Int(required=True)
+
+    # Token Stuff
+    t_id = fields.Int(required=True)
+
+    @post_dump
+    def add_picture_path(self, data):
+        data['pic_location'] = request.url_root + 'contract/image=' + data['pic_location']
+
+    doc_dump_info = {
+        'con_id': '1', 'i_id': '2', 'con_hash': "", 'name': '', 'description': '', 'num_created': 20,
+        'pic_location': 'url to pic', 'status': 'status of contract',
+        'constraints': Constraints.doc_load_info
+    }
+
+
 class GetAllTradableContracts(DataQuery):
 
-    def __init__(self):
-        self.sql_text = """
-        SELECT issuers.i_id, contracts.con_tx as con_hash, contracts.name, contracts.description, contracts.num_created,
-        contracts.pic_location, contracts.tradable, contracts.status, issuers.username, contracts.con_id
-        FROM contracts, issuers
-        WHERE contracts.i_id = issuers.i_id
-        AND contracts.tradable = 1
-        AND contracts.status = 'S';
-        """
-        self.schema_out = GetContractResponse()
+    def __init__(self, keyword=None):
+        if keyword is not None:
+            self.sql_text = """
+            SELECT issuers.i_id, issuers.username as issuer_username,
+            contracts.con_tx as con_hash, contracts.name, contracts.description, contracts.num_created,
+            contracts.pic_location, contracts.tradable, contracts.status, issuers.username, contracts.con_id,
+            tokens.t_id,
+            collectors.username as 'collector_username', collectors.c_id
+            FROM contracts, issuers, tokens, collectors
+            WHERE contracts.i_id = issuers.i_id
+            AND contracts.tradable = 1
+            AND contracts.status = 'S'
+            AND tokens.con_id = contracts.con_id
+            AND tokens.status = 'S'
+            AND tokens.owner_c_id notnull
+            and tokens.owner_c_id = collectors.c_id
+            AND (contracts.name like '%{keyword}%'
+            OR contracts.description like '%{keyword}%');
+            """.format(keyword=keyword)
+        else:
+            self.sql_text = """
+            SELECT issuers.i_id, issuers.username as issuer_username,
+            contracts.con_tx as con_hash, contracts.name, contracts.description, contracts.num_created,
+            contracts.pic_location, contracts.tradable, contracts.status, issuers.username, contracts.con_id,
+            tokens.t_id,
+            collectors.username as 'collector_username', collectors.c_id
+            FROM contracts, issuers, tokens, collectors
+            WHERE contracts.i_id = issuers.i_id
+            AND contracts.tradable = 1
+            AND contracts.status = 'S'
+            AND tokens.con_id = contracts.con_id
+            AND tokens.status = 'S'
+            AND tokens.owner_c_id notnull
+            and tokens.owner_c_id = collectors.c_id;
+            """
+        self.schema_out = TradableTokenResponse()
         super().__init__()
 
 
