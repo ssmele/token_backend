@@ -31,13 +31,14 @@ def get_all_contracts(keyword):
 
 
 @explore_bp.route(url_prefix + '/proximity', methods=['POST'])
+@explore_bp.route(url_prefix + '/proximity/keyword=<string:keyword>', methods=['POST'])
 @load_with_schema(Location)
 @requires_db
 @explore_docs.document(url_prefix + '/proximity', 'GET', "Returns all contracts that have some sort of location"
                                                          "constraint on it. Also returns distance given location is"
                                                          "from the constraint. Distance in meters.", Location)
-def get_all_contracts_by_proximity(data):
-    contracts = GetAllContractsByProximity().execute_n_fetchall(data, close_connection=True, load_out=True)
+def get_all_contracts_by_proximity(data, keyword=None):
+    contracts = GetAllContractsByProximity(keyword).execute_n_fetchall(data, close_connection=True, load_out=True)
     if contracts is not None:
         log_kv(LOG_DEBUG, {'debug': 'succesfully got all contracts'})
         return success_response({'contracts': contracts})
