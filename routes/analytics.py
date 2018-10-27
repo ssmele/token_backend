@@ -59,8 +59,6 @@ def analytics(con_id):
     })
 
 
-@verify_issuer_jwt
-@requires_db
 def claimed_coordinates(con_id):
     d_coordinates = g.sesh.execute("""select latitude, longitude from tokens where tokens.con_id=:contract_id
        and status = 'S' ;""", {'contract_id': con_id}).fetchall()
@@ -71,18 +69,17 @@ def claimed_coordinates(con_id):
     return coordinates
 
 
-@verify_issuer_jwt
-@requires_db
 def loc_constraints(con_id):
     d_coordinates = g.sesh.execute("""select latitude, longitude, radius from location_claim where location_claim.con_id=:contract_id
     ;""", {'contract_id': con_id}).fetchall()
 
-    point = [d_coordinates[0].latitude, d_coordinates[0].longitude, d_coordinates[0].radius]
-    return point
+    if d_coordinates:
+        point = [d_coordinates[0].latitude, d_coordinates[0].longitude, d_coordinates[0].radius]
+        return point
+    else:
+        return []
 
 
-@verify_issuer_jwt
-@requires_db
 def token_time_windows(con_id):
     d_times = g.sesh.execute("""select start, end from time_claim where time_claim.con_id=:contract_id;
        """, {'contract_id': con_id}).fetchall()
@@ -100,8 +97,6 @@ def token_time_windows(con_id):
     return time_windows
 
 
-@verify_issuer_jwt
-@requires_db
 def price_and_timestamps(con_id):
     d_timestamps = g.sesh.execute("""select claim_ts, gas_price from tokens where tokens.con_id=:contract_id and status = 'S';
        """, {'contract_id': con_id}).fetchall()
@@ -112,8 +107,6 @@ def price_and_timestamps(con_id):
     return timestamps
 
 
-@verify_issuer_jwt
-@requires_db
 def num_traded(con_id):
     d_tradable = g.sesh.execute("""select tradable from contracts where contracts.con_id=:contract_id;
        """, {'contract_id': con_id}).fetchall()
