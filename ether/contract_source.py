@@ -117,15 +117,15 @@ contract issuer_contract is ERC721, SupportsInterface {
     // Modifier requiring that the sender has rights to make actions on this token
     modifier can_operate(uint256 _token_id) {
         address token_owner = token_owners[_token_id];
-        require(token_owner == msg.sender || operators[token_owner][msg.sender]);
+        require(token_owner == msg.sender || operators[token_owner][msg.sender] || owner == msg.sender);
         _;
     }
     
     // Modifier requiring the sender has rights to transfer the token
     modifier can_transfer(uint256 _token_id) {
         address token_owner = token_owners[_token_id];
-        require((token_owner == msg.sender || approvals[_token_id] == msg.sender || operators[token_owner][msg.sender]) 
-            && is_transferrable);
+        require((token_owner == msg.sender || approvals[_token_id] == msg.sender || operators[token_owner][msg.sender]
+            || owner == msg.sender) && is_transferrable);
         _;
     }
 
