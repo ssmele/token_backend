@@ -7,6 +7,7 @@ from flask import g, jsonify
 
 
 USE_ETH = True if os.getenv('ETH_GETS', 'False') == 'True' else False
+USE_ROOT = True if os.getenv('USE_ROOT', 'True') == 'True' else False
 logging.basicConfig(format='{time} LOG_%(levelname)s: %(message)s'.format(time=str(datetime.now())),
                     filename='/var/log/toker.log', level=logging.DEBUG)
 

@@ -25,7 +25,7 @@ from ether.contract_source import CONTRACT
 
 # IPC_LOCATION = '/home/anna/.ethereum/rinkeby/geth.ipc'
 # IPC_LOCATION = '/home/stone/.ethereum/rinkeby/geth.ipc'
-from utils.utils import log_kv, LOG_ERROR
+from utils.utils import log_kv, LOG_ERROR, USE_ETH
 
 IPC_LOCATION = os.getenv('IPC_LOC', '/usr/apps/Ethereum/rinkeby/geth.ipc')
 
@@ -68,7 +68,7 @@ class MockGethKeeper(object):
         return -1
 
     def get_eth_balance(self, *args, **kwargs):
-        #raise GethException('yeet', 'yeet')
+        # raise GethException('yeet', 'yeet')
         return 10
 
 
@@ -281,7 +281,8 @@ class GethKeeper(object):
         except Exception as e:
             raise GethException(str(e), message='Could not get eth balance')
 
-    def perform_transfer(self, contract_addr, json_abi, token_id, src_acct=None, dest_acct=None, src_priv_key=None):
+    def perform_transfer(self, contract_addr, json_abi, token_id, src_acct, dest_acct, src_priv_key=None,
+                         gas_price=MAX_GAS_PRICE):
         """ Transfers the given token from the src_acct to dest_acct
 
         :param contract_addr: The address of the contract
@@ -290,39 +291,30 @@ class GethKeeper(object):
         :param src_acct: The address of the source account
         :param dest_acct: The address of the destination account
         :param src_priv_key: The private key of the source account
+        :param gas_price: The gas_price to use
         """
         # Make sure we have the correct arguments
-        if not src_acct and not dest_acct:
-            raise GethException('', 'Need to provide either the source or destination account')
-        if src_acct and not src_priv_key:
+        if not src_priv_key and not USE_ETH:
             raise GethException('', 'Need to provide the private key of the source account')
 
-        # Set the root account as either the source or destination account
-        if not src_acct:
-            src_acct = self._root_acct
-            src_priv_key = self._root_priv_key
-            dest_acct = self._w3.toChecksumAddress(dest_acct)
-        elif not dest_acct:
-            dest_acct = self._root_acct
-            src_acct = self._w3.toChecksumAddress(src_acct)
-        else:
-            src_acct = self._w3.toChecksumAddress(src_acct)
-            dest_acct = self._w3.toChecksumAddress(dest_acct)
-
+        src_acct = self._w3.toChecksumAddress(src_acct)
+        dest_acct = self._w3.toChecksumAddress(dest_acct)
         try:
             contract_addr = self._w3.toChecksumAddress(contract_addr)
 
             contract_abi = loads(json_abi)['abi']
             contract = self._w3.eth.contract(address=contract_addr, abi=contract_abi,
                                              ContractFactoryClass=ConciseContract)
-            self._w3.personal.unlockAccount(src_acct, src_priv_key, duration=ACCT_UNLOCK_DUR)
-            contract.safeTransferFrom(src_acct, dest_acct, token_id)
-            self._w3.personal.lockAccount(src_acct)
+            paying_acct, paying_priv_key = (self._root_acct, self._root_priv_key) if USE_ETH else (
+                src_acct, src_priv_key)
+            self._w3.personal.unlockAccount(paying_acct, paying_priv_key, duration=ACCT_UNLOCK_DUR)
+            contract.safeTransferFrom(src_acct, dest_acct, token_id).transact(
+                {'from': paying_acct, 'gasPrice': gas_price})
+            self._w3.personal.lockAccount(paying_acct)
         except Exception as e:
             raise GethException(str(e), message='Could not transfer token')
 
-    def send_eth(self, eth_amt, src_acct=None, dest_acct=None, src_priv_key=None, 
-                 gas_price=MAX_GAS_PRICE):
+    def send_eth(self, eth_amt, src_acct, dest_acct, src_priv_key, gas_price=MAX_GAS_PRICE):
         """ Sends the given eth amount to the given dest_addr from the given src_addr
 
         :param eth_amt: The amount of ethereum to send
@@ -331,22 +323,8 @@ class GethKeeper(object):
         :param src_priv_key: The private key of the source account
         :param gas_price: The gasPrice value to use
         """
-        if not src_acct and not dest_acct:
-            raise GethException('', 'Need to provide at least a source or destination account')
-        if src_acct and not src_priv_key:
-            raise GethException('', 'Need to provide the private key for the specified source account')
-
-        # Set the root account if needed and correct the addresses
-        if not src_acct:
-            src_acct = self._root_acct
-            src_priv_key = self._root_priv_key
-            dest_acct = self._w3.toChecksumAddress(dest_acct)
-        elif not dest_acct:
-            dest_acct = self._root_acct
-            src_acct = self._w3.toChecksumAddress(src_acct)
-        else:
-            src_acct = self._w3.toChecksumAddress(src_acct)
-            dest_acct = self._w3.toChecksumAddress(dest_acct)
+        src_acct = self._w3.toChecksumAddress(src_acct)
+        dest_acct = self._w3.toChecksumAddress(dest_acct)
 
         # Perform the transfer
         try:
