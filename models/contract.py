@@ -1,7 +1,7 @@
 from enum import Enum
 
 from flask import request
-from marshmallow import Schema, fields, post_dump
+from marshmallow import Schema, fields, post_dump, post_load
 from sqlalchemy.exc import SQLAlchemyError
 
 from utils.db_utils import DataQuery
@@ -166,6 +166,7 @@ class GetProximityContracts(Schema):
     longitude = fields.Float(required=True)
 
     @post_dump
+    @post_load
     def add_picture_path(self, data):
         data['pic_location'] = request.url_root + 'contract/image=' + data['pic_location']
 
@@ -220,6 +221,7 @@ class TradableTokenResponse(Schema):
     t_id = fields.Int(required=True)
 
     @post_dump
+    @post_load
     def add_picture_path(self, data):
         data['pic_location'] = request.url_root + 'contract/image=' + data['pic_location']
 
