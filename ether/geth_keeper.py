@@ -25,7 +25,7 @@ from ether.contract_source import CONTRACT
 
 # IPC_LOCATION = '/home/anna/.ethereum/rinkeby/geth.ipc'
 # IPC_LOCATION = '/home/stone/.ethereum/rinkeby/geth.ipc'
-
+from utils.utils import log_kv, LOG_ERROR
 
 IPC_LOCATION = os.getenv('IPC_LOC', '/usr/apps/Ethereum/rinkeby/geth.ipc')
 
@@ -44,6 +44,7 @@ class GethException(Exception):
     def __init__(self, exception, message=''):
         self.exception = exception
         self.message = message
+        log_kv(LOG_ERROR, {'error': self.message, 'exception': self.exception}, exception=True)
 
 
 class MockGethKeeper(object):
@@ -101,7 +102,8 @@ class GethKeeper(object):
             raise GethException(str(e), 'Could not create account')
 
     def issue_contract(self, issuer_acct_num, issuer_name='', name='', symbol='TOKE', desc='',
-                       img_url='', num_tokes=0, code_reqs=None, date_reqs=None, loc_reqs=None, gas_price=MAX_GAS_PRICE):
+                       img_url='', num_tokes=0, code_reqs=None, date_reqs=None, loc_reqs=None,
+                       tradable=False, gas_price=MAX_GAS_PRICE):
         """ Creates, compiles, and deploys a smart contract with the given attributes
 
         :param issuer_acct_num: The issuer's account hash
@@ -142,7 +144,7 @@ class GethKeeper(object):
 
             # Call the constructor of the contract
             tx_hash = contract.constructor(issuer_acct_num, issuer_name, name, symbol, desc, img_url,
-                                           num_tokes, code_reqs, date_reqs, loc_reqs) \
+                                           num_tokes, code_reqs, date_reqs, loc_reqs, tradable) \
                 .transact({'from': self._root_acct, 'gasPrice': gas_price})
 
             # Lock the issuer's account back up and return the transaction hash
@@ -247,73 +249,7 @@ class GethKeeper(object):
         except Exception as e:
             raise GethException(str(e), message='Could not send token')
 
-    def get_users_token_id(self, contract_addr, json_abi, user_address):
-        """ Returns a user's token_id for the given contract. Returns -1 if they don't own one.
-
-        :param contract_addr: The address of the contract
-        :param json_abi: The contract's application binary interface as a json string
-        :param user_address: The address of the user in question
-        :return: The user's token_id of the given contract. -1 if the don't own one.
-        """
-        try:
-            # Convert the addresses
-            contract_addr = self._w3.toChecksumAddress(contract_addr)
-            user_address = self._w3.toChecksumAddress(user_address)
-
-            # Get the contract
-            contract_abi = loads(json_abi)['abi']
-            contract = self._w3.eth.contract(address=contract_addr, abi=contract_abi,
-                                             ContractFactoryClass=ConciseContract)
-            if contract.ownsToken(user_address):
-                return contract.getUsersToken(user_address)
-            return -1
-        except Exception as e:
-            raise GethException(str(e), message='Could not get a users token id')
-
-    def get_users_collection(self, contract_dict, user_address):
-        """ Gets a user's token collection from the given dictionary of contracts
-
-        :param contract_dict: Dictionary of contract_address:json_abi
-        :param user_address: The address of the user's account
-        :return: Array of tuples as [(contract_instance, token_id)]
-        """
-        user_address = self._w3.toChecksumAddress(user_address)
-        owned_tokens = []
-        for contract_addr, json_abi in contract_dict.item():
-            # Get the user's token_id for that contract
-            token_id = self.get_users_token_id(contract_addr, json_abi, user_address)
-            if token_id != -1:
-                # If they own a token in the collection, get the collection and add its instance with the token id
-                try:
-                    contract_abi = loads(json_abi)['abi']
-                    contract = self._w3.eth.contract(address=contract_addr, abi=contract_abi,
-                                                     ContractFactoryClass=ConciseContract)
-                    owned_tokens.append((contract, token_id))
-                except Exception as e:
-                    raise GethException(str(e), message='Could not get contract instance')
-        return owned_tokens
-
-    def get_users_token(self, contract_addr, json_abi, user_address):
-        """ Gets an instance of the contract and the user's token_id
-
-        :param contract_addr: The address of the contract
-        :param json_abi: The contract's application binary interface as a json string
-        :param user_address: The address of the user in question
-        :return: Tuple of (contract_instance, token_id) or None if the user doesn't own a token
-        """
-        contract_addr = self._w3.toChecksumAddress(contract_addr)
-        user_address = self._w3.toChecksumAddress(user_address)
-        token_id = self.get_users_token_id(contract_addr, json_abi, user_address)
-        if token_id != -1:
-            try:
-                contract_abi = loads(json_abi)['abi']
-                contract = self._w3.eth.contract(address=contract_addr, abi=contract_abi,
-                                                 ContractFactoryClass=ConciseContract)
-            except Exception as e:
-                raise GethException(str(e), message='Could not get contract instance')
-            return contract, token_id
-        return None
-
+    # TODO: add function to get contract instance and get a user's collection
     def get_user_from_token_id(self, contract_addr, json_abi, token_id):
         """ Gets the address of the user who owns the given token_id for the given contract
 
@@ -344,6 +280,87 @@ class GethKeeper(object):
             return round(balance, 8)
         except Exception as e:
             raise GethException(str(e), message='Could not get eth balance')
+
+    def perform_transfer(self, contract_addr, json_abi, token_id, src_acct=None, dest_acct=None, src_priv_key=None):
+        """ Transfers the given token from the src_acct to dest_acct
+
+        :param contract_addr: The address of the contract
+        :param json_abi: The ABI for the contract
+        :param token_id: The token_id
+        :param src_acct: The address of the source account
+        :param dest_acct: The address of the destination account
+        :param src_priv_key: The private key of the source account
+        """
+        # Make sure we have the correct arguments
+        if not src_acct and not dest_acct:
+            raise GethException('', 'Need to provide either the source or destination account')
+        if src_acct and not src_priv_key:
+            raise GethException('', 'Need to provide the private key of the source account')
+
+        # Set the root account as either the source or destination account
+        if not src_acct:
+            src_acct = self._root_acct
+            src_priv_key = self._root_priv_key
+            dest_acct = self._w3.toChecksumAddress(dest_acct)
+        elif not dest_acct:
+            dest_acct = self._root_acct
+            src_acct = self._w3.toChecksumAddress(src_acct)
+        else:
+            src_acct = self._w3.toChecksumAddress(src_acct)
+            dest_acct = self._w3.toChecksumAddress(dest_acct)
+
+        try:
+            contract_addr = self._w3.toChecksumAddress(contract_addr)
+
+            contract_abi = loads(json_abi)['abi']
+            contract = self._w3.eth.contract(address=contract_addr, abi=contract_abi,
+                                             ContractFactoryClass=ConciseContract)
+            self._w3.personal.unlockAccount(src_acct, src_priv_key, duration=ACCT_UNLOCK_DUR)
+            contract.safeTransferFrom(src_acct, dest_acct, token_id)
+            self._w3.personal.lockAccount(src_acct)
+        except Exception as e:
+            raise GethException(str(e), message='Could not transfer token')
+
+    def send_eth(self, eth_amt, src_acct=None, dest_acct=None, src_priv_key=None, 
+                 gas_price=MAX_GAS_PRICE):
+        """ Sends the given eth amount to the given dest_addr from the given src_addr
+
+        :param eth_amt: The amount of ethereum to send
+        :param src_acct: The address of the source account
+        :param dest_acct: The address of the destination account
+        :param src_priv_key: The private key of the source account
+        :param gas_price: The gasPrice value to use
+        """
+        if not src_acct and not dest_acct:
+            raise GethException('', 'Need to provide at least a source or destination account')
+        if src_acct and not src_priv_key:
+            raise GethException('', 'Need to provide the private key for the specified source account')
+
+        # Set the root account if needed and correct the addresses
+        if not src_acct:
+            src_acct = self._root_acct
+            src_priv_key = self._root_priv_key
+            dest_acct = self._w3.toChecksumAddress(dest_acct)
+        elif not dest_acct:
+            dest_acct = self._root_acct
+            src_acct = self._w3.toChecksumAddress(src_acct)
+        else:
+            src_acct = self._w3.toChecksumAddress(src_acct)
+            dest_acct = self._w3.toChecksumAddress(dest_acct)
+
+        # Perform the transfer
+        try:
+            transaction = {
+                'to': dest_acct,
+                'from': src_acct,
+                'value': self._w3.toWei(eth_amt, 'ether'),
+                'gasPrice': gas_price
+            }
+            self._w3.personal.unlockAccount(src_acct, src_priv_key, duration=ACCT_UNLOCK_DUR)
+            self._w3.eth.sendTransaction(transaction)
+            self._w3.personal.lockAccount(src_acct)
+        except Exception as e:
+            raise GethException(str(e), message='Could not transfer ethereum')
 
     def kill_contract(self, contract_addr, json_abi, gas_price=MAX_GAS_PRICE):
         """ Kills the given contract

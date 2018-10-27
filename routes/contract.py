@@ -85,7 +85,8 @@ class Contract(Resource):
                                                                     num_tokes=data['num_created'],
                                                                     code_reqs=code_constraints,
                                                                     date_reqs=date_constraints,
-                                                                    loc_reqs=loc_constraints)
+                                                                    loc_reqs=loc_constraints,
+                                                                    tradable=data['tradable'])
 
             # Insert into the database
             con_id = insert_bulk_tokens(data['num_created'], data, g.sesh)
