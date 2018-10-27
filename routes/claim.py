@@ -62,10 +62,6 @@ def claim_token_for_user(con_id, c_id, lat, long, constraints, sesh):
             log_kv(LOG_INFO, {'message': 'no tokens are available', 'contract_id': con_id, 'collector_id': c_id})
             return False, 'No available tokens'
 
-        # Ensure on the ethereum side the user does not already have this token.
-        if g.geth.get_users_token_id(token_info['con_addr'], token_info['con_abi'], token_info['c_hash']) != -1:
-            return False, 'User already has token.'
-
         # Claim the token and update the database
         log_kv(LOG_INFO, {'message': 'claiming ethereum token', 'token_id': avail_token['t_id'],
                           'collector_id': c_id})
