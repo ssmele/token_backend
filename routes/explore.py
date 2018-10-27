@@ -27,7 +27,7 @@ def get_all_contracts():
         return error_response(status="Couldn't retrieve contracts")
 
 
-@explore_bp.route(url_prefix + '/proximity', methods=['GET'])
+@explore_bp.route(url_prefix + '/proximity', methods=['POST'])
 @load_with_schema(Location)
 @requires_db
 @explore_docs.document(url_prefix + '/proximity', 'GET', "Returns all contracts that have some sort of location"
