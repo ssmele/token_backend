@@ -345,13 +345,26 @@ class InvalidateTradeRequests(DataQuery):
 
 class GetActiveTradeRequests(DataQuery):
 
-    def __init__(self):
-        self.sql_text = """
-        select tr_id from trade 
-        where (trader_c_id = :c_id
-        or tradee_c_id = :c_id)
-        and status in ('R', 'A');
-        """
+    def __init__(self, version):
+        if version == 'tradee':
+            self.sql_text = """
+            select tr_id from trade 
+            where tradee_c_id = :c_id
+            and status in ('R', 'A');
+            """
+        elif version == 'trader':
+            self.sql_text = """
+            select tr_id from trade 
+            where trader_c_id = :c_id
+            and status in ('R', 'A');
+            """
+        else:
+            self.sql_text = """
+            select tr_id from trade 
+            where (trader_c_id = :c_id
+            or tradee_c_id = :c_id)
+            and status in ('R', 'A');
+            """
         self.schema_out = None
         super().__init__()
 

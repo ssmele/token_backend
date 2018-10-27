@@ -3,15 +3,40 @@
 	<head>
 		<title>T o k e n</title>
 		<meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    	<meta name="viewport" content="width=device-width, initial-scale=1">
 		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
 		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
 		<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"></script>
 		<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
 		<link href="{{ url_for('static',filename='css/home.css')}}" rel="stylesheet">
-		
+
+
+		<link rel="stylesheet" href="https://unpkg.com/leaflet@1.3.4/dist/leaflet.css"
+	 	integrity="sha512-puBpdR0798OZvTTbP4A8Ix/l+A4dHDD0DGqYW6RQ+9jxkRFclaxxQb/SJAWZfWAkuyeQUytO7+7N4QKrDh+drA=="
+	 	crossorigin=""/>
+		<script src="https://unpkg.com/leaflet@1.3.4/dist/leaflet.js"
+	 	integrity="sha512-nMMmRyTVoLYqjP9hrbed9S+FzjZHW5gY1TWCHA5ckwXZBadntCNs8kEqAWdrb9O7rxbCaA4lKTIWjDXZxflOcA=="
+	 	crossorigin=""></script>
+
+		//Map
+		<link rel="stylesheet" type="text/css" href="https://unpkg.com/leaflet.markercluster@1.0.4/dist/MarkerCluster.Default.css">
+		<link rel="stylesheet" type="text/css" href="https://unpkg.com/leaflet.markercluster@1.0.4/dist/MarkerCluster.css">
+		<script src="https://unpkg.com/leaflet.markercluster@1.0.4/dist/leaflet.markercluster.js"></script>
+		<script src="https://d3js.org/d3.v3.min.js"></script>
+
+		//Calendar
+		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.6/d3.min.js"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/cal-heatmap/3.6.2/cal-heatmap.js"></script>
+		<link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/cal-heatmap/3.6.2/cal-heatmap.css">
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/cal-heatmap/3.6.2/cal-heatmap.min.js"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/cal-heatmap/3.6.2/cal-heatmap.source-map.js"></script>
+
+		//Gas price
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.2.1/Chart.bundle.min.js"></script>
+
+
 	</head>
-	<body>
 		
 		<body>
 			
@@ -49,9 +74,18 @@
 					$.get(
 					"http://"+url+"/analytics/"+con_id,
 					function(data,status){	
-						console.log(data.resp_data.num_claimed +", "+data.resp_data.num_unclaimed); // read
-						drawChart(data.resp_data.num_claimed,data.resp_data.num_unclaimed)
+						console.log(data.resp_data.num_claimed +", "+data.resp_data.num_unclaimed + data.resp_data.coordinates); // read
+
+						drawMap(data.resp_data.loc_constraints, data.resp_data.coordinates);
+						$('#ex1').on('shown.bs.modal', function () {
+						drawChart(data.resp_data.num_claimed, data.resp_data.num_unclaimed);
+						drawGasPrices(data.resp_data.time_windows, data.resp_data.price_and_time);
+						drawCalendar(data.resp_data.time_windows, data.resp_data.price_and_time);
+						numTraded(data.resp_data.traded);
+						});
+						$('#ex1').modal('show');
 					},
+
 					'json')
 					.fail(function(response) {
 						//status
@@ -104,54 +138,241 @@
 				<input class="form-control mr-sm-2" type="search" placeholder="Search My Tokens" aria-label="Search">
 				<button class="btn btn-outline-primary my-2 my-sm-0">Search</button>
 			</form>
-			
-			
-			<script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>			
-			<script type="text/javascript">
-				// Load google charts
-				google.charts.load('current', {'packages':['corechart']});
-				//				google.charts.setOnLoadCallback(drawChart);
-				
-				// Draw the chart and set the chart values
-				function drawChart(claimed,unclaimed) {
-					var data = google.visualization.arrayToDataTable([
-					['Tokens' , 'Number Claimed'],
-					['Claimed', claimed],
-					['Unclaimed', unclaimed]
-					]);
-					
-					var options = {'width':550, 'height':300, 'backgroundColor':'transparent', 'chartArea':{width:'90%',height:'90%'}, 'pieHole':0.6};
-					
-					var chart = new google.visualization.PieChart(document.getElementById('piechart'));
-					chart.draw(data, options);
-					$('#myModal').modal('show');
-				}
-			</script>
-			<!-- Modal -->
-			<div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="exampleModal3Label" aria-hidden="true">
-				<div class="modal-dialog" role="document">
-					<div class="modal-content">
-						<div class="modal-header">
-							<h5 class="modal-title" style="color: black;">Percentage Claimed</h5>
-							<button type="button" class="close" data-dismiss="modal" aria-label="Close">
-								<span aria-hidden="true">&times;</span>
-							</button>
+
+
+
+
+	<div id="ex1" class="modal">
+		<div class="modal-dialog modal-lg" style="max-width: 90%!important; color:black;">
+			<div class="modal-content">
+				<div class="modal-body">
+					<div class="row">
+						<div class="col-lg-4">
+							<p>Percent Claimed</p>
+							<canvas id="pie-chart" width="90%" height="90%"></canvas>
 						</div>
-						<div class="modal-body">
-							<div id="piechart"></div>
+						<div class="col-lg-2">
+							<p>Number of Trades:</p>
+							<p id="traded"></p>
 						</div>
-						<div class="modal-footer">
-							<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+						<div class="col-lg-6">
+							<button id="minDate-previous" style="margin-top: 10px; border: none" class="btn"><i class="fa fa-angle-left"></i></button>
+							<button id="minDate-next" style="margin-top: 10px; border: none;" class="btn"><i class="fa fa-angle-right"></i></button>
+							<div id="cal-heatmap"></div>
+						</div>
+						</div>
+					<div class="row">
+						<div class="col-lg-6">
+							<p>Gas price for token claim</p>
+							<canvas id="canvas" width="50%" height="80%"></canvas>
+						</div>
+						<div class="col-lg-6">
+							<p>Location</p>
+							<div id="mapid" style="height: 255px;"></div>
 						</div>
 					</div>
 				</div>
 			</div>
-		</body>
-		
-		
-		<script>
-			$(document).ready(function(){
-				$('[data-toggle="tooltip"]').tooltip(); 
-			});
-		</script>	
+		</div>
+	</div>
+
+	<script>
+		function numTraded(traded) {
+
+			if (traded == -1)
+				document.getElementById("traded").innerHTML = "This token is not tradable";
+
+			else
+				document.getElementById("traded").innerHTML = traded;
+		}
+	</script>
+
+	<script>
+	var piechart = new Chart(document.getElementById("pie-chart"));
+	function drawChart(claimed, unclaimed) {
+		piechart.destroy();
+		piechart = new Chart(document.getElementById("pie-chart"), {
+			type: 'doughnut',
+			data: {
+				labels: ["Claimed", "Unclaimed"],
+				datasets: [{
+					backgroundColor: ["#141d29", "#ededed"],
+					data: [claimed, unclaimed]
+				}]
+			},
+
+			options : {legend : {display : false}}
+		});
+	}
+	</script>
+
+	<script>
+	var map = L.map("mapid");
+	var tileLayer = L.tileLayer('https://stamen-tiles-{s}.a.ssl.fastly.net/watercolor/{z}/{x}/{y}.{ext}', {
+	attribution: 'Map tiles by <a href="http://stamen.com">Stamen Design</a>, <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a> &mdash; Map data &copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+	subdomains: 'abcd',
+	minZoom: 1,
+	maxZoom: 16,
+	ext: 'jpg'
+});
+
+	tileLayer.addTo(map);
+
+	map.setView([0, 0], 0);
+	var clusters = L.markerClusterGroup();
+	var marker = L.marker();
+	var circle = L.circle();
+
+	function drawMap(loc_constraints, coordinates) {
+
+		map.removeLayer(clusters);
+
+
+
+
+		clusters.clearLayers();
+
+
+		for(i=0; i<coordinates.length; i++) {
+		 var circle = L.circleMarker(coordinates[i],
+		 {radius: 4,
+		 weight: 1,
+		 color: 'white',
+		 fill: true,
+		 fillColor: '141d29',
+		 fillOpacity: 1.0});
+
+		  clusters.addLayer(circle);
+	}
+	map.addLayer(clusters);
+
+	$('#ex1').on('shown.bs.modal', function () {
+		map.invalidateSize();
+	});
+
+	}
+	</script>
+
+
+	<script>
+	var cal = new CalHeatMap();
+	cal.init({});
+
+	function drawCalendar(timeWindows, data) {
+		claimBegin = timeWindows[0][0]; //Assuming only 1 time window for claiming
+		claimEnd = timeWindows[0][1];
+
+
+		if (claimEnd = -1) {
+			claimEnd = new Date();
+		}
+			var stats = {};
+			//Get the data in the correct form:
+			// { "timestamp" : 1 ,
+			//  "timestamp2" : 1 , ...}
+
+			// where timestamp is the date in seconds (epoch time)
+			for (var d in data) {
+				var timestamp = (new Date(data[d][0]).getTime() / 1000).toString();
+				stats[timestamp] = 1;
+			 }
+
+
+		cal = cal.destroy();
+		cal = new CalHeatMap();
+		cal.init({
+			data: stats,
+			previousSelector: "#minDate-previous",
+			nextSelector: "#minDate-next",
+			itemNamespace: "cal",
+			considerMissingDataAsZero: true,
+			start: new Date(claimBegin),
+			domain: "month",
+			minDate: new Date(claimBegin),
+			maxDate: new Date(claimEnd),
+			subDomain: "x_day",
+			range: 4,
+			cellSize: 15,
+			domainGutter: 6,
+			label: {position: "top"},
+
+			itemName: ["token claimed", "tokens claimed"],
+			displayLegend: true,
+			//legend:[5,20,30,40,50],
+			legendColors: {
+				empty: "#ededed",
+			  	max: "#acffe9",
+			  	min: "#141d29"
+			},
+
+			tooltip: true
+		});
+
+	}
+
+	</script>
+
+	<script>
+	var chart = new Chart(document.getElementById("canvas"));
+	function drawGasPrices(timeWindows, timeAndPrice) {
+		claimBegin = timeWindows[0][0]; //Assuming only 1 time window for claiming
+		claimEnd = timeWindows[0][1];
+
+		if (claimEnd == -1)
+			claimEnd = new Date();
+
+		var formattedData = [];
+		var datum = {};
+		//Get the data in the correct form:
+		// { x : 'date' ,
+		//  y : 'price' , ...}
+		for (var d in timeAndPrice) {
+			datum = {};
+			datum["x"] = new Date(timeAndPrice[d][0]);
+			datum["y"] = timeAndPrice[d][1];
+			formattedData.push(datum);
+		}
+
+		chart.destroy();
+		chart = new Chart(document.getElementById("canvas"), {
+			type: 'line',
+			data: {
+				datasets: [{
+					label: 'gas price',
+					data: formattedData,
+					fill: false,
+					borderColor: 'red'
+				}]
+			},
+			options: {
+				tooltips: {
+					callbacks: {
+						title(datasets) {
+							var time = new Date(datasets[0].xLabel);
+							return (time.toISOString());
+						}
+					}
+				},
+				legend : {display : false},
+				scales: {
+					bounds : 'ticks',
+					xAxes: [{
+						type: 'time',
+						time : {minUnit : 'hour'},
+						position: 'bottom'
+					}]
+				},
+			}
+		});
+	}
+
+	</script>
+
+	<script>
+		$(document).ready(function(){
+			$('[data-toggle="tooltip"]').tooltip();
+		});
+	</script>
+
+
 	</html>
