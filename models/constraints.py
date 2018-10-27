@@ -218,7 +218,7 @@ def near_enough(dest_lat, dest_long, g_lat, g_long, radius):
     :param radius: maximum distance between the two points for them to be considered near.
     :return: Boolean
     """
-    if mpu.haversine_distance((dest_lat, dest_long), (g_lat, g_long)) <= radius:
+    if (mpu.haversine_distance((dest_lat, dest_long), (g_lat, g_long))*1000) <= radius:
         return True
     else:
         return False
