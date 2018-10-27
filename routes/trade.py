@@ -1,4 +1,4 @@
-from flask import Blueprint, g
+from flask import Blueprint, g, request
 from flask_restful import Resource, Api
 
 from utils.doc_utils import BlueprintDocumentation
@@ -229,37 +229,45 @@ class Trade(Resource):
                 g.sesh.rollback()
                 return error_response(status='Unable to decline trade request.')
 
-    @requires_db
-    @verify_collector_jwt
-    @trade_docs.document(url_prefix + '     ', 'GET', 'Method to get all active trade requests.', req_c_jwt=True)
-    def get(self):
-        # Get all tr_ids of active trade_requests containing the authorized collector..
-        tr_ids = GetActiveTradeRequests().execute_n_fetchall({'c_id': g.collector_info['c_id']},
-                                                             schema_out=False)
 
-        trades = []
-        for tr_id in map(lambda x: x['tr_id'], tr_ids):
-            # Get base trade info and all trade items associated.
-            trade = GetTradeByTRID().execute_n_fetchone({'tr_id': tr_id}, schema_out=False)
-            trade_items = GetTradeItems().execute_n_fetchall({'tr_id': tr_id}, schema_out=False)
+@trade_bp.route(url_prefix, methods=['GET'], defaults={'version': None})
+@trade_bp.route('/tradee', methods=['GET'], defaults={'version': 'tradee'})
+@trade_bp.route('/trader', methods=['GET'], defaults={'version': 'trader'})
+@requires_db
+@verify_collector_jwt
+@trade_docs.document(url_prefix + '     ', 'GET', 'Method to get all active trade requests.', req_c_jwt=True)
+@trade_docs.document('/tradee', 'GET', 'Method to get all active trade requests where authorized user is tradee.',
+                     req_c_jwt=True)
+@trade_docs.document('/trader', 'GET', 'Method to get all active trade requests where authorized user is trader.',
+                     req_c_jwt=True)
+def get(version=None):
+    # Get all tr_ids of active trade_requests containing the authorized collector..
+    tr_ids = GetActiveTradeRequests(version).execute_n_fetchall({'c_id': g.collector_info['c_id']},
+                                                         schema_out=False)
 
-            # Go through and load object into desired format.
-            cur_trade = TradeRequest().load({
-                'trader': {'c_id': trade['trader_c_id'],
-                           'eth_offer': trade['trader_eth_offer'],
-                           'offers': [{'con_id': t_i['con_id'], 't_id': t_i['t_id']} for t_i in trade_items
-                                      if t_i['owner'] == trade['trader_c_id']]},
-                'tradee': {'c_id': trade['tradee_c_id'],
-                           'eth_offer': trade['tradee_eth_offer'],
-                           'offers': [{'con_id': t_i['con_id'], 't_id': t_i['t_id']} for t_i in trade_items
-                                      if t_i['owner'] == trade['tradee_c_id']]},
-                'status': trade['status'],
-                'tr_id': tr_id
-            })
-            cur_trade.update({'status': trade['status'], 'tr_id': tr_id})
-            trades.append(cur_trade)
+    trades = []
+    for tr_id in map(lambda x: x['tr_id'], tr_ids):
+        # Get base trade info and all trade items associated.
+        trade = GetTradeByTRID().execute_n_fetchone({'tr_id': tr_id}, schema_out=False)
+        trade_items = GetTradeItems().execute_n_fetchall({'tr_id': tr_id}, schema_out=False)
 
-        return success_response({'trades': trades})
+        # Go through and load object into desired format.
+        cur_trade = TradeRequest().load({
+            'trader': {'c_id': trade['trader_c_id'],
+                       'eth_offer': trade['trader_eth_offer'],
+                       'offers': [{'con_id': t_i['con_id'], 't_id': t_i['t_id']} for t_i in trade_items
+                                  if t_i['owner'] == trade['trader_c_id']]},
+            'tradee': {'c_id': trade['tradee_c_id'],
+                       'eth_offer': trade['tradee_eth_offer'],
+                       'offers': [{'con_id': t_i['con_id'], 't_id': t_i['t_id']} for t_i in trade_items
+                                  if t_i['owner'] == trade['tradee_c_id']]},
+            'status': trade['status'],
+            'tr_id': tr_id
+        })
+        cur_trade.update({'status': trade['status'], 'tr_id': tr_id})
+        trades.append(cur_trade)
+
+    return success_response({'trades': trades})
 
 
 trade_api = Api(trade_bp)
