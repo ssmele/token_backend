@@ -8,7 +8,7 @@ from flask import g, jsonify
 
 USE_ETH = True if os.getenv('ETH_GETS', 'False') == 'True' else False
 logging.basicConfig(format='{time} LOG_%(levelname)s: %(message)s'.format(time=str(datetime.now())),
-                    filename='/tmp/log/toker.log', level=logging.DEBUG)
+                    filename='/var/log/toker.log', level=logging.DEBUG)
 
 
 LOG_DEBUG = logging.debug
