@@ -127,7 +127,8 @@
                 times = [{"start": start_time, "end": end_time}]
             }
             var locs = []
-            if (latitude != null && longitude != null && radius != null) {
+            if (latitude != null && longitude != null) {
+						    radius = 100
                 locs = [
                     {
                         "latitude": latitude,
