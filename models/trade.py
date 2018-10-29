@@ -46,9 +46,11 @@ class TradeRequest(Schema):
     tradee = fields.Nested(TradeInstance, required=True)
 
     doc_load_info = {'trader': {'c_id': 'c_id of collector issuing trade.',
+                                'eth_offer': 'number of eth.',
                                 'offers': [{'con_id': 'con_id of contract to trade.',
                                             't_id': 't_id of token to trade.'}]},
                      'tradee': {'c_id': 'c_id of collector issuer of trade is trying to trade with.',
+                                'eth_offer': 'number of eth.',
                                 'offers': [{'con_id': 'con_id of contract to trade.',
                                             't_id': 't_id of token to trade.'}]}}
 
