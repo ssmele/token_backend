@@ -178,20 +178,37 @@ class GetProximityContracts(Schema):
 
 
 class GetAllContractsByProximity(DataQuery):
-    def __init__(self):
-        self.sql_text = """
-        SELECT min((((latitude-:latitude)*(latitude-:latitude)) 
-        + ((longitude - :longitude)*(longitude - :longitude))) * 1000)
-        as distance, radius, latitude, longitude,
-        contracts.con_id, contracts.name, contracts.description, contracts.num_created, contracts.pic_location, 
-        contracts.tradable, contracts.status, contracts.con_tx as con_hash,
-        issuers.username as issuer_username, issuers.i_id
-        FROM location_claim, contracts, issuers
-        WHERE location_claim.con_id = contracts.con_id
-        AND issuers.i_id = contracts.i_id
-        GROUP BY location_claim.con_id
-        ORDER BY distance ASC;
-        """
+    def __init__(self, keyword=None):
+        if keyword:
+            self.sql_text = """
+            SELECT min((((latitude-:latitude)*(latitude-:latitude)) 
+            + ((longitude - :longitude)*(longitude - :longitude))) * 1000)
+            as distance, radius, latitude, longitude,
+            contracts.con_id, contracts.name, contracts.description, contracts.num_created, contracts.pic_location, 
+            contracts.tradable, contracts.status, contracts.con_tx as con_hash,
+            issuers.username as issuer_username, issuers.i_id
+            FROM location_claim, contracts, issuers
+            WHERE location_claim.con_id = contracts.con_id
+            AND issuers.i_id = contracts.i_id
+            AND (contracts.name like '%{keyword}%'
+            OR contracts.description like '%{keyword}%')
+            GROUP BY location_claim.con_id
+            ORDER BY distance ASC;
+            """.format(keyword=keyword)
+        else:
+            self.sql_text = """
+            SELECT min((((latitude-:latitude)*(latitude-:latitude)) 
+            + ((longitude - :longitude)*(longitude - :longitude))) * 1000)
+            as distance, radius, latitude, longitude,
+            contracts.con_id, contracts.name, contracts.description, contracts.num_created, contracts.pic_location, 
+            contracts.tradable, contracts.status, contracts.con_tx as con_hash,
+            issuers.username as issuer_username, issuers.i_id
+            FROM location_claim, contracts, issuers
+            WHERE location_claim.con_id = contracts.con_id
+            AND issuers.i_id = contracts.i_id
+            GROUP BY location_claim.con_id
+            ORDER BY distance ASC;
+            """
 
         self.schema_out = GetProximityContracts()
 

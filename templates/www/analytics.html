@@ -220,16 +220,12 @@
 
 	map.setView([0, 0], 0);
 	var clusters = L.markerClusterGroup();
-	var marker = L.marker();
-	var circle = L.circle();
+	var claimingRegion = L.circle();
 
 	function drawMap(loc_constraints, coordinates) {
 
 		map.removeLayer(clusters);
-
-
-
-
+		map.removeLayer(claimingRegion);
 		clusters.clearLayers();
 
 
@@ -245,6 +241,11 @@
 		  clusters.addLayer(circle);
 	}
 	map.addLayer(clusters);
+
+	if (loc_constraints.length > 0) {
+		claimingRegion = L.circle([loc_constraints[0], loc_constraints[1]], {radius : loc_constraints[2]});
+		map.addLayer(claimingRegion);
+	}
 
 	$('#ex1').on('shown.bs.modal', function () {
 		map.invalidateSize();
@@ -307,7 +308,6 @@
 
 			tooltip: true
 		});
-
 	}
 
 	</script>
