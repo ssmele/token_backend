@@ -29,6 +29,9 @@
 		$("#repassword").show();
 		$("#email").show();
 		$('button').text("Sign Up");
+		$('.contain').width("520px");
+		$('.contain').height("520px");
+
 	}
 	function l() {
 		login = true;
@@ -39,6 +42,10 @@
 		$("#repassword").hide();
 		$("#email").hide();
 		$('button').text("Sign In");
+		$('.contain').width("470px");
+		$('.contain').height("470px");
+
+
 	}
 	var url = "167.99.26.0:80";
 	// var url = "localhost:8088";
@@ -150,10 +157,10 @@
 	<div class="wave">
 		<div class="shadow">
 			<div class="contain">
-				<div class="inner">
 					<img src="{{ url_for('static',filename='images/tokentitlelight.png')}}" alt="" height="180" data-toggle="tooltip"
+					 data-placement="right" title="Alpha 1.0"/>
+					 <img src="images/tokentitlelight.png" alt="" height="180" data-toggle="tooltip"
 					 data-placement="right" title="Beta 1.0"/>
-
 					<p id="slogan"><i>Your experiences, made timeless.</i></p>
 					<form class="form-signin" id="target" action="javascript:form();">
 
@@ -178,7 +185,6 @@
 						<a onClick="resend()" href="#">here</a> to resend.
 
 					</div>
-				</div>
 			</div>
 		</div>
 	</div>
