@@ -1,4 +1,4 @@
-from flask import Blueprint, g, request
+from flask import Blueprint, g
 from flask_restful import Resource, Api
 
 from utils.doc_utils import BlueprintDocumentation
@@ -10,7 +10,8 @@ from routes import load_with_schema
 from models.trade import TradeRequest, DeleteTradeRequest, TradeResponseRequest, GetTradeByTRID, UpdateTradeStatus, \
     TradeStatus, GetTradeItems, InvalidateTradeRequests, GetActiveTradeRequests, UpdateOwnership, GetUntradables, \
     create_trade_request, check_trade_item_ownership, check_active_trade_item, is_valid_trade_items, \
-    validate_offer_and_trade
+    validate_offer_and_trade, GetTokenInfo, TradeResponse
+from models.collector import GetCollectorByCID
 
 trade_bp = Blueprint('trade', __name__)
 trade_docs = BlueprintDocumentation(trade_bp, 'Trade')
@@ -242,8 +243,7 @@ class Trade(Resource):
                      req_c_jwt=True)
 def get(version=None):
     # Get all tr_ids of active trade_requests containing the authorized collector..
-    tr_ids = GetActiveTradeRequests(version).execute_n_fetchall({'c_id': g.collector_info['c_id']},
-                                                         schema_out=False)
+    tr_ids = GetActiveTradeRequests(version).execute_n_fetchall({'c_id': g.collector_info['c_id']}, schema_out=False)
 
     trades = []
     for tr_id in map(lambda x: x['tr_id'], tr_ids):
@@ -251,20 +251,26 @@ def get(version=None):
         trade = GetTradeByTRID().execute_n_fetchone({'tr_id': tr_id}, schema_out=False)
         trade_items = GetTradeItems().execute_n_fetchall({'tr_id': tr_id}, schema_out=False)
 
-        # Go through and load object into desired format.
-        cur_trade = TradeRequest().load({
-            'trader': {'c_id': trade['trader_c_id'],
-                       'eth_offer': trade['trader_eth_offer'],
-                       'offers': [{'con_id': t_i['con_id'], 't_id': t_i['t_id']} for t_i in trade_items
-                                  if t_i['owner'] == trade['trader_c_id']]},
-            'tradee': {'c_id': trade['tradee_c_id'],
-                       'eth_offer': trade['tradee_eth_offer'],
-                       'offers': [{'con_id': t_i['con_id'], 't_id': t_i['t_id']} for t_i in trade_items
-                                  if t_i['owner'] == trade['tradee_c_id']]},
-            'status': trade['status'],
-            'tr_id': tr_id
+        # Getting collector info..
+        trader_collector = GetCollectorByCID().execute_n_fetchone({'c_id': trade['trader_c_id']})
+        tradee_collector = GetCollectorByCID().execute_n_fetchone({'c_id': trade['tradee_c_id']})
+
+        # Getting trade offer, tradee offer info.
+        trader_offers = [
+            GetTokenInfo().execute_n_fetchone({'con_id': t_i['con_id'], 't_id': t_i['t_id']}) for t_i in trade_items
+            if t_i['owner'] == trade['trader_c_id']
+        ]
+        tradee_offers = [
+            GetTokenInfo().execute_n_fetchone({'con_id': t_i['con_id'], 't_id': t_i['t_id']}) for t_i in trade_items
+            if t_i['owner'] == trade['tradee_c_id']
+        ]
+
+        # Setting them up in an object.
+        cur_trade = TradeResponse().load({
+            'trader': {'collector': trader_collector, 'eth_offer': trade['trader_eth_offer'], 'offers': trader_offers},
+            'tradee': {'collector': tradee_collector, 'eth_offer': trade['tradee_eth_offer'], 'offers': tradee_offers},
+            'status': trade['status'], 'tr_id': tr_id
         })
-        cur_trade.update({'status': trade['status'], 'tr_id': tr_id})
         trades.append(cur_trade)
 
     return success_response({'trades': trades})
