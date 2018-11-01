@@ -78,7 +78,9 @@ class GetCollection(DataQuery):
 
     def __init__(self):
         self.sql_text = """
-        SELECT * 
+        SELECT  contracts.con_id, issuers.i_id, issuers.username as issuer_username, contracts.con_tx as con_hash,
+                contracts.name, contracts.description, contracts.num_created, contracts.pic_location, contracts.tradable,
+                contracts.status, tokens.t_id, tokens.t_hash
         FROM tokens, contracts, issuers
         WHERE owner_c_id = :c_id
         AND contracts.con_id = tokens.con_id
