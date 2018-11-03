@@ -195,11 +195,12 @@ class Trade(Resource):
                     validate_offer_and_trade(trade_items, tradee_c_id, trader_c_id, trade['trader_eth_offer'])
                 except GethException as e:
                     log_kv(LOG_ERROR, {'error': 'exception while performing trades', 'exception': str(e.exception),
-                                       'message': e.message})
+                                       'message': e.message}, exception=True)
                     g.sesh.rollback()
                     return error_response('Error accepting request. [G]')
                 except Exception as e:
-                    log_kv(LOG_ERROR, {'error': 'exception while performing trades', 'exception': str(e)})
+                    log_kv(LOG_ERROR, {'error': 'exception while performing trades', 'exception': str(e)},
+                           exception=True)
                     g.sesh.rollback()
                     return error_response('Error accepting request. [G]')
 
