@@ -4,7 +4,9 @@ from enum import Enum
 
 from ether.geth_keeper import GethException
 from utils.db_utils import DataQuery
-from utils.utils import log_kv, LOG_INFO, LOG_ERROR
+from utils.utils import log_kv, LOG_INFO
+
+from models.collector import TokenResponse, CollectorInfoRequest
 
 
 class TradeStatus(Enum):
@@ -34,6 +36,20 @@ class TradeItem(Schema):
     t_id = fields.Int(required=True)
 
 
+class TradeResponseInstance(Schema):
+    collector = fields.Nested(CollectorInfoRequest, required=True)
+    eth_offer = fields.Float(default=0.0)
+    offers = fields.Nested(TokenResponse, many=True, required=True,
+                           validate=validate.Length(min=1, error='Must contain one trade item.'))
+
+
+class TradeResponse(Schema):
+    trader = fields.Nested(TradeResponseInstance, required=True)
+    tradee = fields.Nested(TradeResponseInstance, required=True)
+    status = fields.Str(required=True)
+    tr_id = fields.Int(required=True)
+
+
 class TradeInstance(Schema):
     c_id = fields.Int(required=True)
     eth_offer = fields.Float(default=0.0)
@@ -46,9 +62,11 @@ class TradeRequest(Schema):
     tradee = fields.Nested(TradeInstance, required=True)
 
     doc_load_info = {'trader': {'c_id': 'c_id of collector issuing trade.',
+                                'eth_offer': 'number of eth.',
                                 'offers': [{'con_id': 'con_id of contract to trade.',
                                             't_id': 't_id of token to trade.'}]},
                      'tradee': {'c_id': 'c_id of collector issuer of trade is trying to trade with.',
+                                'eth_offer': 'number of eth.',
                                 'offers': [{'con_id': 'con_id of contract to trade.',
                                             't_id': 't_id of token to trade.'}]}}
 
@@ -392,4 +410,22 @@ class GetUntradables(DataQuery):
         and tradable = 0;
         """
         self.schema_out = None
+        super().__init__()
+
+
+class GetTokenInfo(DataQuery):
+
+    def __init__(self):
+        self.sql_text = """
+        SELECT  contracts.con_id, issuers.i_id, issuers.username as issuer_username, contracts.con_tx as con_hash,
+                contracts.name, contracts.description, contracts.num_created, contracts.pic_location, contracts.tradable,
+                contracts.status, tokens.t_id, tokens.t_hash, tokens.owner_c_id
+        FROM tokens, contracts, issuers
+        WHERE tokens.t_id = :t_id
+        AND contracts.con_id = :con_id
+        AND contracts.con_id = tokens.con_id
+        AND contracts.i_id = issuers.i_id;
+        """
+
+        self.schema_out = TokenResponse()
         super().__init__()

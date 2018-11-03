@@ -103,6 +103,15 @@ div.contain.shrink{
 	background-color: #182430;
 	border: 1px solid #243240;
 	color: white;
+	margin: 10px;
+}
+.form-control-2{
+	background-color: transparent;
+	border: none;
+	color: rgba(255,255,255,0.9);
+	margin: 15px;
+	margin-left: 5px;
+
 }
 .form-control:focus{
 	background-color: #1a2632;
@@ -120,6 +129,10 @@ div.contain.shrink{
 	margin: 0 10px 0 10px;
 	text-decoration: none;
 	color: #aaaaaa;
+}
+.advanced{
+	padding: 6px;
+	margin: 10px;
 }
 
 .nav-btn:hover, .nav-btn:focus{

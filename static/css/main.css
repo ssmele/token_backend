@@ -57,16 +57,11 @@ body {
 	background-color: #141d29;
 	border: none;
 	border-radius: 50%;
-	display: table-cell;
-
-	vertical-align: middle;
-	width: 50vw;
-    height: 50vw;
+	height: 470px;
+	width: 470px;
 
 }
-.inner{
-	display: inline-block;
-}
+
 
 
 .btn{
