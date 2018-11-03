@@ -25,7 +25,7 @@ from ether.contract_source import CONTRACT
 
 # IPC_LOCATION = '/home/anna/.ethereum/rinkeby/geth.ipc'
 # IPC_LOCATION = '/home/stone/.ethereum/rinkeby/geth.ipc'
-from utils.utils import log_kv, LOG_ERROR, USE_ETH
+from utils.utils import log_kv, LOG_ERROR, USE_ROOT
 
 IPC_LOCATION = os.getenv('IPC_LOC', '/usr/apps/Ethereum/rinkeby/geth.ipc')
 
@@ -295,7 +295,7 @@ class GethKeeper(object):
         :return A touple of (addr of transaction, gas_price)
         """
         # Make sure we have the correct arguments
-        if not src_priv_key and not USE_ETH:
+        if not src_priv_key and not USE_ROOT:
             raise GethException('', 'Need to provide the private key of the source account')
 
         src_acct = self._w3.toChecksumAddress(src_acct)
@@ -306,7 +306,7 @@ class GethKeeper(object):
             contract_abi = loads(json_abi)['abi']
             contract = self._w3.eth.contract(address=contract_addr, abi=contract_abi,
                                              ContractFactoryClass=ConciseContract)
-            paying_acct, paying_priv_key = (self._root_acct, self._root_priv_key) if USE_ETH else (
+            paying_acct, paying_priv_key = (self._root_acct, self._root_priv_key) if USE_ROOT else (
                 src_acct, src_priv_key)
             self._w3.personal.unlockAccount(paying_acct, paying_priv_key, duration=ACCT_UNLOCK_DUR)
             tx_hash = contract.safeTransferFrom(src_acct, dest_acct, token_id).transact(
