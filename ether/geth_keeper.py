@@ -304,12 +304,11 @@ class GethKeeper(object):
             contract_addr = self._w3.toChecksumAddress(contract_addr)
 
             contract_abi = loads(json_abi)['abi']
-            contract = self._w3.eth.contract(address=contract_addr, abi=contract_abi,
-                                             ContractFactoryClass=ConciseContract)
+            contract = self._w3.eth.contract(address=contract_addr, abi=contract_abi)
             paying_acct, paying_priv_key = (self._root_acct, self._root_priv_key) if USE_ROOT else (
                 src_acct, src_priv_key)
             self._w3.personal.unlockAccount(paying_acct, paying_priv_key, duration=ACCT_UNLOCK_DUR)
-            tx_hash = contract.safeTransferFrom(src_acct, dest_acct, token_id).transact(
+            tx_hash = contract.functions.safeTransferFrom(src_acct, dest_acct, token_id).transact(
                 {'from': paying_acct, 'gasPrice': gas_price})
             self._w3.personal.lockAccount(paying_acct)
             return hexlify(tx_hash), gas_price
