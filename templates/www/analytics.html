@@ -63,7 +63,12 @@
 				</ul>
 			</header>
 			<div class="spacing"></div>
-			
+
+            <style>
+
+
+            </style>
+
 			<script>
 				function analyze(con_id){
 					$.ajaxSetup({
@@ -209,12 +214,12 @@
 	<script>
 	var map = L.map("mapid");
 	var tileLayer = L.tileLayer('https://stamen-tiles-{s}.a.ssl.fastly.net/watercolor/{z}/{x}/{y}.{ext}', {
-	attribution: 'Map tiles by <a href="http://stamen.com">Stamen Design</a>, <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a> &mdash; Map data &copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-	subdomains: 'abcd',
-	minZoom: 1,
-	maxZoom: 16,
-	ext: 'jpg'
-});
+	    attribution: 'Map tiles by <a href="http://stamen.com">Stamen Design</a>, <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a> &mdash; Map data &copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+	    subdomains: 'abcd',
+	    minZoom: 1,
+	    maxZoom: 16,
+	    ext: 'jpg'
+    });
 
 	tileLayer.addTo(map);
 
@@ -260,12 +265,25 @@
 	cal.init({});
 
 	function drawCalendar(timeWindows, data) {
+
+		//Reset next and prev buttons
+		document.getElementById('minDate-next').style.visibility = 'visible';
+		document.getElementById('minDate-previous').style.visibility = 'visible';
+		document.getElementById("minDate-next").disabled = false;
+		document.getElementById("minDate-previous").disabled = false;
+
 		claimBegin = timeWindows[0][0]; //Assuming only 1 time window for claiming
 		claimEnd = timeWindows[0][1];
 
 
-		if (claimEnd = -1) {
-			claimEnd = new Date();
+
+		if (claimEnd == -1) {
+			var lastDayInMonth = new Date();
+			lastDayInMonth.setMonth(lastDayInMonth.getMonth() + 1);
+			lastDayInMonth.setDate(1); // first day in next month
+			lastDayInMonth.setDate(lastDayInMonth.getDate()-1);
+
+			claimEnd = lastDayInMonth;
 		}
 			var stats = {};
 			//Get the data in the correct form:
@@ -278,37 +296,85 @@
 				stats[timestamp] = 1;
 			 }
 
+		var minDate = new Date(claimBegin);
+  		var maxDate = new Date(claimEnd);
+
+		var endOfFinalDay = new Date(maxDate);
+		endOfFinalDay.setHours(23);
+      	endOfFinalDay.setMinutes(59);
+      	endOfFinalDay.setSeconds(59);
+		for (var d = new Date(minDate); d <= endOfFinalDay; d.setDate(d.getDate() + 1)) {
+
+			if (!((new Date(d).getTime() / 1000) in stats))
+			stats[new Date(d).getTime() / 1000] = 0;
+			}
+
+			var range = monthRange(minDate, maxDate);
+			var maxRangeToDisplay = 4;
+			if (range <= maxRangeToDisplay) {
+				document.getElementById('minDate-previous').style.visibility = 'hidden';
+			  	document.getElementById('minDate-next').style.visibility = 'hidden';
+			 }
+
 
 		cal = cal.destroy();
 		cal = new CalHeatMap();
 		cal.init({
 			data: stats,
-			previousSelector: "#minDate-previous",
-			nextSelector: "#minDate-next",
-			itemNamespace: "cal",
-			considerMissingDataAsZero: true,
+			itemNamespace: "cal-heatmap",
+			considerMissingDataAsZero: false,
 			start: new Date(claimBegin),
 			domain: "month",
-			minDate: new Date(claimBegin),
-			maxDate: new Date(claimEnd),
+			minDate: minDate,
+			maxDate: maxDate,
 			subDomain: "x_day",
-			range: 4,
+			range: Math.min(maxRangeToDisplay, monthRange(minDate, maxDate)),
 			cellSize: 15,
 			domainGutter: 6,
 			label: {position: "top"},
 
 			itemName: ["token claimed", "tokens claimed"],
+			subDomainTitleFormat : {
+    			empty: "Token was unavailable on {date}"
+    		},
 			displayLegend: true,
 			//legend:[5,20,30,40,50],
 			legendColors: {
 				empty: "#ededed",
 			  	max: "#acffe9",
-			  	min: "#141d29"
+			  	min: "#141d29",
+			  	base: "#f9f9f9"
 			},
 
 			tooltip: true
 		});
 	}
+
+		$("#minDate-previous").on("click", function(e) {
+			e.preventDefault();
+			if (!cal.previous()) {
+				document.getElementById("minDate-previous").disabled = true;
+			}
+			else
+				document.getElementById("minDate-next").disabled = false;
+		});
+
+		$("#minDate-next").on("click", function(e) {
+			e.preventDefault();
+			if (!cal.next()) {
+				document.getElementById("minDate-next").disabled = true;
+			}
+
+			else
+				document.getElementById("minDate-previous").disabled = false;
+		});
+
+
+		function monthRange(start, end)
+		{
+		return end.getMonth() - start.getMonth()
+			   + (12 * (end.getFullYear() - start.getFullYear())) + 1;
+		}
 
 	</script>
 
@@ -375,4 +441,5 @@
 	</script>
 
 
+        </body>
 	</html>
