@@ -201,9 +201,12 @@ def update_trade_items(trade_items, trade, sess):
 
     # Go through trade items and ensure they have been mined.
     for ti in trade_items:
+        print ('checking status of token transfer. TOKEN_ID: {t_id}, CONTRACT_ID: {c_id}'.format(t_id=ti['t_id'],
+                                                                                                 c_id=ti['con_id']))
         has_receipt, success, receipt = geth.check_claim_mine(ti['trade_hash'])
         if has_receipt:
             if success:
+                print('Token transfer has been successfully mined.')
                 # If they have been mined and success add to the list.
                 gas_cost_list.append(receipt['gasUsed'])
                 claimed.append(True)
@@ -223,8 +226,13 @@ def update_trade_items(trade_items, trade, sess):
         try:
             perform_ownership_transfer(trade, trade_items, sess)
             UpdateTradeStatus().execute({'tr_id': trade['tr_id'], 'new_status': 'A'}, sesh=sess)
-            print('Trade transfer mined - tr_id: {tr_id}, gas_cost: {gas_cost_list}'.format(trade['tr_id'], gas_cost_list))
+            print('Trade transfer mined - tr_id: {tr_id}, gas_cost: {gas_cost_list}'
+                  .format(tr_id=trade['tr_id'], gas_cost_list=gas_cost_list))
+            sess.commit()
         except Exception as e:
+            print('Exception while checking transfer mine: ERROR: {err}'.format(err=str(e)))
+            log_kv(LOG_ERROR, {'error': 'exception while checking transfer mine', 'exception': str(e)},
+                   exception=True)
             sess.rollback()
     else:
         print('Not all trade_items mined will try again later.'.format(t_id=trade['tr_id']))
