@@ -371,14 +371,14 @@ contract issuer_contract is ERC721, SupportsInterface {
     function sendToken(address _to, uint256 _token_id, bytes6 code, uint date) public {
         address newOwner = _to;
         require((msg.sender == owner) || (msg.sender == root_acct));  // Make sure sender is the creator
-        require(owner != newOwner);                                  // Make sure the creator isn't sending to self
-        require(newOwner != address(0));                             // Make sure new owner isn't address 0
+        require(owner != newOwner);                                   // Make sure the creator isn't sending to self
+        require(newOwner != address(0));                              // Make sure new owner isn't address 0
         require(token_owners[_token_id] == address(0));               // Make sure token isn't already owned
-        require(remaining_tokes > 0);                                // Make sure there are tokens left
-        require(code_permitted(code));                               // Make sure the code is permitted
-        require(date_permitted(date));                               // Make sure the date is permitted
-        remaining_tokes -= 1;                                        // Decrement the remaining tokens
-        token_owners[_token_id] = newOwner;                           // Set the tokens owner
+        require(remaining_tokes > 0);                                 // Make sure there are tokens left
+        require(code_permitted(code));                                // Make sure the code is permitted
+        require(date_permitted(date));                                // Make sure the date is permitted
+        remaining_tokes -= 1;                                         // Decrement the remaining tokens
+        add_token_to_owner(_to, _token_id);                           // Set the tokens owner
     }
     
     // Function to ensure that the date is within the permitted dates
