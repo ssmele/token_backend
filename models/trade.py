@@ -159,8 +159,8 @@ def validate_offer_and_trade(trade_items, tradee_id, trader_id, trader_eth_offer
     # TODO: Get estimated gas cost so we can validate there is enough for the transfers!!!
 
     # Get the account information for both the tradee and trader
-    tradee_info = GetTraderInfo().execute_n_fetchall({'c_id': tradee_id}, schema_out=False)
-    trader_info = GetTraderInfo().execute_n_fetchall({'c_id': trader_id}, schema_out=False)
+    tradee_info = GetTraderInfo().execute_n_fetchone({'c_id': tradee_id}, schema_out=False)
+    trader_info = GetTraderInfo().execute_n_fetchone({'c_id': trader_id}, schema_out=False)
     if not tradee_info or not trader_info:
         raise GethException('', message='Could not get either tradee or trader information')
 
