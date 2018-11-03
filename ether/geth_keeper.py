@@ -292,6 +292,7 @@ class GethKeeper(object):
         :param dest_acct: The address of the destination account
         :param src_priv_key: The private key of the source account
         :param gas_price: The gas_price to use
+        :return A touple of (addr of transaction, gas_price)
         """
         # Make sure we have the correct arguments
         if not src_priv_key and not USE_ETH:
@@ -308,9 +309,10 @@ class GethKeeper(object):
             paying_acct, paying_priv_key = (self._root_acct, self._root_priv_key) if USE_ETH else (
                 src_acct, src_priv_key)
             self._w3.personal.unlockAccount(paying_acct, paying_priv_key, duration=ACCT_UNLOCK_DUR)
-            contract.safeTransferFrom(src_acct, dest_acct, token_id).transact(
+            tx_hash = contract.safeTransferFrom(src_acct, dest_acct, token_id).transact(
                 {'from': paying_acct, 'gasPrice': gas_price})
             self._w3.personal.lockAccount(paying_acct)
+            return hexlify(tx_hash), gas_price
         except Exception as e:
             raise GethException(str(e), message='Could not transfer token')
 
