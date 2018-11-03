@@ -233,7 +233,7 @@ class GetContractInfo(DataQuery):
 class GetTraderInfo(DataQuery):
 
     def __init__(self):
-        self.sql_test = """
+        self.sql_text = """
             SELECT c_hash AS address, c_priv_key AS priv_key
             FROM collectors 
             WHERE c_id = :c_id;
