@@ -273,12 +273,16 @@ def main():
     sess.close()
 
     # Get pending trades.
-    sess = Session()
-    trades = GetPendingTradeTRIDs().execute_n_fetchall({}, sess, schema_out=False)
-    for trade in trades:
-        trade_items = GetTradeItemsByTRID().execute_n_fetchall({'tr_id': trade['tr_id']}, sess, schema_out=False)
-        update_trade_items(trade_items, trade)
-    sess.close()
+    try:
+        sess = Session()
+        trades = GetPendingTradeTRIDs().execute_n_fetchall({}, sess, schema_out=False)
+        for trade in trades:
+            trade_items = GetTradeItemsByTRID().execute_n_fetchall({'tr_id': trade['tr_id']}, sess, schema_out=False)
+            update_trade_items(trade_items, trade, sess)
+    except Exception as e:
+        print('Received error from pending trades: {err}'.format(err=str(e)))
+    finally:
+        sess.close()
 
 
 if __name__ == '__main__':
