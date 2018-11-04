@@ -161,8 +161,8 @@ def validate_offer_and_trade(trade_items, tradee_id, trader_id, trader_eth_offer
     # TODO: Get estimated gas cost so we can validate there is enough for the transfers!!!
 
     # Get the account information for both the tradee and trader
-    tradee_info = GetTraderInfo().execute_n_fetchall({'c_id': tradee_id}, schema_out=False)
-    trader_info = GetTraderInfo().execute_n_fetchall({'c_id': trader_id}, schema_out=False)
+    tradee_info = GetTraderInfo().execute_n_fetchone({'c_id': tradee_id}, schema_out=False)
+    trader_info = GetTraderInfo().execute_n_fetchone({'c_id': trader_id}, schema_out=False)
     if not tradee_info or not trader_info:
         raise GethException('', message='Could not get either tradee or trader information')
 
@@ -180,7 +180,7 @@ def validate_offer_and_trade(trade_items, tradee_id, trader_id, trader_eth_offer
     for item in trade_items:
         acct, key = (tradee_acct, tradee_key) if item['owner'] == tradee_id else (trader_acct, trader_key)
         to_acct = tradee_acct if acct != tradee_acct else trader_acct
-        contract_info = GetContractInfo().execute_n_fetchall({'t_id': item['t_id']}, schema_out=False)
+        contract_info = GetContractInfo().execute_n_fetchone({'t_id': item['t_id']}, schema_out=False)
         if not contract_info:
             raise GethException('', message='Could not get contract info for token_id {t_id}'.format(t_id=item['t_id']))
 
@@ -256,7 +256,7 @@ class GetContractInfo(DataQuery):
 class GetTraderInfo(DataQuery):
 
     def __init__(self):
-        self.sql_test = """
+        self.sql_text = """
             SELECT c_hash AS address, c_priv_key AS priv_key
             FROM collectors 
             WHERE c_id = :c_id;

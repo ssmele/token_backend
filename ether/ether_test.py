@@ -6,8 +6,8 @@ from ether.geth_keeper import GethKeeper
 if __name__ == '__main__':
     gk = GethKeeper()
 
-    create_contract = False
-    claim_token = False
+    create_contract = True
+    claim_token = True
     transfer_token = True
 
     TOKEN_ID = 5
@@ -18,7 +18,7 @@ if __name__ == '__main__':
     if create_contract:
         tx_hash, json_abi = gk.issue_contract('0xff95b24806e3d93afc628c4bb684fd245e9853e9',
                                               issuer_name='tesla', desc='token for tesla', img_url='http://google.com',
-                                              num_tokes=5, tradable=False)
+                                              num_tokes=5, tradable=True)
 
         print('tx_hash: {0}'.format(tx_hash))
         print('---------------------------------------------------------------')

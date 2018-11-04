@@ -6,7 +6,7 @@ from utils.utils import success_response, error_response, log_kv, LOG_INFO, LOG_
 from utils.db_utils import requires_db
 from utils.verify_utils import verify_collector_jwt
 from ether.geth_keeper import GethException
-from routes import load_with_schema
+from routes import load_with_schema, requires_geth
 from models.trade import TradeRequest, DeleteTradeRequest, TradeResponseRequest, GetTradeByTRID, UpdateTradeStatus, \
     TradeStatus, GetTradeItems, InvalidateTradeRequests, GetActiveTradeRequests, UpdateOwnership, GetUntradables, \
     create_trade_request, check_trade_item_ownership, check_active_trade_item, is_valid_trade_items, \
@@ -118,6 +118,7 @@ class Trade(Resource):
             return error_response(status='Unable to cancel trade request.')
 
     @requires_db
+    @requires_geth
     @verify_collector_jwt
     @load_with_schema(TradeResponseRequest)
     @trade_docs.document(url_prefix + '    ', 'PUT', 'Method to respond to trade request.',
@@ -174,11 +175,12 @@ class Trade(Resource):
                     validate_offer_and_trade(trade_items, tradee_c_id, trader_c_id, trade['trader_eth_offer'])
                 except GethException as e:
                     log_kv(LOG_ERROR, {'error': 'exception while performing trades', 'exception': str(e.exception),
-                                       'message': e.message})
+                                       'message': e.message}, exception=True)
                     g.sesh.rollback()
                     return error_response('Error accepting request. [G]')
                 except Exception as e:
-                    log_kv(LOG_ERROR, {'error': 'exception while performing trades', 'exception': str(e)})
+                    log_kv(LOG_ERROR, {'error': 'exception while performing trades', 'exception': str(e)},
+                           exception=True)
                     g.sesh.rollback()
                     return error_response('Error accepting request. [G]')
 

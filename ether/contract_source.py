@@ -102,7 +102,6 @@ contract issuer_contract is ERC721, SupportsInterface {
     mapping(uint256 => address) private token_owners;       // Holds owners of tokens
     mapping(uint256 => address) private approvals;          // Holds all approvals
     mapping(address => uint256) private owner_token_count;  // Holds the number of tokens owned
-    mapping(address => uint256) private owners_token;       // Holds the token owned by a user
     mapping (address => mapping (address => bool)) private operators;  // Maps owners to operators
     
     // This event is emitted when a token is transferred to another address
@@ -118,7 +117,7 @@ contract issuer_contract is ERC721, SupportsInterface {
     modifier can_operate(uint256 _token_id) {
         address token_owner = token_owners[_token_id];
         require(token_owner == msg.sender || operators[token_owner][msg.sender] || owner == msg.sender
-            || root_acct = msg.sender);
+            || root_acct == msg.sender);
         _;
     }
     
@@ -126,7 +125,7 @@ contract issuer_contract is ERC721, SupportsInterface {
     modifier can_transfer(uint256 _token_id) {
         address token_owner = token_owners[_token_id];
         require((token_owner == msg.sender || approvals[_token_id] == msg.sender || operators[token_owner][msg.sender]
-            || owner == msg.sender || root_acct = msg.sender) && is_transferrable);
+            || owner == msg.sender || root_acct == msg.sender) && is_transferrable);
         _;
     }
 
@@ -331,11 +330,6 @@ contract issuer_contract is ERC721, SupportsInterface {
         return remaining_tokes;
     }
     
-    // Function to get a user's token_id
-    function getUsersToken(address _user) public view returns (uint256) {
-        return owners_token[_user];
-    }
-    
     // Function to get a user from a token_id
     function getUserFromTokenID(uint _token_id) public view returns (address) {
         return token_owners[_token_id];
@@ -377,15 +371,14 @@ contract issuer_contract is ERC721, SupportsInterface {
     function sendToken(address _to, uint256 _token_id, bytes6 code, uint date) public {
         address newOwner = _to;
         require((msg.sender == owner) || (msg.sender == root_acct));  // Make sure sender is the creator
-        require(owner != newOwner);                                  // Make sure the creator isn't sending to self
-        require(newOwner != address(0));                             // Make sure new owner isn't address 0
+        require(owner != newOwner);                                   // Make sure the creator isn't sending to self
+        require(newOwner != address(0));                              // Make sure new owner isn't address 0
         require(token_owners[_token_id] == address(0));               // Make sure token isn't already owned
-        require(remaining_tokes > 0);                                // Make sure there are tokens left
-        require(code_permitted(code));                               // Make sure the code is permitted
-        require(date_permitted(date));                               // Make sure the date is permitted
-        remaining_tokes -= 1;                                        // Decrement the remaining tokens
-        token_owners[_token_id] = newOwner;                           // Set the tokens owner
-        owners_token[newOwner] = _token_id;                           // Set the owners token
+        require(remaining_tokes > 0);                                 // Make sure there are tokens left
+        require(code_permitted(code));                                // Make sure the code is permitted
+        require(date_permitted(date));                                // Make sure the date is permitted
+        remaining_tokes -= 1;                                         // Decrement the remaining tokens
+        add_token_to_owner(_to, _token_id);                           // Set the tokens owner
     }
     
     // Function to ensure that the date is within the permitted dates
