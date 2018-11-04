@@ -225,7 +225,7 @@ def update_trade_items(trade_items, trade, sess):
             UpdateTradeStatus().execute({'tr_id': trade['tr_id'], 'new_status': 'A'}, sesh=sess)
             for ti, gas_cost in zip(trade_items, gas_cost_list):
                 UpdateTradeItemGasCost().execute({'gas_cost': gas_cost, 'tr_id': ti['tr_id'], 'con_id': ti['con_id'],
-                                                  't_id': ti['t_id']})
+                                                  't_id': ti['t_id']}, sesh=sess)
             print('Trade transfer mined - tr_id: {tr_id}, gas_cost: {gas_cost_list}'
                   .format(tr_id=trade['tr_id'], gas_cost_list=gas_cost_list))
             sess.commit()
