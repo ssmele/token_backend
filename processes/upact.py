@@ -285,7 +285,7 @@ def main():
     trades = GetPendingTradeTRIDs().execute_n_fetchall({}, sess, schema_out=False)
     for trade in trades:
         trade_items = GetTradeItemsByTRID().execute_n_fetchall({'tr_id': trade['tr_id']}, sess, schema_out=False)
-        update_trade_items(trade_items, trade)
+        update_trade_items(trade_items, trade, sess)
     sess.close()
 
 
