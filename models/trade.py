@@ -11,10 +11,12 @@ from models.collector import TokenResponse, CollectorInfoRequest
 
 class TradeStatus(Enum):
     REQUESTED = 'R'
+    WAITING = 'W'
     ACCEPTED = 'A'
     DECLINED = 'D'
     CANCELED = 'C'
     INVALID = 'I'
+    FAILED = 'F'
 
 
 class DeleteTradeRequest(Schema):
@@ -196,7 +198,9 @@ def validate_offer_and_trade(trade_items, tradee_id, trader_id, trader_eth_offer
             'key': key,
             'con_addr': con_addr,
             'con_abi': con_abi,
-            'token_id': item['t_id']
+            'token_id': item['t_id'],
+            'con_id': item['con_id'],
+            'tr_id': item['tr_id']
         })
 
     # Perform the eth transfer
@@ -209,12 +213,31 @@ def validate_offer_and_trade(trade_items, tradee_id, trader_id, trader_eth_offer
     # Perform the token transfers
     for transfer in transfers:
         try:
-            g.geth.perform_transfer(transfer['con_addr'], transfer['con_abi'], transfer['token_id'],
-                                    src_acct=transfer['from'], dest_acct=transfer['to'],
-                                    src_priv_key=transfer['key'])
+            trade_hash, gas_price = g.geth.perform_transfer(transfer['con_addr'], transfer['con_abi'],
+                                                            transfer['token_id'],
+                                                            src_acct=transfer['from'], dest_acct=transfer['to'],
+                                                            src_priv_key=transfer['key'])
+            UpdateTradeItem().execute({'tr_id': transfer['tr_id'], 'con_id': transfer['con_id'],
+                                       't_id': transfer['token_id'], 'trade_hash': trade_hash ,
+                                       'gas_price': gas_price})
         except Exception as e:
             raise GethException(str(e), message='Could not perform token transfer for token_id {t_id}'
                                 .format(t_id=transfer['token_id']))
+
+
+class UpdateTradeItem(DataQuery):
+
+    def __init__(self):
+        self.sql_text = """
+        UPDATE trade_item
+        SET trade_hash = :trade_hash,
+        gas_price = :gas_price
+        WHERE tr_id = :tr_id
+        AND con_id = :con_id
+        AND t_id = :t_id
+        """
+        self.schema_out = None
+        super().__init__()
 
 
 class GetContractInfo(DataQuery):
@@ -368,20 +391,20 @@ class GetActiveTradeRequests(DataQuery):
             self.sql_text = """
             select tr_id from trade 
             where tradee_c_id = :c_id
-            and status in ('R', 'A');
+            and status in ('R', 'A', 'W');
             """
         elif version == 'trader':
             self.sql_text = """
             select tr_id from trade 
             where trader_c_id = :c_id
-            and status in ('R', 'A');
+            and status in ('R', 'A', 'W');
             """
         else:
             self.sql_text = """
             select tr_id from trade 
             where (trader_c_id = :c_id
             or tradee_c_id = :c_id)
-            and status in ('R', 'A');
+            and status in ('R', 'A', 'W');
             """
         self.schema_out = None
         super().__init__()

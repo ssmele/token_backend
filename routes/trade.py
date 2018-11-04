@@ -17,6 +17,8 @@ trade_bp = Blueprint('trade', __name__)
 trade_docs = BlueprintDocumentation(trade_bp, 'Trade')
 url_prefix = '/trade'
 
+# TODO: Fix error handling on form validation.
+
 
 class Trade(Resource):
 
@@ -160,32 +162,9 @@ class Trade(Resource):
 
                 # Go through and transfer ownership over
                 trader_c_id, tradee_c_id = trade['trader_c_id'], trade['tradee_c_id']
-                for trade_item in trade_items:
-                    try:
-                        # Figure out new ownership.
-                        if trade_item['owner'] == trader_c_id:
-                            prev_owner, new_owner = trader_c_id, tradee_c_id
-                        else:
-                            prev_owner, new_owner = tradee_c_id, trader_c_id
-
-                        # Update the ownership.
-                        upt_cnt = UpdateOwnership().execute({'con_id': trade_item['con_id'], 't_id': trade_item['t_id'],
-                                                             'new_owner': new_owner, 'prev_owner': prev_owner})
-                        # Ensure that the ownership was actually updated.
-                        if upt_cnt != 1:
-                            log_kv(LOG_ERROR, {'error': 'error transferring token ownership',
-                                               'con_id': trade_item['con_id'], 't_id': trade_item['t_id']})
-                            return error_response("Error Accepting request.")
-
-                    except Exception as e:
-                        log_kv(LOG_ERROR, {'error': 'error transferring ownership of token.',
-                                           'con_id': trade_item['con_id'], 't_id': trade_item['t_id'],
-                                           'owner_c_id': trade_item['owner'], 'exception': str(e)}, exception=True)
-                        g.sesh.rollback()
-                        return error_response('Error Accepting request', http_code=400)
 
                 # Update trade request logic.
-                data.update({'new_status': TradeStatus.ACCEPTED.value})
+                data.update({'new_status': TradeStatus.WAITING.value})
                 if not UpdateTradeStatus().execute(data):
                     g.sesh.rollback()
                     return error_response(status='Error accepting request.')
