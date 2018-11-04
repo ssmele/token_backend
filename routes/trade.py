@@ -177,7 +177,12 @@ class Trade(Resource):
                     log_kv(LOG_ERROR, {'error': 'exception while performing trades', 'exception': str(e.exception),
                                        'message': e.message}, exception=True)
                     g.sesh.rollback()
-                    return error_response('Error accepting request. [G]')
+
+                    # status code 69 is for not enough eth to make transfer.
+                    if e.exception_number == 69:
+                        return error_response(status_code=69, http_code=400)
+                    else:
+                        return error_response('Error accepting request. [G]')
                 except Exception as e:
                     log_kv(LOG_ERROR, {'error': 'exception while performing trades', 'exception': str(e)},
                            exception=True)

@@ -41,9 +41,10 @@ class GethException(Exception):
         * message: Optional message describing inpact
     """
 
-    def __init__(self, exception, message=''):
+    def __init__(self, exception, message='', exception_number=0):
         self.exception = exception
         self.message = message
+        self.exception_number = exception_number
         log_kv(LOG_ERROR, {'error': self.message, 'exception': self.exception}, exception=True)
 
 
