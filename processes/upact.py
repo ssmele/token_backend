@@ -6,7 +6,6 @@ from utils.db_utils import DataQuery
 from ether.geth_keeper import GethKeeper
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.engine import create_engine
-from models.trade import UpdateOwnership
 from utils.utils import log_kv, LOG_ERROR
 
 # Create geth.
@@ -35,6 +34,20 @@ class UpdateContractStatus(DataQuery):
               con_addr = :con_addr 
             WHERE con_id = :this_id;
         """
+        super().__init__()
+
+
+class UpdateOwnership(DataQuery):
+
+    def __init__(self):
+        self.sql_text = """
+        update tokens
+        set owner_c_id = :new_owner
+        where con_id = :con_id
+        and t_id = :t_id
+        and owner_c_id = :prev_owner;
+        """
+        self.schema_out = None
         super().__init__()
 
 
