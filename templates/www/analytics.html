@@ -1,181 +1,208 @@
 <!DOCTYPE html>
-<html lang="en" >
-	<head>
-		<title>T o k e n</title>
-		<meta charset="utf-8">
-    	<meta name="viewport" content="width=device-width, initial-scale=1">
-		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
-		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
-		<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"></script>
-		<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
-		<link href="{{ url_for('static',filename='css/home.css')}}" rel="stylesheet">
+<html lang="en">
+
+<head>
+	<title>T o k e n</title>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"></script>
+	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
+	<link href="{{ url_for('static',filename='css/home.css')}}" rel="stylesheet">
 
 
-		<link rel="stylesheet" href="https://unpkg.com/leaflet@1.3.4/dist/leaflet.css"
-	 	integrity="sha512-puBpdR0798OZvTTbP4A8Ix/l+A4dHDD0DGqYW6RQ+9jxkRFclaxxQb/SJAWZfWAkuyeQUytO7+7N4QKrDh+drA=="
-	 	crossorigin=""/>
-		<script src="https://unpkg.com/leaflet@1.3.4/dist/leaflet.js"
-	 	integrity="sha512-nMMmRyTVoLYqjP9hrbed9S+FzjZHW5gY1TWCHA5ckwXZBadntCNs8kEqAWdrb9O7rxbCaA4lKTIWjDXZxflOcA=="
-	 	crossorigin=""></script>
+	<link rel="stylesheet" href="https://unpkg.com/leaflet@1.3.4/dist/leaflet.css" integrity="sha512-puBpdR0798OZvTTbP4A8Ix/l+A4dHDD0DGqYW6RQ+9jxkRFclaxxQb/SJAWZfWAkuyeQUytO7+7N4QKrDh+drA=="
+	 crossorigin="" />
+	<script src="https://unpkg.com/leaflet@1.3.4/dist/leaflet.js" integrity="sha512-nMMmRyTVoLYqjP9hrbed9S+FzjZHW5gY1TWCHA5ckwXZBadntCNs8kEqAWdrb9O7rxbCaA4lKTIWjDXZxflOcA=="
+	 crossorigin=""></script>
 
-		//Map
-		<link rel="stylesheet" type="text/css" href="https://unpkg.com/leaflet.markercluster@1.0.4/dist/MarkerCluster.Default.css">
-		<link rel="stylesheet" type="text/css" href="https://unpkg.com/leaflet.markercluster@1.0.4/dist/MarkerCluster.css">
-		<script src="https://unpkg.com/leaflet.markercluster@1.0.4/dist/leaflet.markercluster.js"></script>
-		<script src="https://d3js.org/d3.v3.min.js"></script>
+	//Map
+	<link rel="stylesheet" type="text/css" href="https://unpkg.com/leaflet.markercluster@1.0.4/dist/MarkerCluster.Default.css">
+	<link rel="stylesheet" type="text/css" href="https://unpkg.com/leaflet.markercluster@1.0.4/dist/MarkerCluster.css">
+	<script src="https://unpkg.com/leaflet.markercluster@1.0.4/dist/leaflet.markercluster.js"></script>
+	<script src="https://d3js.org/d3.v3.min.js"></script>
 
-		//Calendar
-		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-		<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.6/d3.min.js"></script>
-		<script src="https://cdnjs.cloudflare.com/ajax/libs/cal-heatmap/3.6.2/cal-heatmap.js"></script>
-		<link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/cal-heatmap/3.6.2/cal-heatmap.css">
-		<script src="https://cdnjs.cloudflare.com/ajax/libs/cal-heatmap/3.6.2/cal-heatmap.min.js"></script>
-		<script src="https://cdnjs.cloudflare.com/ajax/libs/cal-heatmap/3.6.2/cal-heatmap.source-map.js"></script>
+	//Calendar
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.6/d3.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/cal-heatmap/3.6.2/cal-heatmap.js"></script>
+	<link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/cal-heatmap/3.6.2/cal-heatmap.css">
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/cal-heatmap/3.6.2/cal-heatmap.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/cal-heatmap/3.6.2/cal-heatmap.source-map.js"></script>
 
-		//Gas price
-		<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.2.1/Chart.bundle.min.js"></script>
+	//Gas price
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.2.1/Chart.bundle.min.js"></script>
 
 
-	</head>
-		
-		<body>
-			
-			
-			<header class="nav fixed-top">
-				<img class="logo" src="{{ url_for('static',filename='images/tokentitlelight.png')}}" height="50px" data-toggle="tooltip" data-placement="bottom" title="Alpha 1.0"></img>
-				
-				<a class="nav-btn" href="home">Home</a>
-				<a class="nav-btn active" href="" data-placement="bottom" title="View token analytics">Analytics</a>
-				<a class="nav-btn" href="explore" data-placement="bottom" title="Explore all issued tokens">Explore</a>			
-				<a class="nav-btn" href="creation" data-placement="bottom" title="Issue your very own token">Issuing</a>
-				<a class="nav-btn" href="about" data-placement="bottom" title="Learn about Token and its developers">About</a>
-				
-				<ul class="navbar-nav flex-row ml-md-auto d-none d-md-flex">
-					<li class="nav-item dropdown">
-						<a class="nav-item nav-link dropdown-toggle mr-md-2" href="#" id="bd-versions" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-							My Account
-						</a>
-						<div class="dropdown-menu dropdown-menu-right" aria-labelledby="bd-versions">
-							<a class="dropdown-item" id="#username">Username</a>
-							<a class="dropdown-item" href="index">Logout</a>
-						</div>
-					</li>			
-				</ul>
-			</header>
-			<div class="spacing"></div>
+</head>
 
-            <style>
+<body>
 
 
-            </style>
+	<header class="nav fixed-top">
+		<img class="logo" src="{{ url_for('static',filename='images/tokentitlelight.png')}}" height="50px" data-toggle="tooltip"
+		 data-placement="bottom" title="Alpha 1.0"></img>
 
-			<script>
-				function analyze(con_id){
-					$.ajaxSetup({
-						headers: {
-							'Authorization': document.cookie
-						}
-					});
-					$.get(
-					"http://"+url+"/analytics/"+con_id,
-					function(data,status){	
-						console.log(data.resp_data.num_claimed +", "+data.resp_data.num_unclaimed + data.resp_data.coordinates); // read
+		<a class="nav-btn" href="home">Home</a>
+		<a class="nav-btn active" href="" data-placement="bottom" title="View token analytics">Analytics</a>
+		<a class="nav-btn" href="explore" data-placement="bottom" title="Explore all issued tokens">Explore</a>
+		<a class="nav-btn" href="creation" data-placement="bottom" title="Issue your very own token">Issuing</a>
+		<a class="nav-btn" href="about" data-placement="bottom" title="Learn about Token and its developers">About</a>
 
-						drawMap(data.resp_data.loc_constraints, data.resp_data.coordinates);
-						$('#ex1').on('shown.bs.modal', function () {
+		<ul class="navbar-nav flex-row ml-md-auto d-none d-md-flex">
+			<li class="nav-item dropdown">
+				<a class="nav-item nav-link dropdown-toggle mr-md-2" href="#" id="bd-versions" data-toggle="dropdown" aria-haspopup="true"
+				 aria-expanded="false">
+					My Account
+				</a>
+				<div class="dropdown-menu dropdown-menu-right" aria-labelledby="bd-versions">
+					<a class="dropdown-item" id="#username">Username</a>
+					<a class="dropdown-item" href="index">Logout</a>
+				</div>
+			</li>
+		</ul>
+	</header>
+	<div class="spacing"></div>
+
+	<style>
+
+
+	</style>
+
+	<script>
+		var map;
+		function analyze(con_id) {
+			$.ajaxSetup({
+				headers: {
+					'Authorization': document.cookie
+				}
+			});
+			$.get(
+				"http://" + url + "/analytics/" + con_id,
+				function (data, status) {
+					console.log(data.resp_data.num_claimed + ", " + data.resp_data.num_unclaimed + data.resp_data.coordinates); // read
+
+					drawMap(data.resp_data.loc_constraints, data.resp_data.coordinates);
+					$('#ex1').on('shown.bs.modal', function () {
 						drawChart(data.resp_data.num_claimed, data.resp_data.num_unclaimed);
 						drawGasPrices(data.resp_data.time_windows, data.resp_data.price_and_time);
 						drawCalendar(data.resp_data.time_windows, data.resp_data.price_and_time);
 						numTraded(data.resp_data.traded);
-						});
-						$('#ex1').modal('show');
-					},
+					});
+					$('#ex1').modal('show');
+					map.invalidateSize();
+				},
 
-					'json')
-					.fail(function(response) {
-						//status
-						//status_code
-						//var obj = JSON.parse(response.responseText);
-						console.log(response.responseText);
-					});
-				}
-			</script>
-			
-			<script>
-				function display(collection){
-					$('#collection').text("");
-					var tokens = '<div class="row">';
-					for(var i = 0; i < collection.contracts.length; i++){
-						//$('#collection').append(collection.contracts[i].name + ":<br>" + collection.contracts[i].description + "<br>");
-						tokens += '<div class="card align-items-center"><div class="wave"><div class="shadow"><div class="token" onclick="analyze('+collection.contracts[i].con_id+')"><img id="image" src='+collection.contracts[i].pic_location+' alt="" width="128"/></div></div><div class="title center">'+collection.contracts[i].name+'</div><div class="title">'+collection.contracts[i].description+'</div></div></div>';
-					}
-					tokens += '</div>';
-					$('#collection').append(tokens);
-				}
-				var url = "167.99.26.0:80";
-				//var url = "localhost:8088";
-				
-				$('document').ready(function view(){
-					
-					$.ajaxSetup({
-						headers: {
-							'Authorization': document.cookie
-						}
-					});
-					$.get(
-					"http://"+url+"/contract",
-					function(data,status){	
-						console.log(data); // read
-						
-						display(data.resp_data);
-					},
-					'json')
-					.fail(function(response) {
-						//status
-						//status_code
-						//var obj = JSON.parse(response.responseText);
-						console.log(response.responseText);
-					});
+				'json')
+				.fail(function (response) {
+					//status
+					//status_code
+					//var obj = JSON.parse(response.responseText);
+					console.log(response.responseText);
 				});
-			</script>
-			<div id="collection"></div>
-			<form class="form-inline my-2 my-lg-0" id="target" action="javascript:view();" style="display:none;">
-				<input class="form-control mr-sm-2" type="search" placeholder="Search My Tokens" aria-label="Search">
-				<button class="btn btn-outline-primary my-2 my-sm-0">Search</button>
-			</form>
+		}
+	</script>
+
+	<script>
+		function display(collection) {
+			$('#collection').text("");
+			var tokens = '<div class="row">';
+			for (var i = 0; i < collection.contracts.length; i++) {
+				//$('#collection').append(collection.contracts[i].name + ":<br>" + collection.contracts[i].description + "<br>");
+				tokens += '<div class="card align-items-center"><div class="wave"><div class="shadow"><div class="token" onclick="analyze(' + collection.contracts[i].con_id + ')"><img id="image" src=' + collection.contracts[i].pic_location + ' alt="" width="128"/></div></div><div class="title center">' + collection.contracts[i].name + '</div><div class="title">' + collection.contracts[i].description + '</div></div></div>';
+			}
+			tokens += '</div>';
+			$('#collection').append(tokens);
+		}
+		var url = "167.99.26.0:80";
+		//var url = "localhost:8088";
+
+		$('document').ready(function view() {
+
+			$.ajaxSetup({
+				headers: {
+					'Authorization': document.cookie
+				}
+			});
+			$.get(
+				"http://" + url + "/contract",
+				function (data, status) {
+					console.log(data); // read
+
+					display(data.resp_data);
+				},
+				'json')
+				.fail(function (response) {
+					//status
+					//status_code
+					//var obj = JSON.parse(response.responseText);
+					console.log(response.responseText);
+				});
+		});
+	</script>
+	<div id="collection"></div>
+	<form class="form-inline my-2 my-lg-0" id="target" action="javascript:view();" style="display:none;">
+		<input class="form-control mr-sm-2" type="search" placeholder="Search My Tokens" aria-label="Search">
+		<button class="btn btn-outline-primary my-2 my-sm-0">Search</button>
+	</form>
 
 
 
 
 	<div id="ex1" class="modal">
-		<div class="modal-dialog modal-lg" style="max-width: 90%!important; color:black;">
-			<div class="modal-content">
-				<div class="modal-body">
-					<div class="row">
-						<div class="col-lg-4">
-							<p>Percent Claimed</p>
-							<canvas id="pie-chart" width="90%" height="90%"></canvas>
+		<div class="modal-dialog modal-lg" style="margin-top:5%; max-width: 60% !important; max-height: 60% !important;">
+			<div class="modal-content" style="min-height: 500px; background: rgba(155,163,177,1);">
+				<div id="carouselExampleIndicators" class="carousel slide" data-ride="carousel">
+					<div class="carousel-inner" role="listbox">
+						<div class="carousel-item active modal-body text-center">
+
+							<h4>Percent Claimed</h4>
+							<canvas id="pie-chart" width="30%" height="30%"></canvas>
+
 						</div>
-						<div class="col-lg-2">
-							<p>Number of Trades:</p>
-							<p id="traded"></p>
+
+						<div class="carousel-item modal-body text-center" style="margin-top: 200px; min-height: 400px;">
+
+							<h4>Number of Trades:</h4>
+							<h1 id="traded"></h1>
+
 						</div>
-						<div class="col-lg-6">
-							<button id="minDate-previous" style="margin-top: 10px; border: none" class="btn"><i class="fa fa-angle-left"></i></button>
-							<button id="minDate-next" style="margin-top: 10px; border: none;" class="btn"><i class="fa fa-angle-right"></i></button>
-							<div id="cal-heatmap"></div>
+
+						<div class="carousel-item modal-body" style="min-height: 400px;">
+							<div class="row justify-content-md-center">
+								<button id="minDate-previous" style="margin-top: 10px; border: none" class="btn"><i class="fa fa-angle-left"></i></button>
+								<button id="minDate-next" style="margin-top: 10px; border: none;" class="btn"><i class="fa fa-angle-right"></i></button>
+								<div id="cal-heatmap"></div>
+
+							</div>
+
 						</div>
+
+						<div class="carousel-item modal-body">
+							<div class="row justify-content-md-center" style="padding: 50px;">
+
+								<h4>Gas price for token claim</h4>
+								<canvas id="canvas" width="40%" height="70%"></canvas>
+							</div>
 						</div>
-					<div class="row">
-						<div class="col-lg-6">
-							<p>Gas price for token claim</p>
-							<canvas id="canvas" width="50%" height="80%"></canvas>
+						<div class="carousel-item modal-body text-center" style="min-height: 500px;">
+
+							<h4 style="margin-top: 50px;">Location</h4>
+							<div id="mapid" style="height: 355px; margin: 60px; margin-top: 0px;"></div>
 						</div>
-						<div class="col-lg-6">
-							<p>Location</p>
-							<div id="mapid" style="height: 255px;"></div>
-						</div>
+
+						<a class="carousel-control-prev" href="#carouselExampleIndicators" role="button" data-slide="prev">
+							<span class="carousel-control-prev-icon" aria-hidden="true"></span>
+							<span class="sr-only">Previous</span>
+						</a>
+						<a class="carousel-control-next" href="#carouselExampleIndicators" role="button" data-slide="next">
+							<span class="carousel-control-next-icon" aria-hidden="true"></span>
+							<span class="sr-only">Next</span>
+						</a>
 					</div>
+
+
 				</div>
 			</div>
 		</div>
@@ -193,98 +220,103 @@
 	</script>
 
 	<script>
-	var piechart = new Chart(document.getElementById("pie-chart"));
-	function drawChart(claimed, unclaimed) {
-		piechart.destroy();
-		piechart = new Chart(document.getElementById("pie-chart"), {
-			type: 'doughnut',
-			data: {
-				labels: ["Claimed", "Unclaimed"],
-				datasets: [{
-					backgroundColor: ["#141d29", "#ededed"],
-					data: [claimed, unclaimed]
-				}]
-			},
+		var piechart = new Chart(document.getElementById("pie-chart"));
+		function drawChart(claimed, unclaimed) {
+			piechart.destroy();
+			piechart = new Chart(document.getElementById("pie-chart"), {
+				type: 'doughnut',
+				data: {
+					labels: ["Claimed", "Unclaimed"],
+					datasets: [{
+						backgroundColor: ["#141d29", "#ededed"],
+						data: [claimed, unclaimed]
+					}]
+				},
 
-			options : {legend : {display : false}}
-		});
-	}
-	</script>
-
-	<script>
-	var map = L.map("mapid");
-	var tileLayer = L.tileLayer('https://stamen-tiles-{s}.a.ssl.fastly.net/watercolor/{z}/{x}/{y}.{ext}', {
-	    attribution: 'Map tiles by <a href="http://stamen.com">Stamen Design</a>, <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a> &mdash; Map data &copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-	    subdomains: 'abcd',
-	    minZoom: 1,
-	    maxZoom: 16,
-	    ext: 'jpg'
-    });
-
-	tileLayer.addTo(map);
-
-	map.setView([0, 0], 0);
-	var clusters = L.markerClusterGroup();
-	var claimingRegion = L.circle();
-
-	function drawMap(loc_constraints, coordinates) {
-
-		map.removeLayer(clusters);
-		map.removeLayer(claimingRegion);
-		clusters.clearLayers();
-
-
-		for(i=0; i<coordinates.length; i++) {
-		 var circle = L.circleMarker(coordinates[i],
-		 {radius: 4,
-		 weight: 1,
-		 color: 'white',
-		 fill: true,
-		 fillColor: '141d29',
-		 fillOpacity: 1.0});
-
-		  clusters.addLayer(circle);
-	}
-	map.addLayer(clusters);
-
-	if (loc_constraints.length > 0) {
-		claimingRegion = L.circle([loc_constraints[0], loc_constraints[1]], {radius : loc_constraints[2]});
-		map.addLayer(claimingRegion);
-	}
-
-	$('#ex1').on('shown.bs.modal', function () {
-		map.invalidateSize();
-	});
-
-	}
-	</script>
-
-
-	<script>
-	var cal = new CalHeatMap();
-	cal.init({});
-
-	function drawCalendar(timeWindows, data) {
-
-		//Reset next and prev buttons
-		document.getElementById('minDate-next').style.visibility = 'visible';
-		document.getElementById('minDate-previous').style.visibility = 'visible';
-		document.getElementById("minDate-next").disabled = false;
-		document.getElementById("minDate-previous").disabled = false;
-
-		claimBegin = timeWindows[0][0]; //Assuming only 1 time window for claiming
-		claimEnd = timeWindows[0][1];
-
-
-
-		if (claimEnd == -1) {
-			var lastDayInMonth = new Date();
-			lastDayInMonth.setMonth(lastDayInMonth.getMonth() + 1);
-			lastDayInMonth.setDate(1); // first day in next month
-			lastDayInMonth.setDate(lastDayInMonth.getDate()-1);
-
-			claimEnd = lastDayInMonth;
+				options: { legend: { display: false } }
+			});
 		}
+	</script>
+
+	<script>
+		map = L.map("mapid");
+		var tileLayer = L.tileLayer('https://stamen-tiles-{s}.a.ssl.fastly.net/watercolor/{z}/{x}/{y}.{ext}', {
+			attribution: 'Map tiles by <a href="http://stamen.com">Stamen Design</a>, <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a> &mdash; Map data &copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+			subdomains: 'abcd',
+			minZoom: 1,
+			maxZoom: 16,
+			ext: 'jpg'
+		});
+
+		tileLayer.addTo(map);
+
+		map.setView([0, 0], 0);
+		var clusters = L.markerClusterGroup();
+		var claimingRegion = L.circle();
+
+		function drawMap(loc_constraints, coordinates) {
+
+			map.removeLayer(clusters);
+			map.removeLayer(claimingRegion);
+			clusters.clearLayers();
+
+
+			for (i = 0; i < coordinates.length; i++) {
+				var circle = L.circleMarker(coordinates[i],
+					{
+						radius: 4,
+						weight: 1,
+						color: 'white',
+						fill: true,
+						fillColor: '141d29',
+						fillOpacity: 1.0
+					});
+
+				clusters.addLayer(circle);
+			}
+			map.addLayer(clusters);
+
+			if (loc_constraints.length > 0) {
+				claimingRegion = L.circle([loc_constraints[0], loc_constraints[1]], { radius: loc_constraints[2] });
+				map.addLayer(claimingRegion);
+			}
+
+			$('#ex1').on('shown.bs.modal', function () {
+				map.invalidateSize();
+			});
+			$('.carousel').on('slid.bs.carousel', function () {
+				map.invalidateSize();
+
+			});
+		}
+	</script>
+
+
+	<script>
+		var cal = new CalHeatMap();
+		cal.init({});
+
+		function drawCalendar(timeWindows, data) {
+
+			//Reset next and prev buttons
+			document.getElementById('minDate-next').style.visibility = 'visible';
+			document.getElementById('minDate-previous').style.visibility = 'visible';
+			document.getElementById("minDate-next").disabled = false;
+			document.getElementById("minDate-previous").disabled = false;
+
+			claimBegin = timeWindows[0][0]; //Assuming only 1 time window for claiming
+			claimEnd = timeWindows[0][1];
+
+
+
+			if (claimEnd == -1) {
+				var lastDayInMonth = new Date();
+				lastDayInMonth.setMonth(lastDayInMonth.getMonth() + 1);
+				lastDayInMonth.setDate(1); // first day in next month
+				lastDayInMonth.setDate(lastDayInMonth.getDate() - 1);
+
+				claimEnd = lastDayInMonth;
+			}
 			var stats = {};
 			//Get the data in the correct form:
 			// { "timestamp" : 1 ,
@@ -294,63 +326,63 @@
 			for (var d in data) {
 				var timestamp = (new Date(data[d][0]).getTime() / 1000).toString();
 				stats[timestamp] = 1;
-			 }
+			}
 
-		var minDate = new Date(claimBegin);
-  		var maxDate = new Date(claimEnd);
+			var minDate = new Date(claimBegin);
+			var maxDate = new Date(claimEnd);
 
-		var endOfFinalDay = new Date(maxDate);
-		endOfFinalDay.setHours(23);
-      	endOfFinalDay.setMinutes(59);
-      	endOfFinalDay.setSeconds(59);
-		for (var d = new Date(minDate); d <= endOfFinalDay; d.setDate(d.getDate() + 1)) {
+			var endOfFinalDay = new Date(maxDate);
+			endOfFinalDay.setHours(23);
+			endOfFinalDay.setMinutes(59);
+			endOfFinalDay.setSeconds(59);
+			for (var d = new Date(minDate); d <= endOfFinalDay; d.setDate(d.getDate() + 1)) {
 
-			if (!((new Date(d).getTime() / 1000) in stats))
-			stats[new Date(d).getTime() / 1000] = 0;
+				if (!((new Date(d).getTime() / 1000) in stats))
+					stats[new Date(d).getTime() / 1000] = 0;
 			}
 
 			var range = monthRange(minDate, maxDate);
 			var maxRangeToDisplay = 4;
 			if (range <= maxRangeToDisplay) {
 				document.getElementById('minDate-previous').style.visibility = 'hidden';
-			  	document.getElementById('minDate-next').style.visibility = 'hidden';
-			 }
+				document.getElementById('minDate-next').style.visibility = 'hidden';
+			}
 
 
-		cal = cal.destroy();
-		cal = new CalHeatMap();
-		cal.init({
-			data: stats,
-			itemNamespace: "cal-heatmap",
-			considerMissingDataAsZero: false,
-			start: new Date(claimBegin),
-			domain: "month",
-			minDate: minDate,
-			maxDate: maxDate,
-			subDomain: "x_day",
-			range: Math.min(maxRangeToDisplay, monthRange(minDate, maxDate)),
-			cellSize: 15,
-			domainGutter: 6,
-			label: {position: "top"},
+			cal = cal.destroy();
+			cal = new CalHeatMap();
+			cal.init({
+				data: stats,
+				itemNamespace: "cal-heatmap",
+				considerMissingDataAsZero: false,
+				start: new Date(claimBegin),
+				domain: "month",
+				minDate: minDate,
+				maxDate: maxDate,
+				subDomain: "x_day",
+				range: Math.min(maxRangeToDisplay, monthRange(minDate, maxDate)),
+				cellSize: 55,
+				domainGutter: 6,
+				label: { position: "top" },
 
-			itemName: ["token claimed", "tokens claimed"],
-			subDomainTitleFormat : {
-    			empty: "Token was unavailable on {date}"
-    		},
-			displayLegend: true,
-			//legend:[5,20,30,40,50],
-			legendColors: {
-				empty: "#ededed",
-			  	max: "#acffe9",
-			  	min: "#141d29",
-			  	base: "#f9f9f9"
-			},
+				itemName: ["token claimed", "tokens claimed"],
+				subDomainTitleFormat: {
+					empty: "Token was unavailable on {date}"
+				},
+				displayLegend: true,
+				//legend:[5,20,30,40,50],
+				legendColors: {
+					empty: "#ededed",
+					max: "#acffe9",
+					min: "#141d29",
+					base: "#f9f9f9"
+				},
 
-			tooltip: true
-		});
-	}
+				tooltip: true
+			});
+		}
 
-		$("#minDate-previous").on("click", function(e) {
+		$("#minDate-previous").on("click", function (e) {
 			e.preventDefault();
 			if (!cal.previous()) {
 				document.getElementById("minDate-previous").disabled = true;
@@ -359,7 +391,7 @@
 				document.getElementById("minDate-next").disabled = false;
 		});
 
-		$("#minDate-next").on("click", function(e) {
+		$("#minDate-next").on("click", function (e) {
 			e.preventDefault();
 			if (!cal.next()) {
 				document.getElementById("minDate-next").disabled = true;
@@ -370,76 +402,76 @@
 		});
 
 
-		function monthRange(start, end)
-		{
-		return end.getMonth() - start.getMonth()
-			   + (12 * (end.getFullYear() - start.getFullYear())) + 1;
+		function monthRange(start, end) {
+			return end.getMonth() - start.getMonth()
+				+ (12 * (end.getFullYear() - start.getFullYear())) + 1;
 		}
 
 	</script>
 
 	<script>
-	var chart = new Chart(document.getElementById("canvas"));
-	function drawGasPrices(timeWindows, timeAndPrice) {
-		claimBegin = timeWindows[0][0]; //Assuming only 1 time window for claiming
-		claimEnd = timeWindows[0][1];
+		var chart = new Chart(document.getElementById("canvas"));
+		function drawGasPrices(timeWindows, timeAndPrice) {
+			claimBegin = timeWindows[0][0]; //Assuming only 1 time window for claiming
+			claimEnd = timeWindows[0][1];
 
-		if (claimEnd == -1)
-			claimEnd = new Date();
+			if (claimEnd == -1)
+				claimEnd = new Date();
 
-		var formattedData = [];
-		var datum = {};
-		//Get the data in the correct form:
-		// { x : 'date' ,
-		//  y : 'price' , ...}
-		for (var d in timeAndPrice) {
-			datum = {};
-			datum["x"] = new Date(timeAndPrice[d][0]);
-			datum["y"] = timeAndPrice[d][1];
-			formattedData.push(datum);
-		}
+			var formattedData = [];
+			var datum = {};
+			//Get the data in the correct form:
+			// { x : 'date' ,
+			//  y : 'price' , ...}
+			for (var d in timeAndPrice) {
+				datum = {};
+				datum["x"] = new Date(timeAndPrice[d][0]);
+				datum["y"] = timeAndPrice[d][1];
+				formattedData.push(datum);
+			}
 
-		chart.destroy();
-		chart = new Chart(document.getElementById("canvas"), {
-			type: 'line',
-			data: {
-				datasets: [{
-					label: 'gas price',
-					data: formattedData,
-					fill: false,
-					borderColor: 'red'
-				}]
-			},
-			options: {
-				tooltips: {
-					callbacks: {
-						title(datasets) {
-							var time = new Date(datasets[0].xLabel);
-							return (time.toISOString());
-						}
-					}
-				},
-				legend : {display : false},
-				scales: {
-					bounds : 'ticks',
-					xAxes: [{
-						type: 'time',
-						time : {minUnit : 'hour'},
-						position: 'bottom'
+			chart.destroy();
+			chart = new Chart(document.getElementById("canvas"), {
+				type: 'line',
+				data: {
+					datasets: [{
+						label: 'gas price',
+						data: formattedData,
+						fill: false,
+						borderColor: 'red'
 					}]
 				},
-			}
-		});
-	}
+				options: {
+					tooltips: {
+						callbacks: {
+							title(datasets) {
+								var time = new Date(datasets[0].xLabel);
+								return (time.toISOString());
+							}
+						}
+					},
+					legend: { display: false },
+					scales: {
+						bounds: 'ticks',
+						xAxes: [{
+							type: 'time',
+							time: { minUnit: 'hour' },
+							position: 'bottom'
+						}]
+					},
+				}
+			});
+		}
 
 	</script>
 
 	<script>
-		$(document).ready(function(){
+		$(document).ready(function () {
 			$('[data-toggle="tooltip"]').tooltip();
 		});
 	</script>
 
 
-        </body>
-	</html>
+</body>
+
+</html>
