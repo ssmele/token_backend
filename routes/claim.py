@@ -3,12 +3,12 @@ import traceback
 from flask import Blueprint, g
 
 from ether.geth_keeper import GethException
-from models.claim import ClaimRequest, DoesCollectorOwnToken, GetTokenInfo, GetAvailableToken, SetToken
+from models.claim import ClaimRequest, GetTokenInfo, GetAvailableToken, SetToken
 from models.constraints import validate_uni_code_constraints, validate_time_constraints, validate_location_constraints
 from routes import load_with_schema, requires_geth
 from utils.db_utils import requires_db
 from utils.doc_utils import BlueprintDocumentation
-from utils.utils import success_response, error_response, log_kv, LOG_WARNING, LOG_INFO, LOG_ERROR
+from utils.utils import success_response, error_response, log_kv, LOG_INFO, LOG_ERROR
 from utils.verify_utils import verify_collector_jwt
 
 claim_bp = Blueprint('claim', __name__)
@@ -21,10 +21,11 @@ url_prefix = '/claim'
 @requires_geth
 @requires_db
 @load_with_schema(ClaimRequest)
-@claim_docs.document(url_prefix, 'POST', 'Method to claim a token of of a contract.',
+@claim_docs.document(url_prefix, 'POST', 'Method to claim a token of of a contract. '
+                                         'Error Codes: (3: Code, 4: Time, 5: location)',
                      input_schema=ClaimRequest, req_c_jwt=True)
 def claims(data):
-    results, msg = claim_token_for_user(data['con_id'], g.collector_info['c_id'],
+    results, msg, err_code = claim_token_for_user(data['con_id'], g.collector_info['c_id'],
                                         data['location']['latitude'], data['location']['longitude'],
                                         data.get('constraints', {}), g.sesh)
     if results:
@@ -32,7 +33,7 @@ def claims(data):
         return success_response(msg)
     else:
         g.sesh.rollback()
-        return error_response(msg)
+        return error_response(msg, status_code=err_code)
 
 
 def claim_token_for_user(con_id, c_id, lat, long, constraints, sesh):
@@ -49,18 +50,18 @@ def claim_token_for_user(con_id, c_id, lat, long, constraints, sesh):
     try:
         # Enforcing claim constraints.
         if not validate_uni_code_constraints(con_id, constraints.get('code', None)):
-            return False, "Constraint Failed: Code provided does not match any codes required to claim this token."
+            return False, "Constraint Failed: Code provided does not match any codes required to claim this token.", 3
         if not validate_time_constraints(con_id, constraints.get('time', None)):
-            return False, 'Constraint Failed: This token is unclaimable at this time.'
+            return False, 'Constraint Failed: This token is unclaimable at this time.', 4
         if not validate_location_constraints(con_id, constraints.get('location', None)):
-            return False, 'Constraint Failed: Not within the appropriate location to obtain this token.'
+            return False, 'Constraint Failed: Not within the appropriate location to obtain this token.', 5
 
         # Make sure a token is available and that it has info
         avail_token = GetAvailableToken().execute_n_fetchone({'con_id': con_id}, sesh=sesh)
         token_info = GetTokenInfo().execute_n_fetchone({'con_id': con_id, 'c_id': c_id}, sesh=sesh)
         if not avail_token or not token_info:
             log_kv(LOG_INFO, {'message': 'no tokens are available', 'contract_id': con_id, 'collector_id': c_id})
-            return False, 'No available tokens'
+            return False, 'No available tokens', 6
 
         # Claim the token and update the database
         log_kv(LOG_INFO, {'message': 'claiming ethereum token', 'token_id': avail_token['t_id'],
@@ -79,13 +80,13 @@ def claim_token_for_user(con_id, c_id, lat, long, constraints, sesh):
         # Make sure a row was updated
         if rows_updated == 1:
             log_kv(LOG_INFO, {'message': 'successfully claimed token', 'contract_id': con_id, 'collector_id': c_id})
-            return True, 'Token has been claimed!'
+            return True, 'Token has been claimed!', 0
 
     except GethException as e:
         log_kv(LOG_ERROR, {'error': 'a geth_exception occurred while claiming token', 'exception': e.exception,
                            'exc_message': e.message, 'contract_id': con_id, 'collector_id': c_id}, exception=True)
-        return False, 'Geth Error:' + e.exception
+        return False, 'Geth Error:' + e.exception, -1
     except Exception as e:
         log_kv(LOG_ERROR, {'error': 'an exception occurred while claiming token', 'exception': str(e),
                            'contract_id': con_id, 'collector_id': c_id}, exception=True)
-        return False, str(e) + traceback.format_exc()
+        return False, str(e) + traceback.format_exc(), -1
