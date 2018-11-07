@@ -4,6 +4,8 @@ from uuid import uuid1
 
 from flask import current_app, send_from_directory
 
+from utils.utils import log_kv, LOG_ERROR
+
 ALLOWED_EXTENSION = ['png', 'jpg', 'jpeg']
 
 
@@ -32,14 +34,31 @@ def save_file(file, folder, tag1):
         return None
 
 
+def save_qrcode(file, tag):
+    """
+    This method saves a qr code.
+    :param file: PIL IMAGE.
+    :param tag: should be con_id of the contract.
+    :return: filename of newly saved qrcode.
+    """
+    try:
+        file_type = 'png'
+        new_file_name = "{}_{}.{}".format(tag, uuid1(), file_type)
+        # Generate the full path of where to save the file.
+        file_save_path = os.path.join(*[current_app.root_path, 'PICTURES', ImageFolders.QR_CODES.value, new_file_name])
+        file.save(file_save_path)
+        return new_file_name
+    except Exception as e:
+        log_kv(LOG_ERROR, {"info": "Error saving qr code", "error": str(e)}, exception=True)
+        return None
+
+
 def serve_file(name, folder_type):
     # Specify location to look into.
-    if folder_type == ImageFolders.CONTRACTS.value:
-        folder = os.path.join(*[current_app.root_path, 'PICTURES', ImageFolders.CONTRACTS.value])
-    else:
-        folder = None
+    folder = os.path.join(*[current_app.root_path, 'PICTURES', folder_type])
     return send_from_directory(folder, name)
 
 
 class ImageFolders(Enum):
     CONTRACTS = 'CONTRACTS'
+    QR_CODES = 'QR_CODES'

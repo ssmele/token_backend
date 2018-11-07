@@ -15,6 +15,7 @@ class ContractRequest(Schema):
     description = fields.Str(required=True)
     num_created = fields.Int(required=True)
     tradable = fields.Boolean(required=True)
+    qr_code_claimable = fields.Boolean(required=True)
 
     constraints = fields.Nested(Constraints, required=False)
 
@@ -23,6 +24,7 @@ class ContractRequest(Schema):
         'description': {'type': 'string', 'desc': 'Description of the new token contract being deployed'},
         'num_created': {'type': 'int', 'desc': 'desired password for collector creation.'},
         'tradable': {'type': 'boolean', 'desc': 'boolean to determine if token is tradable.'},
+        'qr_code_claimable': {'boolean that says if qrcode should be generated for this contract.'},
         'constraints': Constraints.doc_load_info,
         'INFO (NOT APART OF REQUEST)' : {'time_format': CONSTRAINT_DATETIME_FORMAT, 'radius metric': 'meters',
                                          'constraints': 'The constraints are optional'}
@@ -37,6 +39,7 @@ class GetContractResponse(Schema):
     description = fields.Str(required=True)
     num_created = fields.Int(required=True)
     pic_location = fields.Str(required=True)
+    qr_code_location = fields.Str(required=True)
     tradable = fields.Boolean(required=True)
     status = fields.Str(required=True)
 
@@ -45,6 +48,9 @@ class GetContractResponse(Schema):
     @post_dump
     def add_picture_path(self, data):
         data['pic_location'] = request.url_root + 'contract/image=' + data['pic_location']
+
+        if data['qr_code_location']:
+            data['qr_code_location'] = request.url_root + 'contract/qr_code=' + data['qr_code_location']
 
     doc_dump_info = {
         'con_id': '1', 'i_id': '2', 'con_hash': "", 'name': '', 'description': '', 'num_created': 20,
@@ -298,6 +304,18 @@ class GetAllContractsForEth(DataQuery):
             WHERE c.i_id = i.i_id;
         """
 
+        self.schema_out = None
+        super().__init__()
+
+
+class UpdateQRCODE(DataQuery):
+
+    def __init__(self):
+        self.sql_text = """
+        UPDATE contracts
+        SET qr_code_location = :qr_code_location
+        WHERE con_id = :con_id;
+        """
         self.schema_out = None
         super().__init__()
 
