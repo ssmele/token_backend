@@ -2,19 +2,22 @@ from datetime import datetime
 
 from flask import Blueprint, g, request
 from flask_restful import Api, Resource
+from json import dumps
+import qrcode
+
 
 from ether.geth_keeper import GethException
 from marshmallow import ValidationError
-from models.contract import ContractRequest, GetContractByConID, \
-    GetContractByName, GetContractsByIssuerID, process_constraints, insert_bulk_tokens, GetContractResponse
+from models.contract import ContractRequest, GetContractByConID, GetContractByName,\
+    GetContractsByIssuerID, process_constraints, insert_bulk_tokens, GetContractResponse, UpdateQRCODE
 from models.constraints import get_all_constraints
 from models.issuer import GetIssuerInfo
 from routes import requires_geth
 from utils.db_utils import requires_db
 from utils.doc_utils import BlueprintDocumentation
-from utils.image_utils import save_file, serve_file, ImageFolders
+from utils.image_utils import save_file, serve_file, save_qrcode, ImageFolders
 from utils.utils import success_response, error_response, log_kv, LOG_WARNING, LOG_INFO, LOG_ERROR, LOG_DEBUG
-from utils.verify_utils import verify_issuer_jwt
+from utils.verify_utils import verify_issuer_jwt, generate_jwt
 
 contract_bp = Blueprint('contract', __name__)
 contract_docs = BlueprintDocumentation(contract_bp, 'Contract')
@@ -94,6 +97,16 @@ class Contract(Resource):
             # If constraints were passed in we need to process them.
             if 'constraints' in data:
                 process_constraints(data['constraints'], con_id)
+
+            # If the user wants to be able to claim based on qr_code
+            if data['qr_code_claimable']:
+                json_data_dict = dumps({'con_id': con_id, 'jwt': generate_jwt({'con_id': con_id, 'swag': 'yeet'})})
+                qrc = qrcode.make(json_data_dict)
+                saved_location = save_qrcode(qrc, con_id)
+                if saved_location is None:
+                    log_kv(LOG_ERROR, {'error': 'failed to make qrcode.'})
+                else:
+                    UpdateQRCODE().execute({'qr_code_location': saved_location, 'con_id': con_id})
 
             g.sesh.commit()
             log_kv(LOG_INFO, {'message': 'succesfully issued contract!', 'issuer_id': g.issuer_info['i_id']})
@@ -178,6 +191,11 @@ contract_api.add_resource(Contract, url_prefix)
 @contract_bp.route(url_prefix + '/image=<string:image>')
 def server_image(image):
     return serve_file(image, ImageFolders.CONTRACTS.value)
+
+
+@contract_bp.route(url_prefix + '/qr_code=<string:qr_code>')
+def serve_qr_code(qr_code):
+    return serve_file(qr_code, ImageFolders.QR_CODES.value)
 
 
 @contract_bp.route(url_prefix + '/con_id=<int:con_id>', methods=['GET'])

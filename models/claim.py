@@ -21,7 +21,6 @@ class ClaimConstraintRequest(Schema):
 class ClaimRequest(Schema):
     con_id = fields.Int(required=True)
     location = fields.Nested(Location, required=True)
-
     constraints = fields.Nested(ClaimConstraintRequest, required=False)
 
     doc_load_info = {
