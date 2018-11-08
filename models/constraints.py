@@ -46,18 +46,23 @@ class LocationConstraint(ConstraintBase):
     radius = fields.Number(required=True)
 
 
+CONSTRAINT_CODE_DOC = {
+    'code_constraints': [{'code': '123ABC (LENGTH 6 ALPANUMERIC CODE)'}],
+    'time_constraints': [{"start": "2014-12-22 03:12:58",
+                          "end": "2018-12-22 03:12:58"}],
+    'location_constraints': [{"latitude": 40.7607793,
+                              "longitude": -111.8910474,
+                              "radius": 1000}]
+}
+
+
 class Constraints(Schema):
     code_constraints = fields.Nested(UniqueCodeConstraint, only=['code'], required=False, many=True)
     time_constraints = fields.Nested(TimeConstraint, only=['start', 'end'], required=False, many=True)
     location_constraints = fields.Nested(LocationConstraint, only=['latitude', 'longitude', 'radius'],
                                          required=False, many=True)
 
-    doc_load_info = {'code_constraints': [{'code': '123ABC (LENGTH 6 ALPANUMERIC CODE)'}],
-                     'time_constraints': [{"start": "2014-12-22 03:12:58",
-                                           "end": "2018-12-22 03:12:58"}],
-                     'location_constraints': [{"latitude": 40.7607793,
-                                               "longitude": -111.8910474,
-                                               "radius": 1000}]}
+    doc_load_info = CONSTRAINT_CODE_DOC
 
 
 class GetUniqueCodeConstraints(DataQuery):

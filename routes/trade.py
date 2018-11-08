@@ -8,7 +8,7 @@ from utils.verify_utils import verify_collector_jwt
 from ether.geth_keeper import GethException
 from routes import load_with_schema, requires_geth
 from models.trade import TradeRequest, DeleteTradeRequest, TradeResponseRequest, GetTradeByTRID, UpdateTradeStatus, \
-    TradeStatus, GetTradeItems, InvalidateTradeRequests, GetActiveTradeRequests, UpdateOwnership, GetUntradables, \
+    TradeStatus, GetTradeItems, InvalidateTradeRequests, GetActiveTradeRequests, GetUntradables, \
     create_trade_request, check_trade_item_ownership, check_active_trade_item, is_valid_trade_items, \
     validate_offer_and_trade, GetTokenInfo, TradeResponse
 from models.collector import GetCollectorByCID
@@ -25,8 +25,14 @@ class Trade(Resource):
     @load_with_schema(TradeRequest, dump=True)
     @requires_db
     @verify_collector_jwt
-    @trade_docs.document(url_prefix + ' ', 'POST', 'Method to issue trade request.', input_schema=TradeRequest,
-                         req_c_jwt=True)
+    @trade_docs.document(url_prefix, 'POST',
+                         """
+                         Method to issue trade request.
+                         """, input_schema=TradeRequest, req_c_jwt=True,
+                         error_codes={'42': "Untradable tokens in the trade offer.",
+                                      '67': "Collector doesn't have ownership of tokens in the trade.",
+                                      '90': "Collector making request with tokens already active in trade.",
+                                      '91': "Tradee doesn't own all tokens on their side."})
     def post(self, data):
         try:
             # Ensure the trader is the one making the request.
@@ -34,13 +40,14 @@ class Trade(Resource):
                 return error_response('Not allowed to issue this trade request.')
 
             # Ensure all the items put up for trade are tradable tokens.
+            # TODO: FIX THIS.
             con_ids = set([t_i['con_id'] for t_i in data['trader']['offers']] +
                           [t_i['con_id'] for t_i in data['tradee']['offers']])
             untradable_con_ids = GetUntradables().execute_n_fetchall({'con_ids': ','.join(map(str, set(con_ids)))},
                                                                      schema_out=False)
             if len(untradable_con_ids) != 0:
                 return error_response('Attempting to issue trade request with untrabable tokens.',
-                                      untradable_cons=untradable_con_ids)
+                                      untradable_cons=untradable_con_ids, status_code=42)
 
             # Ensure trader owns all tokens put up by trader.
             for t_i in data['trader']['offers']:
@@ -48,7 +55,8 @@ class Trade(Resource):
                     log_kv(LOG_INFO, {'info': 'collector made trade request containing token they did not own.',
                                       'trader_c_id': data['trader']['c_id'], 'con_id': t_i['con_id'],
                                       't_id': t_i['t_id']})
-                    return error_response("Collector making request doesn't have ownership of tokens within trade")
+                    return error_response("Collector making request doesn't have ownership of tokens within trade",
+                                          status_code=67)
 
             # Ensure trader doesn't have any active trades containing put up tokens.
             for t_i in data['trader']['offers']:
@@ -56,7 +64,8 @@ class Trade(Resource):
                     log_kv(LOG_INFO, {'info': 'collector attempting to make trade on active token.',
                                       'trader_c_id': data['trader']['c_id'], 'con_id': t_i['con_id'],
                                       't_id': t_i['t_id']})
-                    return error_response("Collector making request already has token in an active trade.")
+                    return error_response("Collector making request already has token in an active trade.",
+                                          status_code=90)
 
             # Ensure tradee owns all tokens request
             for t_i in data['tradee']['offers']:
@@ -64,14 +73,13 @@ class Trade(Resource):
                     log_kv(LOG_INFO, {'info': 'collector made trade request containing token tradee did not own.',
                                       'tradee_c_id': data['tradee']['c_id'], 'con_id': t_i['con_id'],
                                       't_id': t_i['t_id']})
-                    return error_response("Collector making request for token the tradee doesn't have ownership of.")
+                    return error_response("Collector making request for token the tradee doesn't have ownership of.",
+                                          status_code=91)
 
             # TODO: Need to add validation for the eth_offer here. - Once tokens are put up for trade
 
             # If we are dealing with a valid trade request persist it within the database.
             new_tr_id = create_trade_request(data)
-
-            # TODO: transfer trader items to intermittent account - Once tokens are put up for trade
 
             data.update({'tr_id': new_tr_id})
             g.sesh.commit()
@@ -85,8 +93,10 @@ class Trade(Resource):
     @requires_db
     @verify_collector_jwt
     @load_with_schema(DeleteTradeRequest)
-    @trade_docs.document(url_prefix + '  ', 'DELETE', 'Method to cancel trade request.',
-                         input_schema=DeleteTradeRequest, req_c_jwt=True)
+    @trade_docs.document(url_prefix , 'DELETE',
+                         """
+                         Method to cancel trade request.
+                         """, input_schema=DeleteTradeRequest, req_c_jwt=True)
     def delete(self, data):
 
         # Get trade specified by requester.
@@ -121,8 +131,10 @@ class Trade(Resource):
     @requires_geth
     @verify_collector_jwt
     @load_with_schema(TradeResponseRequest)
-    @trade_docs.document(url_prefix + '    ', 'PUT', 'Method to respond to trade request.',
-                         input_schema=TradeResponseRequest, req_c_jwt=True)
+    @trade_docs.document(url_prefix, 'PUT',
+                         """
+                         Method to respond to trade request.
+                         """, input_schema=TradeResponseRequest, req_c_jwt=True)
     def put(self, data):
         # Get trade specified by requester.
         trade = GetTradeByTRID().execute_n_fetchone(data, schema_out=False)
@@ -222,11 +234,18 @@ class Trade(Resource):
 @trade_bp.route('/trader', methods=['GET'], defaults={'version': 'trader'})
 @requires_db
 @verify_collector_jwt
-@trade_docs.document(url_prefix + '     ', 'GET', 'Method to get all active trade requests.', req_c_jwt=True)
-@trade_docs.document('/tradee', 'GET', 'Method to get all active trade requests where authorized user is tradee.',
-                     req_c_jwt=True)
-@trade_docs.document('/trader', 'GET', 'Method to get all active trade requests where authorized user is trader.',
-                     req_c_jwt=True)
+@trade_docs.document(url_prefix + '     ', 'GET',
+                     """
+                     Method to get all active trade requests.
+                     """, req_c_jwt=True, output_schema=TradeResponse)
+@trade_docs.document('/tradee', 'GET',
+                     """
+                     Method to get all active trade requests where authorized user is tradee.
+                     """, req_c_jwt=True, output_schema=TradeResponse)
+@trade_docs.document('/trader', 'GET',
+                     """
+                     Method to get all active trade requests where authorized user is trader.
+                     """,req_c_jwt=True, output_schema=TradeResponse)
 def get(version=None):
     # Get all tr_ids of active trade_requests containing the authorized collector..
     tr_ids = GetActiveTradeRequests(version).execute_n_fetchall({'c_id': g.collector_info['c_id']}, schema_out=False)

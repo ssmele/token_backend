@@ -8,6 +8,17 @@ from utils.db_utils import DataQuery
 from utils.utils import log_kv, LOG_ERROR
 from models.constraints import Constraints, InsertLocationConstraint, \
     InsertTimeConstraint, InsertUniqueCodeConstraint, CONSTRAINT_DATETIME_FORMAT
+from models.claim import LOCATION_DOC_INFO
+
+
+CONTRACT_DOC_INFO = {
+    'name': 'Name for the new token contract.',
+    'description': 'Description of the new token contract being deployed',
+    'num_created': 'Desired number of tokens to create.',
+    'tradable': 'boolean to determine if token is tradable.',
+    'qr_code_claimable': 'boolean that says if qrcode should be generated for this contract.',
+    'constraints': {'Optional': Constraints.doc_load_info}
+}
 
 
 class ContractRequest(Schema):
@@ -19,16 +30,38 @@ class ContractRequest(Schema):
 
     constraints = fields.Nested(Constraints, required=False)
 
-    doc_load_info = {
-        'name': {'type': 'string', 'desc': 'Name for the new token contract.'},
-        'description': {'type': 'string', 'desc': 'Description of the new token contract being deployed'},
-        'num_created': {'type': 'int', 'desc': 'desired password for collector creation.'},
-        'tradable': {'type': 'boolean', 'desc': 'boolean to determine if token is tradable.'},
-        'qr_code_claimable': {'boolean that says if qrcode should be generated for this contract.'},
-        'constraints': Constraints.doc_load_info,
-        'INFO (NOT APART OF REQUEST)' : {'time_format': CONSTRAINT_DATETIME_FORMAT, 'radius metric': 'meters',
-                                         'constraints': 'The constraints are optional'}
-    }
+    doc_load_info = CONTRACT_DOC_INFO
+
+
+GET_CONTRACT_DOC = {
+    'con_id': 'con_id of contract.',
+    'i_id': 'issuer id of contract creator.',
+    'con_hash': "Contract hash on ethereum network.",
+    'name': 'Name of contract.',
+    'description': 'Description given to contract by issuer.',
+    'num_created': "Number of tokens assocaited with this contract.",
+    'pic_location': 'url to picture given to contract.',
+    'qr_code_location': 'url to qr code if one was specified to be set up.',
+    'tradable': "If contract has trading enabled.",
+    'status': 'status of contract',
+    'issuer_username': 'username of issuer who made the contract.',
+    'constraints': Constraints.doc_load_info
+}
+
+
+GET_CONTRACT_DOC_EXPLORE = {
+    'con_id': 'con_id of contract.',
+    'i_id': 'issuer id of contract creator.',
+    'con_hash': "Contract hash on ethereum network.",
+    'name': 'Name of contract.',
+    'description': 'Description given to contract by issuer.',
+    'num_created': "Number of tokens assocaited with this contract.",
+    'pic_location': 'url to picture given to contract.',
+    'qr_code_location': 'url to qr code if one was specified to be set up.',
+    'tradable': "If contract has trading enabled.",
+    'status': 'status of contract',
+    'issuer_username': 'username of issuer who made the contract.'
+}
 
 
 class GetContractResponse(Schema):
@@ -52,11 +85,7 @@ class GetContractResponse(Schema):
         if data['qr_code_location']:
             data['qr_code_location'] = request.url_root + 'contract/qr_code=' + data['qr_code_location']
 
-    doc_dump_info = {
-        'con_id': '1', 'i_id': '2', 'con_hash': "", 'name': '', 'description': '', 'num_created': 20,
-        'pic_location': 'url to pic', 'status': 'status of contract',
-        'constraints': Constraints.doc_load_info
-    }
+    doc_dump_info = GET_CONTRACT_DOC
 
 
 class InsertNewContract(DataQuery):
@@ -150,6 +179,11 @@ class GetAllContracts(DataQuery):
         super().__init__()
 
 
+PROXIMITY_DOC_INFO = {**GET_CONTRACT_DOC,
+                      **{'distance': 'distance to contract.', 'radius': 'distance token is claimable from in meteres.'},
+                      **LOCATION_DOC_INFO}
+
+
 class GetProximityContracts(Schema):
     # Stuff off contracts.
     con_id = fields.Int(required=True)
@@ -176,11 +210,7 @@ class GetProximityContracts(Schema):
     def add_picture_path(self, data):
         data['pic_location'] = request.url_root + 'contract/image=' + data['pic_location']
 
-    doc_dump_info = {
-        'con_id': '1', 'i_id': '2', 'con_hash': "", 'name': '', 'description': '', 'num_created': 20,
-        'pic_location': 'url to pic', 'status': 'status of contract',
-        'constraints': Constraints.doc_load_info
-    }
+    doc_dump_info = PROXIMITY_DOC_INFO
 
 
 class GetAllContractsByProximity(DataQuery):
@@ -221,6 +251,12 @@ class GetAllContractsByProximity(DataQuery):
         super().__init__()
 
 
+TRADABLE_DOC_INFO = {**GET_CONTRACT_DOC,
+                     **{'collector_username': 'username of collector who owns the token.',
+                        'c_id': 'c_id of collector who owns token.',
+                        't_id': 't_id of the token.'}}
+
+
 class TradableTokenResponse(Schema):
     # Contract stuff.
     con_id = fields.Int(required=True)
@@ -248,11 +284,7 @@ class TradableTokenResponse(Schema):
     def add_picture_path(self, data):
         data['pic_location'] = request.url_root + 'contract/image=' + data['pic_location']
 
-    doc_dump_info = {
-        'con_id': '1', 'i_id': '2', 'con_hash': "", 'name': '', 'description': '', 'num_created': 20,
-        'pic_location': 'url to pic', 'status': 'status of contract',
-        'constraints': Constraints.doc_load_info
-    }
+    doc_dump_info = TRADABLE_DOC_INFO
 
 
 class GetAllTradableContracts(DataQuery):

@@ -10,6 +10,9 @@ from models.collector import TokenResponse, CollectorInfoRequest
 
 
 class TradeStatus(Enum):
+    """
+    Enumeration of all the states a trade can be in.
+    """
     REQUESTED = 'R'
     WAITING = 'W'
     ACCEPTED = 'A'
@@ -19,18 +22,28 @@ class TradeStatus(Enum):
     FAILED = 'F'
 
 
+DELETE_TRADE_REQUEST_DOC = {
+    'tr_id': 'tr_id of trade request to delete.'
+}
+
+
 class DeleteTradeRequest(Schema):
     tr_id = fields.Int(required=True)
 
-    doc_load_info = {'tr_id': 'integer (tr_id of trade request to delete).'}
+    doc_load_info = DELETE_TRADE_REQUEST_DOC
+
+
+TRADE_RESPONSE_REQUEST_DOC = {
+    'tr_id': 'integer (tr_id of trade request to respond to)',
+    'accept': 'Boolean (True if accept, false if decline)'
+}
 
 
 class TradeResponseRequest(Schema):
     tr_id = fields.Int(required=True)
     accept = fields.Boolean(required=True)
 
-    doc_load_info = {'tr_id': 'integer (tr_id of trade request to respond to)',
-                     'accept': 'Boolean (True if accept, false if decline)'}
+    doc_load_info = TRADE_RESPONSE_REQUEST_DOC
 
 
 class TradeItem(Schema):
@@ -45,11 +58,38 @@ class TradeResponseInstance(Schema):
                            validate=validate.Length(min=1, error='Must contain one trade item.'))
 
 
+TRADE_REQUEST_DOC = {'trader': {'c_id': 'c_id of collector issuing trade.',
+                                'eth_offer': 'number of eth.',
+                                'offers': [{'con_id': 'con_id of contract to trade.',
+                                            't_id': 't_id of token to trade.'}]},
+                     'tradee': {'c_id': 'c_id of collector issuer of trade is trying to trade with.',
+                                'eth_offer': 'number of eth.',
+                                'offers': [{'con_id': 'con_id of contract to trade.',
+                                            't_id': 't_id of token to trade.'}]}}
+
+TRADE_RESPONSE_DOC = {
+    'trader': {
+        'collector': CollectorInfoRequest.doc_dump_info,
+        'eth_offer': 'eth offer associated with the trader side.',
+        'offers': TokenResponse.doc_dump_info
+    },
+    'tradee': {
+        'collector': CollectorInfoRequest.doc_dump_info,
+        'eth_offer': 'eth offer associated with the trader side.',
+        'offers': TokenResponse.doc_dump_info
+    },
+    'status': 'status of the trade request. See enumerations for possibilities.',
+    'tr_id': 'tr_id of the request.'
+}
+
+
 class TradeResponse(Schema):
     trader = fields.Nested(TradeResponseInstance, required=True)
     tradee = fields.Nested(TradeResponseInstance, required=True)
     status = fields.Str(required=True)
     tr_id = fields.Int(required=True)
+
+    doc_dump_info = TRADE_RESPONSE_DOC
 
 
 class TradeInstance(Schema):
@@ -63,14 +103,7 @@ class TradeRequest(Schema):
     trader = fields.Nested(TradeInstance, required=True)
     tradee = fields.Nested(TradeInstance, required=True)
 
-    doc_load_info = {'trader': {'c_id': 'c_id of collector issuing trade.',
-                                'eth_offer': 'number of eth.',
-                                'offers': [{'con_id': 'con_id of contract to trade.',
-                                            't_id': 't_id of token to trade.'}]},
-                     'tradee': {'c_id': 'c_id of collector issuer of trade is trying to trade with.',
-                                'eth_offer': 'number of eth.',
-                                'offers': [{'con_id': 'con_id of contract to trade.',
-                                            't_id': 't_id of token to trade.'}]}}
+    doc_load_info = TRADE_REQUEST_DOC
 
 
 def check_active_trade_item(c_id, con_id, t_id):

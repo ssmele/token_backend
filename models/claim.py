@@ -3,19 +3,41 @@ from models.constraints import validate_code, CONSTRAINT_DATETIME_FORMAT, Locati
 
 from utils.db_utils import DataQuery
 
+LOCATION_DOC_INFO = {
+    'latitude': 'decimal(8,6)',
+    'longitude': 'decimal(9,6)'
+}
 
-# ------------------------------SCHEMAS-------------------------------
+
 class Location(Schema):
+    """
+    Schema for simple location information.
+    """
     latitude = fields.Number(required=True)
     longitude = fields.Number(required=True)
 
-    doc_load_info = {'latitude': 'decimal(8,6)', 'longitude': 'decimal(9,6)'}
+    doc_load_info = LOCATION_DOC_INFO
 
 
 class ClaimConstraintRequest(Schema):
+    """
+    Schema for request to claim a token.
+    """
     code = fields.Str(required=False, validate=validate_code)
     time = fields.DateTime(CONSTRAINT_DATETIME_FORMAT, required=False)
     location = fields.Nested(LocationConstraint, only=['latitude', 'longitude'], required=False)
+
+
+CLAIM_REQUEST_DOC_INFO = {
+        'con_id': "con_id of token.",
+        'location': LOCATION_DOC_INFO,
+        'constraints': {
+            'code': 'Exactly 6 digits alphanumeric. Example: 123ABC',
+            'location': LOCATION_DOC_INFO,
+            'time': 'Time for issuing token. Example: 2018-12-22 03:12:58, String Format: {}'
+                .format(CONSTRAINT_DATETIME_FORMAT)
+        },
+}
 
 
 class ClaimRequest(Schema):
@@ -23,19 +45,13 @@ class ClaimRequest(Schema):
     location = fields.Nested(Location, required=True)
     constraints = fields.Nested(ClaimConstraintRequest, required=False)
 
-    doc_load_info = {
-        'con_id': "integer",
-        'location': Location.doc_load_info,
-        'constraints': {'code': '123ABC',
-                        'location': Location.doc_load_info,
-                        'time': '2018-12-22 03:12:58'},
-        'INFO (Not apart of request': {'constraints': {'code-info': 'exactly 6 digits alphanumeric',
-                                                       'location-info': 'latitude, and longitude as floats',
-                                                       'time-info': CONSTRAINT_DATETIME_FORMAT}}}
+    doc_load_info = CLAIM_REQUEST_DOC_INFO
 
 
 class GetTokenInfoInternal(Schema):
-    """ Schema for Token info for the ETH network """
+    """
+    Schema for Token info for the ETH network
+    """
     t_id = fields.Int(dump_only=True)
     con_addr = fields.Str(dump_only=True)
     con_abi = fields.Str(dump_only=True)
@@ -49,8 +65,10 @@ class GetAvailableTokenIDInternal(Schema):
     t_id = fields.Int(dump_only=True)
 
 
-# ------------------------------QUERIES--------------------------------
 class DoesCollectorOwnToken(DataQuery):
+    """
+    Query to check if the issuer already owns a token apart of given con_id.
+    """
 
     def __init__(self):
         self.sql_text = """
@@ -64,6 +82,9 @@ class DoesCollectorOwnToken(DataQuery):
 
 
 class SetToken(DataQuery):
+    """
+    Sets up the token when an issuer has officially claimed it.
+    """
 
     def __init__(self):
         self.sql_text = """
@@ -84,7 +105,9 @@ class SetToken(DataQuery):
 
 
 class GetAvailableToken(DataQuery):
-    """ Gets an available token in the collection """
+    """
+    Gets an available token in the collection
+    """
 
     def __init__(self):
         self.sql_text = """
@@ -100,7 +123,9 @@ class GetAvailableToken(DataQuery):
 
 
 class GetTokenInfo(DataQuery):
-    """ Gets a token's related contract and its issuer information for the ETH network """
+    """
+    Gets a token's related contract and its issuer information for the ETH network
+    """
 
     def __init__(self):
         self.sql_text = """

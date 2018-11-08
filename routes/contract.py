@@ -1,16 +1,15 @@
 from datetime import datetime
+from json import dumps
 
+import qrcode
 from flask import Blueprint, g, request
 from flask_restful import Api, Resource
-from json import dumps
-import qrcode
-
+from marshmallow import ValidationError
 
 from ether.geth_keeper import GethException
-from marshmallow import ValidationError
-from models.contract import ContractRequest, GetContractByConID, GetContractByName,\
-    GetContractsByIssuerID, process_constraints, insert_bulk_tokens, GetContractResponse, UpdateQRCODE
 from models.constraints import get_all_constraints
+from models.contract import ContractRequest, GetContractByConID, GetContractByName, \
+    GetContractsByIssuerID, process_constraints, insert_bulk_tokens, GetContractResponse, UpdateQRCODE
 from models.issuer import GetIssuerInfo
 from routes import requires_geth
 from utils.db_utils import requires_db
@@ -32,13 +31,15 @@ class Contract(Resource):
     @requires_db
     @requires_geth
     @contract_docs.document(url_prefix+" ", 'POST',
-                            'Method to start a request to issue a new token on the eth network.'
-                            ' This will also create all new tokens associated with the method.'
-                            'This method requires a multipart form. The two possible form values are token_image which '
-                            'should be an image, and json_data. The json_data form should contain a json object '
-                            'matching the method request json fields below.',
-                            input_schema=ContractRequest,
-                            req_i_jwt=True)
+                            """
+                            Method to start a request to issue a new token on the eth network. This will also create all 
+                            new tokens associated with the method. This method requires a multipart form. The two 
+                            possible form values are token_image which should be an image, and json_data. The json_data 
+                            form should contain a json object matching the method request json fields below.
+                            """,
+                            error_codes={'89': 'Number of tokens requested to create exceeds limit.',
+                                         '45': "Couldn't retrieve issuer specified."},
+                            input_schema=ContractRequest, req_i_jwt=True)
     def post(self):
         """ Method to use for post requests to the /contract method.
 
@@ -55,7 +56,7 @@ class Contract(Resource):
             log_kv(LOG_WARNING, {'warning': 'issuer tried to create contract over limit',
                                  'issuer_id': g.issuer_info['i_id'], 'num_tokens': data['num_created']})
             return error_response("Could not create a token contract with that many individual token. Max is {}"
-                                  .format(MAX_TOKEN_LIMIT))
+                                  .format(MAX_TOKEN_LIMIT), status_code=89)
 
         # Update the original data given after validation for contract creation binds.
         data.update({'i_id': g.issuer_info['i_id']})
@@ -78,7 +79,7 @@ class Contract(Resource):
             issuer = GetIssuerInfo().execute_n_fetchone(binds={'i_id': g.issuer_info['i_id']})
             # Ensure we retrieved an issuer.
             if issuer is None:
-                error_response('Failed to retrieve issuer specified.')
+                error_response('Failed to retrieve issuer specified.', status_code=45)
 
             data['con_tx'], data['con_abi'] = g.geth.issue_contract(issuer['i_hash'],
                                                                     issuer_name=issuer['username'],
@@ -160,8 +161,9 @@ class Contract(Resource):
         return code_constraints, date_constraints, loc_constraints
 
     @contract_docs.document(url_prefix, 'GET',
-                            'Method to get all contracts deployed by the issuer verified in the jwt.',
-                            req_i_jwt=True)
+                            """
+                            Method to get all contracts deployed by the issuer verified in the jwt.
+                            """, req_i_jwt=True)
     @requires_db
     @verify_issuer_jwt
     def get(self):
@@ -184,10 +186,6 @@ class Contract(Resource):
             return error_response(status="Couldn't retrieve contract with that con_id", status_code=-1, http_code=200)
 
 
-contract_api = Api(contract_bp)
-contract_api.add_resource(Contract, url_prefix)
-
-
 @contract_bp.route(url_prefix + '/image=<string:image>')
 def server_image(image):
     return serve_file(image, ImageFolders.CONTRACTS.value)
@@ -202,7 +200,9 @@ def serve_qr_code(qr_code):
 @verify_issuer_jwt
 @requires_db
 @contract_docs.document(url_prefix + '/con_id=<int:con_id>', 'GET',
-                        "Method to retrieve contract information by con_id. Constraint info included.",
+                        """
+                        Method to retrieve contract information by con_id. Constraint info included.
+                        """,
                         output_schema=GetContractResponse, req_i_jwt=True)
 def get_contract_by_con_id(con_id):
     contract = GetContractByConID().execute_n_fetchone({'con_id': con_id})
@@ -221,8 +221,9 @@ def get_contract_by_con_id(con_id):
 @verify_issuer_jwt
 @requires_db
 @contract_docs.document(url_prefix + '/name=<string:name>', 'GET',
-                        "Method to retrieve contract information by names like it.",
-                        req_i_jwt=True)
+                        """
+                        Method to retrieve contract information by names like it.
+                        """, req_i_jwt=True)
 def get_contract_by_name(name):
     contracts_by_name = GetContractByName().execute_n_fetchall({'name': '%'+name+'%'}, close_connection=True)
     if contracts_by_name is not None:
@@ -231,21 +232,3 @@ def get_contract_by_name(name):
     else:
         log_kv(LOG_WARNING, {'warning': 'could not find contract by name', 'contract_name': name})
         return error_response(status="Couldn't retrieve contract with that con_id", status_code=-1, http_code=200)
-
-
-# Constraints endpoint
-constraint_bp = Blueprint('constraint', __name__)
-constraint_url_prefix = '/contract/constraints'
-
-
-class Constraint(Resource):
-
-    def put(self, data):
-        raise NotImplemented
-
-    def delete(self):
-        raise NotImplemented
-
-
-constraint_api = Api(constraint_bp)
-constraint_api.add_resource(Constraint, constraint_url_prefix)

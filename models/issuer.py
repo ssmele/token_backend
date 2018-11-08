@@ -2,6 +2,10 @@ from marshmallow import Schema, fields
 
 from utils.db_utils import DataQuery
 
+ISSUER_DOC_INFO = {
+    'username' : "username for issuer",
+    'password' : "password for issuer"
+}
 
 class CreateIssuerRequest(Schema):
     """
@@ -11,10 +15,7 @@ class CreateIssuerRequest(Schema):
     username = fields.Str(required=True)
     password = fields.Str(required=True, load_only=True)
 
-    doc_load_info = {
-        'username': {'type': 'string', 'desc': 'desired username for issuer creation.'},
-        'password': {'type': 'string', 'desc': 'desired password for issuer creation.'}
-    }
+    doc_load_info = ISSUER_DOC_INFO
 
 
 class IssuerInternalInfo(Schema):
@@ -42,10 +43,7 @@ class LoginIssuerRequest(Schema):
     username = fields.Str(required=True)
     password = fields.Str(required=True)
 
-    doc_load_info = {
-        'username': {'type': 'string', 'desc': 'issuer username to use with login.'},
-        'password': {'type': 'string', 'desc': 'issuer password to use with login.'}
-    }
+    doc_load_info = ISSUER_DOC_INFO
 
 
 class GetIssuerInfo(DataQuery):
@@ -106,6 +104,7 @@ class IssuerInfoRequest(Schema):
     username = fields.Str(required=True)
     i_hash = fields.Str(required=True)
     i_priv_key = fields.Str(required=True)
+
 
 class GetIssuerLoginDetails(DataQuery):
 

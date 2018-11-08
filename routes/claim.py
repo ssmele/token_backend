@@ -21,9 +21,14 @@ url_prefix = '/claim'
 @requires_geth
 @requires_db
 @load_with_schema(ClaimRequest)
-@claim_docs.document(url_prefix, 'POST', 'Method to claim a token of of a contract. '
-                                         'Error Codes: (3: Code, 4: Time, 5: location)',
-                     input_schema=ClaimRequest, req_c_jwt=True)
+@claim_docs.document(url_prefix, 'POST',
+                     """
+                     Method to claim a token of of an issued contract.
+                     """, input_schema=ClaimRequest,  req_c_jwt=True,
+                     error_codes={'3': 'Code Constraint Failed',
+                                  '4': 'Time Constraint Failed',
+                                  '5': 'Location Constraint Failed',
+                                  '6': 'No available tokens left.'})
 def claims(data):
     results, msg, err_code = claim_token_for_user(data['con_id'], g.collector_info['c_id'],
                                         data['location']['latitude'], data['location']['longitude'],

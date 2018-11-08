@@ -18,8 +18,9 @@ url_prefix = '/collector'
 @collector_bp.route(url_prefix + '/username=<string:username>', methods=['GET'])
 @requires_db
 @collector_docs.document(url_prefix + '/username=<string:username>', 'GET',
-                         "Method to retrieve collector information by username",
-                         url_params={'username': 'username of collector to search for.'})
+                         """
+                         Method to retrieve collector information by username
+                         """, url_params={'username': 'username of collector to search for.'})
 def get_collector_by_username(username):
     collector = GetCollectorByUsername().execute_n_fetchone({'username': username}, close_connection=True)
     if collector:
@@ -33,7 +34,9 @@ def get_collector_by_username(username):
 # TODO: Let cole know that this token already is in a trade. Status.
 @collector_bp.route(url_prefix + '/collection', methods=['GET'])
 @collector_docs.document(url_prefix + '/collection', 'GET',
-                         'This method returns a list of tokens in the collectors collection.',
+                         """
+                         This method returns a list of tokens in the collectors collection.
+                         """,
                          req_c_jwt=True)
 @requires_db
 @verify_collector_jwt
@@ -52,8 +55,11 @@ class Collector(Resource):
     @load_with_schema(CreateCollectorRequest)
     @requires_db
     @requires_geth
-    @collector_docs.document(url_prefix+" ", 'POST', "Method to create collector. Returns jwt for other methods.",
-                             input_schema=CreateCollectorRequest())
+    @collector_docs.document(url_prefix, 'POST',
+                             """
+                             Method to create collector. Returns jwt for other methods.
+                             """,
+                             input_schema=CreateCollectorRequest)
     def post(self, data):
         try:
             # Create the collector account and bind the hash and private key
@@ -77,7 +83,9 @@ class Collector(Resource):
     @requires_db
     @requires_geth
     @collector_docs.document(url_prefix, 'GET',
-                             "Method to retrieve collector information. Requires jwt from login/creation account.",
+                             """
+                             Method to retrieve collector information. Requires jwt from login/creation account.
+                             """,
                              url_params={'c_id': 'c_id of collector to search for.'}, req_c_jwt=True)
     def get(self):
         collector = GetCollectorByCID().execute_n_fetchone({'c_id': g.collector_info['c_id']}, close_connection=True)

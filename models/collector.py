@@ -4,11 +4,28 @@ from models.contract import GetContractResponse
 from utils.db_utils import DataQuery
 
 
+TOKEN_RESPONSE_DOC = {
+    't_id': 't_id of token',
+    'con_id': 'con_id of the token.',
+    't_hash': 'hash on ethereum network tied to the token.',
+    'owner_c_id': 'c_id of current owner of token.',
+    'owner_c_id': 'c_id of current owner of token.'
+}
+
+
 class TokenResponse(GetContractResponse):
     t_id = fields.Int(required=True)
     con_id = fields.Int(required=True)
     t_hash = fields.Str(required=True)
     owner_c_id = fields.Str(required=True)
+
+    doc_dump_info = TOKEN_RESPONSE_DOC
+
+
+COLLECTOR_DOC_INFO = {
+        'username': 'username for collector.',
+        'password': 'password for collector.'
+}
 
 
 class CreateCollectorRequest(Schema):
@@ -16,10 +33,15 @@ class CreateCollectorRequest(Schema):
     username = fields.Str(required=True)
     password = fields.Str(required=True, load_only=True)
 
-    doc_load_info = {
-        'username': {'type': 'string', 'desc': 'desired username for collector creation.'},
-        'password': {'type': 'string', 'desc': 'desired password for collector creation.'}
-    }
+    doc_load_info = COLLECTOR_DOC_INFO
+
+
+COLLECTOR_INFO_REQUEST_DOC = {
+    'c_id': 'c_id of the collector',
+    'username': 'username of collector',
+    'c_hash': 'collectors wallet hash.',
+    'c_priv_key': 'collector private key.'
+}
 
 
 class CollectorInfoRequest(Schema):
@@ -28,16 +50,15 @@ class CollectorInfoRequest(Schema):
     c_hash = fields.Str(required=True)
     c_priv_key = fields.Str(required=True)
 
+    doc_dump_info = COLLECTOR_INFO_REQUEST_DOC
+
 
 class LoginCollectorRequest(Schema):
     c_id = fields.Int(dump_only=True)
     username = fields.Str(required=True)
     password = fields.Str(required=True)
 
-    doc_load_info = {
-        'username': {'type': 'string', 'desc': 'collector username to use with login.'},
-        'password': {'type': 'string', 'desc': 'collector password to use with login.'}
-    }
+    doc_load_info = COLLECTOR_DOC_INFO
 
 
 def create_collector(user_deets):

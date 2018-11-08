@@ -16,7 +16,10 @@ url_prefix = '/issuer'
 
 @issuer_bp.route(url_prefix + '/username=<string:username>', methods=['GET'])
 @requires_db
-@issuer_docs.document(url_prefix + '/username=<string:username>', 'GET', 'Gets issuer information by username')
+@issuer_docs.document(url_prefix + '/username=<string:username>', 'GET',
+                      """
+                      Gets issuer information by username
+                      """)
 def get_issuer_by_username(username):
     """
     This method retrieves issuer data for the given username.
@@ -37,7 +40,10 @@ class Issuer(Resource):
     @load_with_schema(CreateIssuerRequest)
     @requires_db
     @requires_geth
-    @issuer_docs.document(url_prefix+" ", 'POST', 'Method to create issuer. Returns jwt.', CreateIssuerRequest)
+    @issuer_docs.document(url_prefix, 'POST',
+                          """
+                          Method to create issuer. Returns jwt.
+                          """, CreateIssuerRequest)
     def post(self, data):
         try:
             data['i_hash'], data['i_priv_key'] = g.geth.create_account()
@@ -62,8 +68,9 @@ class Issuer(Resource):
     @requires_db
     @requires_geth
     @issuer_docs.document(url_prefix, 'GET',
-                          "Method to retrieve issuer information. Requires jwt from login/creation account.",
-                          req_i_jwt=True)
+                          """
+                          Method to retrieve issuer information. Requires jwt from login/creation account.
+                          """, req_i_jwt=True)
     def get(self):
         issuer = GetIssuerByIID().execute_n_fetchone({'i_id': g.issuer_info['i_id']}, close_connection=True)
 
