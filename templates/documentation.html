@@ -1,24 +1,71 @@
 <!DOCTYPE html>
-<style>
-    td, th {
-        border: 1px solid #dddddd;
-        text-align: left;
-        padding: 8px;
-    }
 
-    tr:nth-child(even) {
-        background-color: #dddddd;
-    }
+<style>
+td, th {
+    border: 1px solid #dddddd;
+    text-align: left;
+    padding: 8px;
+}
+
+tr:nth-child(even) {
+    background-color: #dddddd;
+}
+
+    /* Style the button that is used to open and close the collapsible content */
+.collapsible {
+  background-color: #eee;
+  color: #444;
+  cursor: pointer;
+  padding: 18px;
+  width: 100%;
+  border: none;
+  text-align: left;
+  outline: none;
+  font-size: 15px;
+}
+.active, .collapsible:hover {
+  background-color: #ffdd00;
+}
+.content {
+  padding: 0 18px;
+  display: none;
+  overflow: hidden;
+  background-color: #f1f1f1;
+}
 </style>
+
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <title>TOKEN API Docs</title>
+
+    <head>
+<title> text conversion</title>
+
+<script language="JavaScript">z
+function collapse_stuff(element) {
+    var coll = document.getElementsByClassName("collapsible");
+    var i;
+
+    for (i = 0; i < coll.length; i++) {
+        coll[i].addEventListener("click", function () {
+            var content = this.nextElementSibling;
+            if (content.style.display === "block") {
+                content.style.display = "none";
+            } else {
+                content.style.display = "block";
+            }
+        });
+    }
+}
+</script>
+</head>
+
 </head>
 <body>
 <h1>TOKEN API Documentation.</h1>
 <h1>Provided by stone. Any questions, concerns, likes, or dislikes contact me at 801-541-9341</h1>
-<hr style="height:3px;border:black;color:red;background-color:red;"/>
+<hr style="height:3px;border:black;color:red;background-color:#0055ff;"/>
 <h2>Response Info</h2>
 <p>All successful responses are wrapped in a common json response. This common json response consists of a 'status',
     'status_code' and 'resp_data' keys.</p>
@@ -28,22 +75,24 @@
     This will be a json object and the contents are specified per method below in the docs. Below is an example of
     what a base response will look like.</p>
 <pre>{{ base_resp|tojson_pretty|safe }}</pre>
-<hr style="height:3px;border:black;color:red;background-color:red;"/>
+<hr style="height:3px;border:black;color:red;background-color:#0055ff;"/>
 <h2>Authorization:</h2>
 <p>JWT's can be retrieved from creating issuer/collector accounts or from using the login methods for both issuer
     and collectors. Place your JWT inside the 'Authorization' header.</p>
-<hr style="height:3px;border:black;color:red;background-color:red;"/>
+<hr style="height:3px;border:black;color:red;background-color:#0055ff;"/>
 <h1>Enumerations:</h1>
 {% for enum in enums %}
-<hr style="height:1px;border:black;color:yellow;background-color:yellow;"/>
+<hr style="height:3px;border:black;color:yellow;background-color:#0055ff;"/>
 <h2>{{ enum.__name__ }}:</h2>
     {% for e in enum %}
         <p>{{ e.name }}: {{ e.value }}</p>
     {% endfor %}
-<hr style="height:1px;border:black;color:yellow;background-color:yellow;"/>
+<hr style="height:3px;border:black;color:yellow;background-color:#0055ff;"/>
 {% endfor %}
-<hr style="height:3px;border:black;color:red;background-color:red;"/>
 {% for bp in bp_docs %}
+    <hr style="height:3px;border:black;color:red;background-color:red;"/>
+    <button class="collapsible" onclick="collapse_stuff(this)">{{ bp.bp_name }}</button>
+    <div class="content">
     <h1><u><em>{{ bp.bp_name }} Methods:</em></u></h1>
     {% for key, value in bp.registered_endpoints.items() %}
         <h2> {{ key[0] }} [{{ value.endpoint_type }}]
@@ -110,7 +159,7 @@
     {% else %}
         <p>No methods for this endpoint</p>
     {% endfor %}
-    <hr style="height:3px;border:black;color:red;background-color:red;"/>
+    </div>
 {% endfor %}
 <br>
 </body>
