@@ -25,6 +25,7 @@ CREATE TABLE contracts (
   description TEXT,
   tradable BOOLEAN NOT NULL DEFAULT true,
   num_created INTEGER NOT NULL,
+  qr_code_claimable BOOLEAN NOT NULL DEFAULT false,
   pic_location varchar(35) NOT NULL,
   creation_ts DATE DEFAULT (strftime('%Y-%m-%d %H:%M:%S')),
   status CHAR(1) NOT NULL DEFAULT 'P',

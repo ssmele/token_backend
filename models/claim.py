@@ -48,6 +48,21 @@ class ClaimRequest(Schema):
     doc_load_info = CLAIM_REQUEST_DOC_INFO
 
 
+CLAIM_QRCODE_REQUEST_DOC_INFO = {
+    'con_id': "con_id of token.",
+    't_id': 't_id of token',
+    'location': LOCATION_DOC_INFO,
+}
+
+
+class ClaimQRCodeRequest(Schema):
+    con_id = fields.Int(required=True)
+    t_id = fields.Int(required=True)
+    location = fields.Nested(Location, required=True)
+
+    doc_load_info = CLAIM_QRCODE_REQUEST_DOC_INFO
+
+
 class GetTokenInfoInternal(Schema):
     """
     Schema for Token info for the ETH network
@@ -101,6 +116,23 @@ class SetToken(DataQuery):
         """
 
         self.schema_out = None
+        super().__init__()
+
+class GetSingleAvailToken(DataQuery):
+    """
+    Gets an available token in the collection
+    """
+
+    def __init__(self):
+        self.sql_text = """
+            SELECT t_id
+            FROM tokens
+            WHERE owner_c_id IS NULL 
+              AND con_id = :con_id
+              AND t_id = :t_id;
+        """
+
+        self.schema_out = GetAvailableTokenIDInternal()
         super().__init__()
 
 

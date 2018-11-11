@@ -72,13 +72,13 @@ class GetContractResponse(Schema):
     pic_location = fields.Str(required=True)
     tradable = fields.Boolean(required=True)
     status = fields.Str(required=True)
+    qr_code_claimable = fields.Boolean(required=True)
 
     issuer_username = fields.Str(dump_only=True)
 
     @post_dump
     def add_picture_path(self, data):
         data['pic_location'] = request.url_root + 'contract/image=' + data['pic_location']
-
 
     doc_dump_info = GET_CONTRACT_DOC
 
@@ -95,8 +95,8 @@ class InsertNewContract(DataQuery):
 
     def __init__(self):
         self.sql_text = """
-        INSERT INTO contracts(i_id, con_tx, con_abi, name, description, tradable, num_created, pic_location) 
-        VALUES(:i_id, :con_tx, :con_abi,  :name, :description, :tradable, :num_created, :pic_location);
+        INSERT INTO contracts(i_id, con_tx, con_abi, name, description, tradable, num_created, pic_location, qr_code_claimable) 
+        VALUES(:i_id, :con_tx, :con_abi,  :name, :description, :tradable, :num_created, :pic_location, :qr_code_claimable);
         """
         self.schema_out = None
         super().__init__()
@@ -172,7 +172,7 @@ class GetAllContracts(DataQuery):
             self.sql_text = """
             SELECT contracts.con_id, issuers.i_id, issuers.username as issuer_username, contracts.con_tx as con_hash,
             contracts.name, contracts.description, contracts.num_created, contracts.pic_location, contracts.tradable,
-            contracts.status
+            contracts.status, contracts.qr_code_claimable
             FROM contracts, issuers
             WHERE contracts.i_id = issuers.i_id
             AND (contracts.name like '%{keyword}%'
@@ -182,7 +182,7 @@ class GetAllContracts(DataQuery):
             self.sql_text = """
             SELECT contracts.con_id, issuers.i_id, issuers.username as issuer_username, contracts.con_tx as con_hash,
             contracts.name, contracts.description, contracts.num_created, contracts.pic_location, contracts.tradable,
-            contracts.status
+            contracts.status, contracts.qr_code_claimable
             FROM contracts, issuers
             WHERE contracts.i_id = issuers.i_id;
             """
@@ -280,6 +280,7 @@ class TradableTokenResponse(Schema):
     pic_location = fields.Str(required=True)
     tradable = fields.Boolean(required=True)
     status = fields.Str(required=True)
+    qr_code_claimable = fields.Boolean(required=True)
 
     # Issuer stuff.
     issuer_username = fields.Str(required=True)
@@ -308,7 +309,7 @@ class GetAllTradableContracts(DataQuery):
             SELECT issuers.i_id, issuers.username as issuer_username,
             contracts.con_tx as con_hash, contracts.name, contracts.description, contracts.num_created,
             contracts.pic_location, contracts.tradable, contracts.status, issuers.username, contracts.con_id,
-            tokens.t_id,
+            tokens.t_id, contracts.qr_code_claimable,
             collectors.username as 'collector_username', collectors.c_id
             FROM contracts, issuers, tokens, collectors
             WHERE contracts.i_id = issuers.i_id
@@ -326,7 +327,7 @@ class GetAllTradableContracts(DataQuery):
             SELECT issuers.i_id, issuers.username as issuer_username,
             contracts.con_tx as con_hash, contracts.name, contracts.description, contracts.num_created,
             contracts.pic_location, contracts.tradable, contracts.status, issuers.username, contracts.con_id,
-            tokens.t_id,
+            tokens.t_id, contracts.qr_code_claimable,
             collectors.username as 'collector_username', collectors.c_id
             FROM contracts, issuers, tokens, collectors
             WHERE contracts.i_id = issuers.i_id
