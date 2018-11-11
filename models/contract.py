@@ -41,7 +41,6 @@ GET_CONTRACT_DOC = {
     'description': 'Description given to contract by issuer.',
     'num_created': "Number of tokens assocaited with this contract.",
     'pic_location': 'url to picture given to contract.',
-    'qr_code_location': 'url to qr code if one was specified to be set up.',
     'tradable': "If contract has trading enabled.",
     'status': 'status of contract',
     'issuer_username': 'username of issuer who made the contract.',
@@ -57,7 +56,6 @@ GET_CONTRACT_DOC_EXPLORE = {
     'description': 'Description given to contract by issuer.',
     'num_created': "Number of tokens assocaited with this contract.",
     'pic_location': 'url to picture given to contract.',
-    'qr_code_location': 'url to qr code if one was specified to be set up.',
     'tradable': "If contract has trading enabled.",
     'status': 'status of contract',
     'issuer_username': 'username of issuer who made the contract.'
@@ -72,7 +70,6 @@ class GetContractResponse(Schema):
     description = fields.Str(required=True)
     num_created = fields.Int(required=True)
     pic_location = fields.Str(required=True)
-    qr_code_location = fields.Str(required=True)
     tradable = fields.Boolean(required=True)
     status = fields.Str(required=True)
 
@@ -82,10 +79,16 @@ class GetContractResponse(Schema):
     def add_picture_path(self, data):
         data['pic_location'] = request.url_root + 'contract/image=' + data['pic_location']
 
-        if data['qr_code_location']:
-            data['qr_code_location'] = request.url_root + 'contract/qr_code=' + data['qr_code_location']
 
     doc_dump_info = GET_CONTRACT_DOC
+
+
+class QRCode(Schema):
+    qr_code_location = fields.Str(required=True)
+
+    @post_dump
+    def add_picture_path(self, data):
+        data['qr_code_location'] = request.url_root + 'contract/qr_code=' + data['qr_code_location']
 
 
 class InsertNewContract(DataQuery):
@@ -107,6 +110,16 @@ class InsertToken(DataQuery):
         """
 
         self.schema_out = None
+        super().__init__()
+
+
+class GetAllQRCodes(DataQuery):
+
+    def __init__(self):
+        self.sql_text = """
+        SELECT qr_code_location from tokens where con_id=:con_id;
+        """
+        self.schema_out = QRCode()
         super().__init__()
 
 
@@ -344,9 +357,10 @@ class UpdateQRCODE(DataQuery):
 
     def __init__(self):
         self.sql_text = """
-        UPDATE contracts
+        UPDATE tokens
         SET qr_code_location = :qr_code_location
-        WHERE con_id = :con_id;
+        WHERE con_id = :con_id
+        AND t_id = :t_id;
         """
         self.schema_out = None
         super().__init__()
@@ -367,10 +381,13 @@ def insert_bulk_tokens(num_to_create, contract_deets, sesh):
     con_id = sesh.execute("select last_insert_rowid() as 'con_id'").fetchone()['con_id']
 
     # Insert all token records associated with it.
+    t_ids = []
     token_binds = {'con_id': con_id, 'tok_hash': 'temp_hash'}
     for tok_num in range(1, num_to_create+1):
         InsertToken().execute(token_binds, sesh=sesh)
-    return con_id
+        t_id = sesh.execute("select last_insert_rowid() as 't_id'").fetchone()['t_id']
+        t_ids.append(t_id)
+    return con_id, t_ids
 
 
 def process_constraints(constraints, con_id):

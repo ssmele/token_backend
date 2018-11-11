@@ -34,16 +34,17 @@ def save_file(file, folder, tag1):
         return None
 
 
-def save_qrcode(file, tag):
+def save_qrcode(file, tag0, tag1):
     """
     This method saves a qr code.
     :param file: PIL IMAGE.
-    :param tag: should be con_id of the contract.
+    :param tag0: should be con_id of the contract.
+    :param tag1: should be t_id of the contract.
     :return: filename of newly saved qrcode.
     """
     try:
         file_type = 'png'
-        new_file_name = "{}_{}.{}".format(tag, uuid1(), file_type)
+        new_file_name = "{}-{}_{}.{}".format(tag0, tag1, uuid1(), file_type)
         # Generate the full path of where to save the file.
         file_save_path = os.path.join(*[current_app.root_path, 'PICTURES', ImageFolders.QR_CODES.value, new_file_name])
         file.save(file_save_path)

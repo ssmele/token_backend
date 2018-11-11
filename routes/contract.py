@@ -9,7 +9,7 @@ from marshmallow import ValidationError
 from ether.geth_keeper import GethException
 from models.constraints import get_all_constraints
 from models.contract import ContractRequest, GetContractByConID, GetContractByName, \
-    GetContractsByIssuerID, process_constraints, insert_bulk_tokens, GetContractResponse, UpdateQRCODE
+    GetContractsByIssuerID, process_constraints, insert_bulk_tokens, GetContractResponse, UpdateQRCODE, GetAllQRCodes
 from models.issuer import GetIssuerInfo
 from routes import requires_geth
 from utils.db_utils import requires_db
@@ -93,21 +93,28 @@ class Contract(Resource):
                                                                     tradable=data['tradable'])
 
             # Insert into the database
-            con_id = insert_bulk_tokens(data['num_created'], data, g.sesh)
+            con_id, t_ids = insert_bulk_tokens(data['num_created'], data, g.sesh)
 
-            # If constraints were passed in we need to process them.
-            if 'constraints' in data:
-                process_constraints(data['constraints'], con_id)
-
-            # If the user wants to be able to claim based on qr_code
+            # It is either qr_codes or other contstraints it cannot be both.
             if data['qr_code_claimable']:
-                json_data_dict = dumps({'con_id': con_id, 'jwt': generate_jwt({'con_id': con_id, 'swag': 'yeet'})})
-                qrc = qrcode.make(json_data_dict)
-                saved_location = save_qrcode(qrc, con_id)
-                if saved_location is None:
-                    log_kv(LOG_ERROR, {'error': 'failed to make qrcode.'})
-                else:
-                    UpdateQRCODE().execute({'qr_code_location': saved_location, 'con_id': con_id})
+                # Get all tokens to associate qr code with.
+                for t_id in t_ids:
+                    # Generate the data to place in qr code.
+                    json_data_dict = dumps({'con_id': con_id, 't_id': t_id,
+                                            'jwt': generate_jwt({'con_id': con_id, 't_id': 't_id'})})
+
+                    # Make qr_code and save it.
+                    qrc = qrcode.make(json_data_dict)
+                    saved_location = save_qrcode(qrc, con_id, t_id)
+
+                    # If we successfully saved the image persist it into database.
+                    if saved_location is None:
+                        log_kv(LOG_ERROR, {'error': 'failed to make qrcode.'})
+                    else:
+                        UpdateQRCODE().execute({'qr_code_location': saved_location, 'con_id': con_id, 't_id': t_id})
+            elif 'constraints' in data:
+                # If constraints were passed in we need to process them.
+                process_constraints(data['constraints'], con_id)
 
             g.sesh.commit()
             log_kv(LOG_INFO, {'message': 'succesfully issued contract!', 'issuer_id': g.issuer_info['i_id']})
@@ -196,6 +203,18 @@ def serve_qr_code(qr_code):
     return serve_file(qr_code, ImageFolders.QR_CODES.value)
 
 
+@contract_bp.route(url_prefix + '/qr_code/con_id=<int:con_id>')
+@requires_db
+@verify_issuer_jwt
+@contract_docs.document(url_prefix + 'qr_code/con_id=<int:con_id>', 'GET',
+                        """
+                        Method to retrieve all the qr_codes associated with a given con_id.
+                        """, req_i_jwt=True)
+def qr_codes_by_con_id(con_id):
+    qr_codes = GetAllQRCodes().execute_n_fetchall({'con_id': con_id})
+    return success_response({'qr_codes': [q['qr_code_location'] for q in qr_codes]})
+
+
 @contract_bp.route(url_prefix + '/con_id=<int:con_id>', methods=['GET'])
 @verify_issuer_jwt
 @requires_db
@@ -232,3 +251,7 @@ def get_contract_by_name(name):
     else:
         log_kv(LOG_WARNING, {'warning': 'could not find contract by name', 'contract_name': name})
         return error_response(status="Couldn't retrieve contract with that con_id", status_code=-1, http_code=200)
+
+
+contract_api = Api(contract_bp)
+contract_api.add_resource(Contract, url_prefix)
