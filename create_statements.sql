@@ -29,6 +29,8 @@ CREATE TABLE contracts (
   pic_location varchar(35) NOT NULL,
   creation_ts DATE DEFAULT (strftime('%Y-%m-%d %H:%M:%S')),
   status CHAR(1) NOT NULL DEFAULT 'P',
+  gas_price FLOAT,
+  gas_cost FLOAT,
   FOREIGN KEY(i_id) REFERENCES issuers(i_id)
 );
 

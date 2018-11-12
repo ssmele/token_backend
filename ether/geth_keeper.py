@@ -154,7 +154,7 @@ class GethKeeper(object):
             # Create the json string of the ABI and return
             abi_dict = {'abi': contract_interface['abi']}
             json_abi = dumps(abi_dict)
-            return hexlify(tx_hash), json_abi
+            return hexlify(tx_hash), json_abi, gas_price
         except Exception as e:
             raise GethException(str(e), message=str(e))
 
@@ -173,7 +173,7 @@ class GethKeeper(object):
                 if tx_receipt['status'] == 0:
                     return True, False, None
                 else:
-                    return True, True, tx_receipt['contractAddress']
+                    return True, True, tx_receipt
             return False, False, None
         except Exception as e:
             raise GethException(str(e), message='Could not check transaction receipt')

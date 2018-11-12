@@ -95,8 +95,10 @@ class InsertNewContract(DataQuery):
 
     def __init__(self):
         self.sql_text = """
-        INSERT INTO contracts(i_id, con_tx, con_abi, name, description, tradable, num_created, pic_location, qr_code_claimable) 
-        VALUES(:i_id, :con_tx, :con_abi,  :name, :description, :tradable, :num_created, :pic_location, :qr_code_claimable);
+            INSERT INTO contracts(i_id, con_tx, con_abi, name, description, tradable, num_created, 
+              pic_location, qr_code_claimable, gas_price) 
+            VALUES(:i_id, :con_tx, :con_abi,  :name, :description, :tradable, :num_created, 
+              :pic_location, :qr_code_claimable, :gas_price);
         """
         self.schema_out = None
         super().__init__()

@@ -24,6 +24,7 @@ class UpdateContractStatus(DataQuery):
     **binds**:
         * new_status: The status to update to
         * con_addr: The address of the contract
+        * gas_cost: The gas_cost of the contract mine
         * this_id: The database's contract_id for this contract
     """
 
@@ -31,7 +32,8 @@ class UpdateContractStatus(DataQuery):
         self.sql_text = """
             UPDATE contracts 
             SET status = :new_status, 
-              con_addr = :con_addr 
+              con_addr = :con_addr,
+              gas_cost = :gas_cost 
             WHERE con_id = :this_id;
         """
         super().__init__()
@@ -150,16 +152,19 @@ def update_contracts(rows, sess):
     for row in rows:
         print('working on contract - contract_id: {c_id}'.format(c_id=row['con_id']))
         # Try to get the transaction receipt
-        has_receipt, success, contract_addr = geth.check_contract_mine(row['con_tx'])
+        has_receipt, success, receipt = geth.check_contract_mine(row['con_tx'])
         if has_receipt:
-            status, addr = 'F', None
+            status, address, gas_cost = 'F', None, None
             if success:
-                status, addr = 'S', contract_addr
+                status, address = 'S', receipt['contractAddress']
+                gas_cost = receipt['gasUsed']
                 print('Contract mined - contract_id: {c_id}'.format(c_id=row['con_id']))
             else:
                 print('Contract failed!! - contract_id: {c_id}'.format(c_id=row['con_id']))
             # Update the status and contract address
-            UpdateContractStatus().execute({'new_status': 'S', 'con_addr': addr, 'this_id': row['con_id']}, sesh=sess)
+            UpdateContractStatus().execute(
+                {'new_status': 'S', 'con_addr': address, 'this_id': row['con_id'], 'gas_cost': gas_cost},
+                sesh=sess)
     sess.commit()
 
 

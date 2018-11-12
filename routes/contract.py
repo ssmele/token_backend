@@ -30,7 +30,7 @@ class Contract(Resource):
     @verify_issuer_jwt
     @requires_db
     @requires_geth
-    @contract_docs.document(url_prefix+" ", 'POST',
+    @contract_docs.document(url_prefix + " ", 'POST',
                             """
                             Method to start a request to issue a new token on the eth network. This will also create all 
                             new tokens associated with the method. This method requires a multipart form. The two 
@@ -64,7 +64,7 @@ class Contract(Resource):
         # If we have an image save it.
         file_location = None
         if 'token_image' in request.files:
-            file_location = save_file(request.files['token_image'],  ImageFolders.CONTRACTS.value,
+            file_location = save_file(request.files['token_image'], ImageFolders.CONTRACTS.value,
                                       g.issuer_info['i_id'])
 
         if file_location is None:
@@ -81,16 +81,16 @@ class Contract(Resource):
             if issuer is None:
                 error_response('Failed to retrieve issuer specified.', status_code=45)
 
-            data['con_tx'], data['con_abi'] = g.geth.issue_contract(issuer['i_hash'],
-                                                                    issuer_name=issuer['username'],
-                                                                    name=data['name'],
-                                                                    desc=data['description'],
-                                                                    img_url=data['pic_location'],
-                                                                    num_tokes=data['num_created'],
-                                                                    code_reqs=code_constraints,
-                                                                    date_reqs=date_constraints,
-                                                                    loc_reqs=loc_constraints,
-                                                                    tradable=data['tradable'])
+            data['con_tx'], data['con_abi'], data['gas_price'] = g.geth.issue_contract(issuer['i_hash'],
+                                                                                       issuer_name=issuer['username'],
+                                                                                       name=data['name'],
+                                                                                       desc=data['description'],
+                                                                                       img_url=data['pic_location'],
+                                                                                       num_tokes=data['num_created'],
+                                                                                       code_reqs=code_constraints,
+                                                                                       date_reqs=date_constraints,
+                                                                                       loc_reqs=loc_constraints,
+                                                                                       tradable=data['tradable'])
 
             # Insert into the database
             con_id, t_ids = insert_bulk_tokens(data['num_created'], data, g.sesh)
@@ -244,7 +244,7 @@ def get_contract_by_con_id(con_id):
                         Method to retrieve contract information by names like it.
                         """, req_i_jwt=True)
 def get_contract_by_name(name):
-    contracts_by_name = GetContractByName().execute_n_fetchall({'name': '%'+name+'%'}, close_connection=True)
+    contracts_by_name = GetContractByName().execute_n_fetchall({'name': '%' + name + '%'}, close_connection=True)
     if contracts_by_name is not None:
         log_kv(LOG_DEBUG, {'debug': 'found contract by name', 'contract_name': name})
         return success_response({'contracts': contracts_by_name})

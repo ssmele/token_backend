@@ -14,11 +14,11 @@ if __name__ == '__main__':
     SRC_ACCT = "0x9db3052c0173adada374173a0286f7855222a713"
     DEST_ACCT = "0x9db3052c0173adada374173a0286f7855222a713"
 
-
     if create_contract:
-        tx_hash, json_abi = gk.issue_contract('0xff95b24806e3d93afc628c4bb684fd245e9853e9',
-                                              issuer_name='tesla', desc='token for tesla', img_url='http://google.com',
-                                              num_tokes=5, tradable=True)
+        tx_hash, json_abi, _ = gk.issue_contract('0xff95b24806e3d93afc628c4bb684fd245e9853e9',
+                                                 issuer_name='tesla', desc='token for tesla',
+                                                 img_url='http://google.com',
+                                                 num_tokes=5, tradable=True)
 
         print('tx_hash: {0}'.format(tx_hash))
         print('---------------------------------------------------------------')
