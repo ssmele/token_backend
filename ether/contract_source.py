@@ -89,6 +89,7 @@ contract issuer_contract is ERC721, SupportsInterface {
     string contract_symbol;
     string contract_description;
     string img_url;
+    string contract_uri;
     uint num_tokes;
     uint remaining_tokes;  // Holds the remaining # of tokens
     bool is_transferrable;
@@ -103,6 +104,7 @@ contract issuer_contract is ERC721, SupportsInterface {
     mapping(uint256 => address) private approvals;          // Holds all approvals
     mapping(address => uint256) private owner_token_count;  // Holds the number of tokens owned
     mapping (address => mapping (address => bool)) private operators;  // Maps owners to operators
+    mapping (uint256 => string) internal token_uri;         // Maps token_id to a token_uri
     
     // This event is emitted when a token is transferred to another address
     event Transfer(address indexed _from, address indexed _to, uint256 indexed _token_id);
@@ -137,9 +139,11 @@ contract issuer_contract is ERC721, SupportsInterface {
 
     // Constructor
     function issuer_contract(address _owner, string _in, string _cn, string _ts, string _cd, 
-            string _iu, uint256 _it, bytes6[] _codes, uint[] _dates, int256[] _locs, bool _can_transfer) public {
+            string _iu, uint256 _it, bytes6[] _codes, uint[] _dates, int256[] _locs, bool _can_transfer, 
+            string _contract_uri) public {
                 
         supportedInterfaces[0x80ac58cd] = true; // ERC721
+        supportedInterfaces[0x5b5e139f] = true; // ERC721Metadata
         
         // Set attributes
         issuer_name = _in;
@@ -150,6 +154,7 @@ contract issuer_contract is ERC721, SupportsInterface {
         remaining_tokes = _it;
         num_tokes = _it;
         is_transferrable = _can_transfer;
+        contract_uri = _contract_uri;
         
         // Set the requirements
         code_reqs = _codes;
@@ -258,15 +263,31 @@ contract issuer_contract is ERC721, SupportsInterface {
         emit Transfer(from, _to, _token_id);
     }
     
-    // Mints a new token
-    function _mint(address _to, uint256 _token_id) internal {
+    // Mints a new token and sends it to an account
+    function mint_and_send(address _to, uint256 _token_id, string _token_uri) public {
         require(_to != address(0));
         require(_token_id != 0);
         require(token_owners[_token_id] == address(0));
-
+        
+        num_tokes += 1;
         add_token_to_owner(_to, _token_id);
+        if (bytes(_token_uri).length != 0) {
+            token_uri[_token_id] = _token_uri;
+        }
 
         emit Transfer(address(0), _to, _token_id);
+    }
+    
+    // Mints a new token
+    function mint(uint256 _token_id, string _token_uri) public {
+        require(_token_id != 0);
+        require(token_owners[_token_id] == address(0));
+        
+        num_tokes += 1;
+        remaining_tokes += 1;
+        if (bytes(_token_uri).length != 0) {
+            token_uri[_token_id] = _token_uri;
+        }
     }
     
     // Removes the approval for a token
@@ -365,6 +386,14 @@ contract issuer_contract is ERC721, SupportsInterface {
     function get_location(uint index) public view returns (int256, int256, int256) {
         LocationReq storage loc = loc_reqs[index];
         return (loc.latitude, loc.longitude, loc.radius);
+    }
+    
+    // Returns the tokenURI for the token metadata
+    function tokenURI(uint256 _token_id) valid_token(_token_id) external view returns (string) {
+        if (bytes(token_uri[_token_id]).length != 0) {
+            return token_uri[_token_id];
+        }
+        return contract_uri;
     }
     
     // Function to transfer from creator to another user
