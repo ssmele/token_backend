@@ -191,7 +191,7 @@
 
             hidden = true;
             function toggle() {
-                if (hidden) {
+                if ($(".location").is(":hidden")) {
                     $(".location").show();
                     map.invalidateSize();
                     hidden = false;
@@ -200,6 +200,9 @@
                     hidden = true;
                 }
             }
+            
+            
+
         </script>
         <form class="form" id="target" enctype="multipart/form-data" action="javascript:publish();">
             <div class="container">
@@ -249,22 +252,24 @@
                         </script>
 
                         <input type='file' class="custom-file-input" placeholder="thumbnail" id='t_image' onchange="readURL(this);"
-                            name="token_image" />
+                            name="token_image" data-toggle="tooltip"
+                            data-placement="left" title="Add an Image to your Token"/>
                         <label class="custom-file-label form-control" for="t_image">Choose file</label>
 
 
 
 
                     </div>
+                        
+                    <label class="form-control form-control-2" data-toggle="tooltip"
+                    data-placement="left" title="Collectors can trade this Token"><input id="tradable" type="checkbox" value=""> Tradable?</label>
+                    <label class="form-control form-control-2" data-toggle="tooltip"
+                    data-placement="left" title="Advanced Options will be disabled"><input id="qrcode" type="checkbox" value=""> QR CODE</label>
 
-                    <label class="form-control form-control-2"><input id="tradable" type="checkbox" value=""> Tradable?</label>
 
-
-
-
-                    <button class="btn btn-secondary advanced" type="button" data-toggle="collapse" onclick="toggle()"
+                    <button class="btn btn-secondary advanced" id="advanced" type="button" data-toggle="collapse" onclick="toggle()"
                         data-target="#collapseExample" aria-expanded="false" aria-controls="collapseExample">
-                        Advanced Options
+                        + Advanced Option
                     </button>
 
                     <div class="collapse" id="collapseExample">
@@ -369,7 +374,16 @@
 
         }
     });
-
+    $('#qrcode').change(function(){
+                console.log("working")
+                if (this.checked) {
+                    $('#advanced').prop('disabled', true);
+                    $('.collapse').collapse("hide");
+                    $(".location").hide();
+                } else {
+                    $('#advanced').prop('disabled', false);
+                }
+            })
 </script>
 
 </html>
