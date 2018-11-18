@@ -31,6 +31,7 @@ CREATE TABLE contracts (
   status CHAR(1) NOT NULL DEFAULT 'P',
   gas_price FLOAT,
   gas_cost FLOAT,
+  metadata_location VARCHAR(64) NOT NULL DEFAULT '',
   FOREIGN KEY(i_id) REFERENCES issuers(i_id)
 );
 

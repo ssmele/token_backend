@@ -46,7 +46,7 @@ def save_qrcode(file, tag0, tag1):
         file_type = 'png'
         new_file_name = "{}-{}_{}.{}".format(tag0, tag1, uuid1(), file_type)
         # Generate the full path of where to save the file.
-        file_save_path = os.path.join(*[current_app.root_path, 'PICTURES', ImageFolders.QR_CODES.value, new_file_name])
+        file_save_path = os.path.join(*[current_app.root_path, 'PICTURES', Folders.QR_CODES.value, new_file_name])
         file.save(file_save_path)
         return new_file_name
     except Exception as e:
@@ -60,6 +60,7 @@ def serve_file(name, folder_type):
     return send_from_directory(folder, name)
 
 
-class ImageFolders(Enum):
+class Folders(Enum):
     CONTRACTS = 'CONTRACTS'
     QR_CODES = 'QR_CODES'
+    METADATA = 'METADATA'
