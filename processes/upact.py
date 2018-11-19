@@ -106,7 +106,6 @@ class GetTradeItemsByTRID(DataQuery):
         super().__init__()
 
 
-# TODO: add this to the logic in the update trades.
 class UpdateTradeItemGasCost(DataQuery):
 
     def __init__(self):
