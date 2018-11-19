@@ -78,6 +78,7 @@ class GetContractResponse(Schema):
     @post_dump
     def add_picture_path(self, data):
         data['pic_location'] = request.url_root + 'contract/image=' + data['pic_location']
+        data['metadata_location'] = request.url_root + 'contract/metadata=' + data['metadata_location']
 
     doc_dump_info = GET_CONTRACT_DOC
 
@@ -224,6 +225,7 @@ class GetProximityContracts(Schema):
     @post_load
     def add_picture_path(self, data):
         data['pic_location'] = request.url_root + 'contract/image=' + data['pic_location']
+        data['metadata_location'] = request.url_root + 'contract/metadata=' + data['metadata_location']
 
     doc_dump_info = PROXIMITY_DOC_INFO
 
@@ -300,6 +302,7 @@ class TradableTokenResponse(Schema):
     @post_load
     def add_picture_path(self, data):
         data['pic_location'] = request.url_root + 'contract/image=' + data['pic_location']
+        data['metadata_location'] = request.url_root + 'contract/metadata=' + data['metadata_location']
 
     doc_dump_info = TRADABLE_DOC_INFO
 

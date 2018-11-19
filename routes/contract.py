@@ -14,7 +14,7 @@ from models.issuer import GetIssuerInfo
 from routes import requires_geth
 from utils.db_utils import requires_db
 from utils.doc_utils import BlueprintDocumentation
-from utils.image_utils import save_file, serve_file, save_qrcode, Folders
+from utils.image_utils import save_file, serve_file, save_qrcode, Folders, save_json_data
 from utils.utils import success_response, error_response, log_kv, LOG_WARNING, LOG_INFO, LOG_ERROR, LOG_DEBUG
 from utils.verify_utils import verify_issuer_jwt, generate_jwt
 
@@ -62,17 +62,15 @@ class Contract(Resource):
         data.update({'i_id': g.issuer_info['i_id']})
 
         # If we have an image save it.
-        file_location = None
+        file_location = 'default.png'
         if 'token_image' in request.files:
             file_location = save_file(request.files['token_image'], Folders.CONTRACTS.value,
                                       g.issuer_info['i_id'])
-
-        if file_location is None:
-            file_location = 'default.png'
         data.update({'pic_location': file_location})
 
-        metadata_location = 'tmp'  # TODO: save and get the location of the metadata JSON file
-        data['metadata_location'] = metadata_location
+        # If meta data is persistent save it.
+        if 'meta_json_data' in request.form:
+            data['metadata_location'] = save_json_data(request.form['meta_json_data'], g.issuer_info['i_id'])
 
         try:
             # Get the received constraints in array format for the smart contract
@@ -94,7 +92,8 @@ class Contract(Resource):
                                                                                        date_reqs=date_constraints,
                                                                                        loc_reqs=loc_constraints,
                                                                                        tradable=data['tradable'],
-                                                                                       metadata_uri=metadata_location)
+                                                                                       metadata_uri=data[
+                                                                                           'metadata_location'])
 
             # Insert into the database
             con_id, t_ids = insert_bulk_tokens(data['num_created'], data, g.sesh)

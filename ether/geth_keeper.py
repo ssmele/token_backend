@@ -54,7 +54,7 @@ class MockGethKeeper(object):
         return 0, 123
 
     def issue_contract(self, *args, **kwargs):
-        return hexlify(b'a2'), '{}'
+        return hexlify(b'a2'), '{}', randint(0, MAX_GAS_PRICE)
 
     def check_contract_mine(self, *args, **kwargs):
         return True, True, 123
