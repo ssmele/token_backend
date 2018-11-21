@@ -1,12 +1,32 @@
 from flask import request
 from marshmallow import Schema, fields, post_dump, post_load
 from sqlalchemy.exc import SQLAlchemyError
+from enum import Enum
 
 from utils.db_utils import DataQuery
 from utils.utils import log_kv, LOG_ERROR
 from models.constraints import Constraints, InsertLocationConstraint, \
     InsertTimeConstraint, InsertUniqueCodeConstraint, CONSTRAINT_DATETIME_FORMAT
 from models.claim import LOCATION_DOC_INFO
+
+
+class TokenStatus(Enum):
+    """
+    Enumeration of all the states a token can be in.
+    """
+    NEW = 'N'
+    CLAIMED = 'P'
+    CLAIM_MINED = 'S'
+    FAILED = 'F'
+
+
+class ContractStatus(Enum):
+    """
+    Enumeration of all the states a token can be in.
+    """
+    ISSUED = 'P'
+    ISSUE_MINED = 'S'
+    FAILED = 'F'
 
 
 CONTRACT_DOC_INFO = {
@@ -95,10 +115,10 @@ class InsertNewContract(DataQuery):
 
     def __init__(self):
         self.sql_text = """
-            INSERT INTO contracts(i_id, con_tx, con_abi, name, description, tradable, num_created, 
-              pic_location, qr_code_claimable, gas_price, metadata_location)
-            VALUES(:i_id, :con_tx, :con_abi,  :name, :description, :tradable, :num_created, 
-              :pic_location, :qr_code_claimable, :gas_price, :metadata_location);
+        INSERT INTO contracts(i_id, con_tx, con_abi, name, description, tradable, num_created, 
+          pic_location, qr_code_claimable, gas_price, metadata_location)
+        VALUES(:i_id, :con_tx, :con_abi,  :name, :description, :tradable, :num_created, 
+          :pic_location, :qr_code_claimable, :gas_price, :metadata_location);
         """
         self.schema_out = None
         super().__init__()
@@ -108,8 +128,8 @@ class InsertToken(DataQuery):
 
     def __init__(self):
         self.sql_text = """
-        INSERT INTO tokens(con_id, t_hash, status) values(:con_id, :tok_hash, 'N');
-        """
+        INSERT INTO tokens(con_id, t_hash, status) values(:con_id, :tok_hash, '{}');
+        """.format(TokenStatus.NEW.value)
 
         self.schema_out = None
         super().__init__()

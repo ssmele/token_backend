@@ -455,6 +455,9 @@ class UpdateOwnership(DataQuery):
 
 
 class GetUntradables(DataQuery):
+    """
+    This Data Query has a weird format as I needed to bind a list of integers.
+    """
 
     def __init__(self, con_ids):
         self.sql_text = """

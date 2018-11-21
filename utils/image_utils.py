@@ -75,6 +75,7 @@ def save_json_data(json_data, tag0):
         log_kv(LOG_ERROR, {"info": "Error saving json meta data", "error": str(e)}, exception=True)
         return None
 
+
 def serve_file(name, folder_type):
     # Specify location to look into.
     folder = os.path.join(*[current_app.root_path, 'PICTURES', folder_type])

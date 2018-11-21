@@ -105,7 +105,7 @@ class SetToken(DataQuery):
         self.sql_text = """
         UPDATE tokens
         SET owner_c_id = :c_id,
-          status = 'P',
+          status = :new_status,
           t_hash = :t_hash,
           latitude = :latitude,
           longitude = :longitude,
@@ -117,6 +117,7 @@ class SetToken(DataQuery):
 
         self.schema_out = None
         super().__init__()
+
 
 class GetSingleAvailToken(DataQuery):
     """

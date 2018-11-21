@@ -7,6 +7,8 @@ from ether.geth_keeper import GethKeeper
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.engine import create_engine
 from utils.utils import log_kv, LOG_ERROR
+from models.contract import TokenStatus, ContractStatus
+from models.trade import TradeStatus
 
 # Create geth.
 geth = GethKeeper()
@@ -79,7 +81,7 @@ class GetPendingContracts(DataQuery):
         self.sql_text = """
             SELECT con_id, con_tx 
             FROM contracts 
-            WHERE status = 'P'
+            WHERE status = :pending_issue_status
         """
         super().__init__()
 
@@ -92,7 +94,7 @@ class GetPendingTradeTRIDs(DataQuery):
     def __init__(self):
         self.sql_text = """
         select * from trade
-        where status = 'W'
+        where status = :pending_trade_status
         """
         super().__init__()
 
@@ -137,7 +139,7 @@ class GetPendingTokens(DataQuery):
         self.sql_text = """
             SELECT t_id, t_hash 
             FROM tokens 
-            WHERE status = 'P' 
+            WHERE status = :pending_claim_status
               AND t_hash IS NOT NULL
         """
         super().__init__()
@@ -153,9 +155,9 @@ def update_contracts(rows, sess):
         # Try to get the transaction receipt
         has_receipt, success, receipt = geth.check_contract_mine(row['con_tx'])
         if has_receipt:
-            status, address, gas_cost = 'F', None, None
+            status, address, gas_cost = ContractStatus.FAILED.value, None, None
             if success:
-                status, address = 'S', receipt['contractAddress']
+                status, address = ContractStatus.ISSUE_MINED.value, receipt['contractAddress']
                 gas_cost = receipt['gasUsed']
                 print('Contract mined - contract_id: {c_id}'.format(c_id=row['con_id']))
             else:
@@ -178,9 +180,9 @@ def update_tokens(rows, sess):
         # Try to get the transaction receipt
         has_receipt, success, receipt = geth.check_claim_mine(row['t_hash'])
         if has_receipt:
-            status = 'F'
+            status = TokenStatus.FAILED.value
             if success:
-                status = 'S'
+                status = TokenStatus.CLAIM_MINED.value
                 gas_cost = receipt['gasUsed']
                 print('Token claim mined - token_id: {t_id}, gas_used: {gas}'.format(t_id=row['t_id'], gas=gas_cost))
             else:
@@ -216,7 +218,7 @@ def update_trade_items(trade_items, trade, sess):
                 print('Trade_item mine fail. Failing whole transfer.-tr_id:{}, t_id:{}, con_id:{}'.format(ti['tr_id'],
                                                                                                           ti['t_id'],
                                                                                                           ti['con_id']))
-                UpdateTradeStatus().execute({'tr_id': trade['tr_id'], 'new_status': 'F'})
+                UpdateTradeStatus().execute({'tr_id': trade['tr_id'], 'new_status': TradeStatus.FAILED.value})
         else:
             # If any fail then its over.
             claimed.append(False)
@@ -226,7 +228,7 @@ def update_trade_items(trade_items, trade, sess):
     if all(claimed):
         try:
             perform_ownership_transfer(trade, trade_items, sess)
-            UpdateTradeStatus().execute({'tr_id': trade['tr_id'], 'new_status': 'A'}, sesh=sess)
+            UpdateTradeStatus().execute({'tr_id': trade['tr_id'], 'new_status': TradeStatus.ACCEPTED.value}, sesh=sess)
             for ti, gas_cost in zip(trade_items, gas_cost_list):
                 UpdateTradeItemGasCost().execute({'gas_cost': gas_cost, 'tr_id': ti['tr_id'], 'con_id': ti['con_id'],
                                                   't_id': ti['t_id']}, sesh=sess)
@@ -272,21 +274,24 @@ def perform_ownership_transfer(trade, trade_items, sess):
 def main():
     # Get contracts with pending status (for updating contracts)
     sess = Session()
-    contract_rows = GetPendingContracts().execute_n_fetchall({}, sess, schema_out=False)
+    contract_rows = GetPendingContracts().execute_n_fetchall({'pending_issue_status': ContractStatus.ISSUED.value},
+                                                             sess, schema_out=False)
     if contract_rows:
         update_contracts(contract_rows, sess)
     sess.close()
 
     # Get tokens with pending status (for updating claimed tokens)
     sess = Session()
-    token_rows = GetPendingTokens().execute_n_fetchall({}, sess, schema_out=False)
+    token_rows = GetPendingTokens().execute_n_fetchall({'pending_claim_status': TokenStatus.CLAIMED.value},
+                                                       sess, schema_out=False)
     if token_rows:
         update_tokens(token_rows, sess)
     sess.close()
 
     # Get pending trades.
     sess = Session()
-    trades = GetPendingTradeTRIDs().execute_n_fetchall({}, sess, schema_out=False)
+    trades = GetPendingTradeTRIDs().execute_n_fetchall({"pending_trade_status": TradeStatus.WAITING.value},
+                                                       sess, schema_out=False)
     for trade in trades:
         trade_items = GetTradeItemsByTRID().execute_n_fetchall({'tr_id': trade['tr_id']}, sess, schema_out=False)
         update_trade_items(trade_items, trade, sess)

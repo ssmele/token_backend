@@ -5,6 +5,7 @@ from flask import Blueprint, g
 from ether.geth_keeper import GethException
 from models.claim import ClaimRequest, GetTokenInfo, GetAvailableToken, SetToken, ClaimQRCodeRequest,\
     GetSingleAvailToken
+from models.contract import TokenStatus
 from models.constraints import validate_uni_code_constraints, validate_time_constraints, validate_location_constraints
 from routes import load_with_schema, requires_geth
 from utils.db_utils import requires_db
@@ -68,7 +69,7 @@ def claim_qr_code(con_id, t_id, c_id, lat, long):
         # Persist the changes in the database.
         rows_updated = SetToken().execute(
             {'con_id': con_id, 'latitude': lat, 'longitude': long, 'gas_price': gas_price,
-             't_hash': tx_hash, 't_id': avail_token['t_id'], 'c_id': c_id})
+             't_hash': tx_hash, 't_id': avail_token['t_id'], 'c_id': c_id, 'new_status': TokenStatus.CLAIMED.value})
 
         # Make sure a row was updated
         if rows_updated == 1:

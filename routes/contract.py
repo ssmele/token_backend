@@ -6,11 +6,11 @@ from flask import Blueprint, g, request
 from flask_restful import Api, Resource
 from marshmallow import ValidationError
 
+from ether.contract_source import DEFAULT_JSON_METADATA
 from ether.geth_keeper import GethException
 from models.constraints import get_all_constraints
 from models.contract import ContractRequest, GetContractByConID, GetContractByName, \
     GetContractsByIssuerID, process_constraints, insert_bulk_tokens, GetContractResponse, UpdateQRCODE, GetAllQRCodes
-from ether.contract_source import DEFAULT_JSON_METADATA
 from models.issuer import GetIssuerInfo
 from routes import requires_geth
 from utils.db_utils import requires_db
