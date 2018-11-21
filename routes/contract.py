@@ -126,12 +126,12 @@ class Contract(Resource):
             g.sesh.rollback()
             log_kv(LOG_ERROR, {'error': 'a geth_exception occurred while issuing contract',
                                'issuer_id': g.issuer_info['i_id'], 'exception': e.exception,
-                               'exc_message': e.message})
+                               'exc_message': e.message}, exception=True)
             return error_response(e.message)
         except Exception as e:
             g.sesh.rollback()
             log_kv(LOG_ERROR, {'error': 'an exception occurred while issuing contract',
-                               'issuer_id': g.issuer_info['i_id'], 'exception': str(e)})
+                               'issuer_id': g.issuer_info['i_id'], 'exception': str(e)}, exception=True)
             return error_response("Couldn't create new contract. Exception {}".format(str(e)))
 
     @staticmethod
