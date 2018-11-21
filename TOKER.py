@@ -28,12 +28,12 @@ from routes.collector import collector_bp, collector_docs
 from routes.issuer import issuer_bp, issuer_docs
 from routes.ping import ping, ping_docs
 from routes.claim import claim_bp, claim_docs
-from routes.contract import contract_bp, contract_docs, constraint_bp
+from routes.contract import contract_bp, contract_docs
 from routes.login import login_bp, login_docs
 from routes.explore import explore_bp, explore_docs
 from routes.analytics import analytics_bp
 from routes.frontend import frontend_bp
-from routes.trade import trade_bp, trade_docs
+from routes.trade import trade_bp, trade_docs, TradeStatus
 
 # Registering blueprints.
 app.register_blueprint(collector_bp)
@@ -45,7 +45,6 @@ app.register_blueprint(login_bp)
 app.register_blueprint(explore_bp)
 app.register_blueprint(analytics_bp)
 app.register_blueprint(frontend_bp)
-app.register_blueprint(constraint_bp)
 app.register_blueprint(trade_bp)
 
 
@@ -76,7 +75,9 @@ def docs():
     app.jinja_env.filters['tojson_pretty'] = to_pretty_json
     blueprint_doc_list = [collector_docs, issuer_docs, contract_docs, login_docs, ping_docs, claim_docs, explore_docs,
                           trade_docs]
-    return render_template('documentation.html', bp_docs=blueprint_doc_list, base_resp=success_response_dict({}))
+    return render_template('documentation.html', bp_docs=blueprint_doc_list,
+                           base_resp=success_response_dict({}),
+                           enums=[TradeStatus])
 
 
 if __name__ == '__main__':

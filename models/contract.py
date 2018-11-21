@@ -1,5 +1,3 @@
-from enum import Enum
-
 from flask import request
 from marshmallow import Schema, fields, post_dump, post_load
 from sqlalchemy.exc import SQLAlchemyError
@@ -8,6 +6,17 @@ from utils.db_utils import DataQuery
 from utils.utils import log_kv, LOG_ERROR
 from models.constraints import Constraints, InsertLocationConstraint, \
     InsertTimeConstraint, InsertUniqueCodeConstraint, CONSTRAINT_DATETIME_FORMAT
+from models.claim import LOCATION_DOC_INFO
+
+
+CONTRACT_DOC_INFO = {
+    'name': 'Name for the new token contract.',
+    'description': 'Description of the new token contract being deployed',
+    'num_created': 'Desired number of tokens to create.',
+    'tradable': 'boolean to determine if token is tradable.',
+    'qr_code_claimable': 'boolean that says if qrcode should be generated for this contract.',
+    'constraints': {'Optional': Constraints.doc_load_info}
+}
 
 
 class ContractRequest(Schema):
@@ -15,18 +24,40 @@ class ContractRequest(Schema):
     description = fields.Str(required=True)
     num_created = fields.Int(required=True)
     tradable = fields.Boolean(required=True)
+    qr_code_claimable = fields.Boolean(required=True)
 
     constraints = fields.Nested(Constraints, required=False)
 
-    doc_load_info = {
-        'name': {'type': 'string', 'desc': 'Name for the new token contract.'},
-        'description': {'type': 'string', 'desc': 'Description of the new token contract being deployed'},
-        'num_created': {'type': 'int', 'desc': 'desired password for collector creation.'},
-        'tradable': {'type': 'boolean', 'desc': 'boolean to determine if token is tradable.'},
-        'constraints': Constraints.doc_load_info,
-        'INFO (NOT APART OF REQUEST)' : {'time_format': CONSTRAINT_DATETIME_FORMAT, 'radius metric': 'meters',
-                                         'constraints': 'The constraints are optional'}
-    }
+    doc_load_info = CONTRACT_DOC_INFO
+
+
+GET_CONTRACT_DOC = {
+    'con_id': 'con_id of contract.',
+    'i_id': 'issuer id of contract creator.',
+    'con_hash': "Contract hash on ethereum network.",
+    'name': 'Name of contract.',
+    'description': 'Description given to contract by issuer.',
+    'num_created': "Number of tokens assocaited with this contract.",
+    'pic_location': 'url to picture given to contract.',
+    'tradable': "If contract has trading enabled.",
+    'status': 'status of contract',
+    'issuer_username': 'username of issuer who made the contract.',
+    'constraints': Constraints.doc_load_info
+}
+
+
+GET_CONTRACT_DOC_EXPLORE = {
+    'con_id': 'con_id of contract.',
+    'i_id': 'issuer id of contract creator.',
+    'con_hash': "Contract hash on ethereum network.",
+    'name': 'Name of contract.',
+    'description': 'Description given to contract by issuer.',
+    'num_created': "Number of tokens assocaited with this contract.",
+    'pic_location': 'url to picture given to contract.',
+    'tradable': "If contract has trading enabled.",
+    'status': 'status of contract',
+    'issuer_username': 'username of issuer who made the contract.'
+}
 
 
 class GetContractResponse(Schema):
@@ -39,26 +70,35 @@ class GetContractResponse(Schema):
     pic_location = fields.Str(required=True)
     tradable = fields.Boolean(required=True)
     status = fields.Str(required=True)
+    qr_code_claimable = fields.Boolean(required=True)
+    metadata_location = fields.Str(required=True)
 
     issuer_username = fields.Str(dump_only=True)
 
     @post_dump
     def add_picture_path(self, data):
         data['pic_location'] = request.url_root + 'contract/image=' + data['pic_location']
+        data['metadata_location'] = request.url_root + 'contract/metadata=' + data['metadata_location']
 
-    doc_dump_info = {
-        'con_id': '1', 'i_id': '2', 'con_hash': "", 'name': '', 'description': '', 'num_created': 20,
-        'pic_location': 'url to pic', 'status': 'status of contract',
-        'constraints': Constraints.doc_load_info
-    }
+    doc_dump_info = GET_CONTRACT_DOC
+
+
+class QRCode(Schema):
+    qr_code_location = fields.Str(required=True)
+
+    @post_dump
+    def add_picture_path(self, data):
+        data['qr_code_location'] = request.url_root + 'contract/qr_code=' + data['qr_code_location']
 
 
 class InsertNewContract(DataQuery):
 
     def __init__(self):
         self.sql_text = """
-        INSERT INTO contracts(i_id, con_tx, con_abi, name, description, tradable, num_created, pic_location) 
-        VALUES(:i_id, :con_tx, :con_abi,  :name, :description, :tradable, :num_created, :pic_location);
+            INSERT INTO contracts(i_id, con_tx, con_abi, name, description, tradable, num_created, 
+              pic_location, qr_code_claimable, gas_price, metadata_location)
+            VALUES(:i_id, :con_tx, :con_abi,  :name, :description, :tradable, :num_created, 
+              :pic_location, :qr_code_claimable, :gas_price, :metadata_location);
         """
         self.schema_out = None
         super().__init__()
@@ -72,6 +112,16 @@ class InsertToken(DataQuery):
         """
 
         self.schema_out = None
+        super().__init__()
+
+
+class GetAllQRCodes(DataQuery):
+
+    def __init__(self):
+        self.sql_text = """
+        SELECT qr_code_location from tokens where con_id=:con_id;
+        """
+        self.schema_out = QRCode()
         super().__init__()
 
 
@@ -124,7 +174,7 @@ class GetAllContracts(DataQuery):
             self.sql_text = """
             SELECT contracts.con_id, issuers.i_id, issuers.username as issuer_username, contracts.con_tx as con_hash,
             contracts.name, contracts.description, contracts.num_created, contracts.pic_location, contracts.tradable,
-            contracts.status
+            contracts.status, contracts.qr_code_claimable, contracts.metadata_location
             FROM contracts, issuers
             WHERE contracts.i_id = issuers.i_id
             AND (contracts.name like '%{keyword}%'
@@ -134,7 +184,7 @@ class GetAllContracts(DataQuery):
             self.sql_text = """
             SELECT contracts.con_id, issuers.i_id, issuers.username as issuer_username, contracts.con_tx as con_hash,
             contracts.name, contracts.description, contracts.num_created, contracts.pic_location, contracts.tradable,
-            contracts.status
+            contracts.status, contracts.qr_code_claimable, contracts.metadata_location
             FROM contracts, issuers
             WHERE contracts.i_id = issuers.i_id;
             """
@@ -142,6 +192,11 @@ class GetAllContracts(DataQuery):
         self.schema_out = GetContractResponse()
 
         super().__init__()
+
+
+PROXIMITY_DOC_INFO = {**GET_CONTRACT_DOC,
+                      **{'distance': 'distance to contract.', 'radius': 'distance token is claimable from in meteres.'},
+                      **LOCATION_DOC_INFO}
 
 
 class GetProximityContracts(Schema):
@@ -154,6 +209,7 @@ class GetProximityContracts(Schema):
     pic_location = fields.Str(required=True)
     tradable = fields.Boolean(required=True)
     status = fields.Str(required=True)
+    metadata_location = fields.Str(required=True)
 
     # Issuer info.
     i_id = fields.Int(required=True)
@@ -169,12 +225,9 @@ class GetProximityContracts(Schema):
     @post_load
     def add_picture_path(self, data):
         data['pic_location'] = request.url_root + 'contract/image=' + data['pic_location']
+        data['metadata_location'] = request.url_root + 'contract/metadata=' + data['metadata_location']
 
-    doc_dump_info = {
-        'con_id': '1', 'i_id': '2', 'con_hash': "", 'name': '', 'description': '', 'num_created': 20,
-        'pic_location': 'url to pic', 'status': 'status of contract',
-        'constraints': Constraints.doc_load_info
-    }
+    doc_dump_info = PROXIMITY_DOC_INFO
 
 
 class GetAllContractsByProximity(DataQuery):
@@ -185,7 +238,7 @@ class GetAllContractsByProximity(DataQuery):
             + ((longitude - :longitude)*(longitude - :longitude))) * 1000)
             as distance, radius, latitude, longitude,
             contracts.con_id, contracts.name, contracts.description, contracts.num_created, contracts.pic_location, 
-            contracts.tradable, contracts.status, contracts.con_tx as con_hash,
+            contracts.tradable, contracts.status, contracts.con_tx as con_hash, contracts.metadata_location,
             issuers.username as issuer_username, issuers.i_id
             FROM location_claim, contracts, issuers
             WHERE location_claim.con_id = contracts.con_id
@@ -201,7 +254,7 @@ class GetAllContractsByProximity(DataQuery):
             + ((longitude - :longitude)*(longitude - :longitude))) * 1000)
             as distance, radius, latitude, longitude,
             contracts.con_id, contracts.name, contracts.description, contracts.num_created, contracts.pic_location, 
-            contracts.tradable, contracts.status, contracts.con_tx as con_hash,
+            contracts.tradable, contracts.status, contracts.con_tx as con_hash, contracts.metadata_location,
             issuers.username as issuer_username, issuers.i_id
             FROM location_claim, contracts, issuers
             WHERE location_claim.con_id = contracts.con_id
@@ -215,6 +268,12 @@ class GetAllContractsByProximity(DataQuery):
         super().__init__()
 
 
+TRADABLE_DOC_INFO = {**GET_CONTRACT_DOC,
+                     **{'collector_username': 'username of collector who owns the token.',
+                        'c_id': 'c_id of collector who owns token.',
+                        't_id': 't_id of the token.'}}
+
+
 class TradableTokenResponse(Schema):
     # Contract stuff.
     con_id = fields.Int(required=True)
@@ -225,6 +284,8 @@ class TradableTokenResponse(Schema):
     pic_location = fields.Str(required=True)
     tradable = fields.Boolean(required=True)
     status = fields.Str(required=True)
+    qr_code_claimable = fields.Boolean(required=True)
+    metadata_location = fields.Str(required=True)
 
     # Issuer stuff.
     issuer_username = fields.Str(required=True)
@@ -241,12 +302,9 @@ class TradableTokenResponse(Schema):
     @post_load
     def add_picture_path(self, data):
         data['pic_location'] = request.url_root + 'contract/image=' + data['pic_location']
+        data['metadata_location'] = request.url_root + 'contract/metadata=' + data['metadata_location']
 
-    doc_dump_info = {
-        'con_id': '1', 'i_id': '2', 'con_hash': "", 'name': '', 'description': '', 'num_created': 20,
-        'pic_location': 'url to pic', 'status': 'status of contract',
-        'constraints': Constraints.doc_load_info
-    }
+    doc_dump_info = TRADABLE_DOC_INFO
 
 
 class GetAllTradableContracts(DataQuery):
@@ -257,7 +315,7 @@ class GetAllTradableContracts(DataQuery):
             SELECT issuers.i_id, issuers.username as issuer_username,
             contracts.con_tx as con_hash, contracts.name, contracts.description, contracts.num_created,
             contracts.pic_location, contracts.tradable, contracts.status, issuers.username, contracts.con_id,
-            tokens.t_id,
+            tokens.t_id, contracts.qr_code_claimable, contracts.metadata_location,
             collectors.username as 'collector_username', collectors.c_id
             FROM contracts, issuers, tokens, collectors
             WHERE contracts.i_id = issuers.i_id
@@ -275,7 +333,7 @@ class GetAllTradableContracts(DataQuery):
             SELECT issuers.i_id, issuers.username as issuer_username,
             contracts.con_tx as con_hash, contracts.name, contracts.description, contracts.num_created,
             contracts.pic_location, contracts.tradable, contracts.status, issuers.username, contracts.con_id,
-            tokens.t_id,
+            tokens.t_id, contracts.qr_code_claimable, contracts.metadata_location,
             collectors.username as 'collector_username', collectors.c_id
             FROM contracts, issuers, tokens, collectors
             WHERE contracts.i_id = issuers.i_id
@@ -302,6 +360,19 @@ class GetAllContractsForEth(DataQuery):
         super().__init__()
 
 
+class UpdateQRCODE(DataQuery):
+
+    def __init__(self):
+        self.sql_text = """
+        UPDATE tokens
+        SET qr_code_location = :qr_code_location
+        WHERE con_id = :con_id
+        AND t_id = :t_id;
+        """
+        self.schema_out = None
+        super().__init__()
+
+
 def insert_bulk_tokens(num_to_create, contract_deets, sesh):
     """
     This method inserts the original token contract given the deets and creates the tokens related to it.
@@ -317,10 +388,13 @@ def insert_bulk_tokens(num_to_create, contract_deets, sesh):
     con_id = sesh.execute("select last_insert_rowid() as 'con_id'").fetchone()['con_id']
 
     # Insert all token records associated with it.
+    t_ids = []
     token_binds = {'con_id': con_id, 'tok_hash': 'temp_hash'}
     for tok_num in range(1, num_to_create+1):
         InsertToken().execute(token_binds, sesh=sesh)
-    return con_id
+        t_id = sesh.execute("select last_insert_rowid() as 't_id'").fetchone()['t_id']
+        t_ids.append(t_id)
+    return con_id, t_ids
 
 
 def process_constraints(constraints, con_id):

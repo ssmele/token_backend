@@ -54,7 +54,7 @@ class MockGethKeeper(object):
         return 0, 123
 
     def issue_contract(self, *args, **kwargs):
-        return hexlify(b'a2'), '{}'
+        return hexlify(b'a2'), '{}', randint(0, MAX_GAS_PRICE)
 
     def check_contract_mine(self, *args, **kwargs):
         return True, True, 123
@@ -104,7 +104,7 @@ class GethKeeper(object):
 
     def issue_contract(self, issuer_acct_num, issuer_name='', name='', symbol='TOKE', desc='',
                        img_url='', num_tokes=0, code_reqs=None, date_reqs=None, loc_reqs=None,
-                       tradable=False, gas_price=MAX_GAS_PRICE):
+                       tradable=False, metadata_uri='', gas_price=MAX_GAS_PRICE):
         """ Creates, compiles, and deploys a smart contract with the given attributes
 
         :param issuer_acct_num: The issuer's account hash
@@ -119,6 +119,8 @@ class GethKeeper(object):
                           - default: None
         :param loc_reqs: Array of locations the token can be claimed at as [lat_1, long_1, rad_1, ...]
                           - default: None
+        :param tradable: Boolean indicating if the token is transferrable or not - default: False
+        :param metadata_uri: URI of the contract's metadata file - default: Empty String
         :param gas_price: Willing gas price to pay - default: MAX_GAS_PRICE (2000000000)
         :return: Tuple - (transaction_hash, json_abi) as (string, string)
         """
@@ -145,7 +147,7 @@ class GethKeeper(object):
 
             # Call the constructor of the contract
             tx_hash = contract.constructor(issuer_acct_num, issuer_name, name, symbol, desc, img_url,
-                                           num_tokes, code_reqs, date_reqs, loc_reqs, tradable) \
+                                           num_tokes, code_reqs, date_reqs, loc_reqs, tradable, metadata_uri) \
                 .transact({'from': self._root_acct, 'gasPrice': gas_price})
 
             # Lock the issuer's account back up and return the transaction hash
@@ -154,7 +156,7 @@ class GethKeeper(object):
             # Create the json string of the ABI and return
             abi_dict = {'abi': contract_interface['abi']}
             json_abi = dumps(abi_dict)
-            return hexlify(tx_hash), json_abi
+            return hexlify(tx_hash), json_abi, gas_price
         except Exception as e:
             raise GethException(str(e), message=str(e))
 
@@ -173,7 +175,7 @@ class GethKeeper(object):
                 if tx_receipt['status'] == 0:
                     return True, False, None
                 else:
-                    return True, True, tx_receipt['contractAddress']
+                    return True, True, tx_receipt
             return False, False, None
         except Exception as e:
             raise GethException(str(e), message='Could not check transaction receipt')
@@ -249,6 +251,42 @@ class GethKeeper(object):
             return hexlify(tx_hash), gas_price
         except Exception as e:
             raise GethException(str(e), message='Could not send token')
+
+    def mint_token(self, contract_addr, json_abi, token_id, collector_address=None, metadata_uri='',
+                   gas_price=MAX_GAS_PRICE):
+        """ Mints a new token and optionally gives it to the given collector
+
+        :param contract_addr: The address of the contract
+        :param json_abi: The application binary interface of the contract
+        :param token_id: The ID of the token to create
+        :param collector_address: The address of the collector to receive the token - default: None
+        :param metadata_uri: The URI of the token metadata - default: Empty String
+        :param gas_price: The gas_price to use in the transaction
+        :return: The address of the transaction
+        """
+        try:
+            # Convert the addresses
+            contract_addr = self._w3.toChecksumAddress(contract_addr)
+            if collector_address:
+                collector_address = self._w3.toChecksumAddress(collector_address)
+
+            # Get the contract
+            contract_abi = loads(json_abi)['abi']
+            contract = self._w3.eth.contract(address=contract_addr, abi=contract_abi)
+
+            # Unlock the issuers account
+            self._w3.personal.unlockAccount(self._root_acct, self._root_priv_key, duration=ACCT_UNLOCK_DUR)
+
+            # Call the mint token functions, sending to a collector if one is given
+            if collector_address:
+                tx_hash = contract.functions.mint_and_send(collector_address, token_id, metadata_uri).transact(
+                    {'from': self._root_acct, 'gasPrice': gas_price})
+            else:
+                tx_hash = contract.functions.mint(token_id, metadata_uri).transact(
+                    {'from': self._root_acct, 'gasPrice': gas_price})
+            return hexlify(tx_hash), gas_price
+        except Exception as e:
+            raise GethException(str(e), message='Could not mint token')
 
     # TODO: add function to get contract instance and get a user's collection
     def get_user_from_token_id(self, contract_addr, json_abi, token_id):

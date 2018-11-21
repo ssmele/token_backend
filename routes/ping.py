@@ -10,7 +10,10 @@ url_prefix = '/ping'
 
 
 @ping.route(url_prefix, methods=['GET'])
-@ping_docs.document(url_prefix, 'GET', 'Method to test connectivity to server.')
+@ping_docs.document(url_prefix, 'GET',
+                    """
+                    Method to test connectivity to server.
+                    """)
 def pings():
     log_kv(LOG_INFO, {'message': 'ping called pong respond'})
     return success_response("pong")
@@ -18,8 +21,10 @@ def pings():
 
 @ping.route(url_prefix+'_issuer_a', methods=['GET'])
 @verify_issuer_jwt
-@ping_docs.document(url_prefix+'_issuer_a', 'GET', description='Ping that requires collector verification.',
-                    req_i_jwt=True)
+@ping_docs.document(url_prefix+'_issuer_a', 'GET',
+                    """
+                    Ping that requires collector verification.
+                    """, req_i_jwt=True)
 def issuer_a_ping():
     log_kv(LOG_INFO, {'message': 'authorized issuer ping called', 'issuer_id': g.issuer_info['i_id']})
     return success_response("pong for i_id:{}".format(g.issuer_info['i_id']))
@@ -27,8 +32,10 @@ def issuer_a_ping():
 
 @ping.route(url_prefix+'_collector_a', methods=['GET'])
 @verify_collector_jwt
-@ping_docs.document('collector_a_'+url_prefix, 'GET', description='Ping that requires collector verification.',
-                    req_c_jwt=True)
+@ping_docs.document('collector_a_'+url_prefix, 'GET',
+                    """
+                    Ping that requires collector verification.
+                    """, req_c_jwt=True)
 def collector_a_ping():
     log_kv(LOG_INFO, {'message': 'authorized collector ping called', 'collector_id': g.collector_info['c_id']})
     return success_response("pong for c_id:{}".format(g.collector_info['c_id']))

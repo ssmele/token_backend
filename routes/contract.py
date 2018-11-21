@@ -1,20 +1,22 @@
 from datetime import datetime
+from json import dumps
 
+import qrcode
 from flask import Blueprint, g, request
 from flask_restful import Api, Resource
+from marshmallow import ValidationError
 
 from ether.geth_keeper import GethException
-from marshmallow import ValidationError
-from models.contract import ContractRequest, GetContractByConID, \
-    GetContractByName, GetContractsByIssuerID, process_constraints, insert_bulk_tokens, GetContractResponse
 from models.constraints import get_all_constraints
+from models.contract import ContractRequest, GetContractByConID, GetContractByName, \
+    GetContractsByIssuerID, process_constraints, insert_bulk_tokens, GetContractResponse, UpdateQRCODE, GetAllQRCodes
 from models.issuer import GetIssuerInfo
 from routes import requires_geth
 from utils.db_utils import requires_db
 from utils.doc_utils import BlueprintDocumentation
-from utils.image_utils import save_file, serve_file, ImageFolders
+from utils.image_utils import save_file, serve_file, save_qrcode, Folders, save_json_data
 from utils.utils import success_response, error_response, log_kv, LOG_WARNING, LOG_INFO, LOG_ERROR, LOG_DEBUG
-from utils.verify_utils import verify_issuer_jwt
+from utils.verify_utils import verify_issuer_jwt, generate_jwt
 
 contract_bp = Blueprint('contract', __name__)
 contract_docs = BlueprintDocumentation(contract_bp, 'Contract')
@@ -28,14 +30,16 @@ class Contract(Resource):
     @verify_issuer_jwt
     @requires_db
     @requires_geth
-    @contract_docs.document(url_prefix+" ", 'POST',
-                            'Method to start a request to issue a new token on the eth network.'
-                            ' This will also create all new tokens associated with the method.'
-                            'This method requires a multipart form. The two possible form values are token_image which '
-                            'should be an image, and json_data. The json_data form should contain a json object '
-                            'matching the method request json fields below.',
-                            input_schema=ContractRequest,
-                            req_i_jwt=True)
+    @contract_docs.document(url_prefix + " ", 'POST',
+                            """
+                            Method to start a request to issue a new token on the eth network. This will also create all 
+                            new tokens associated with the method. This method requires a multipart form. The two 
+                            possible form values are token_image which should be an image, and json_data. The json_data 
+                            form should contain a json object matching the method request json fields below.
+                            """,
+                            error_codes={'89': 'Number of tokens requested to create exceeds limit.',
+                                         '45': "Couldn't retrieve issuer specified."},
+                            input_schema=ContractRequest, req_i_jwt=True)
     def post(self):
         """ Method to use for post requests to the /contract method.
 
@@ -52,20 +56,21 @@ class Contract(Resource):
             log_kv(LOG_WARNING, {'warning': 'issuer tried to create contract over limit',
                                  'issuer_id': g.issuer_info['i_id'], 'num_tokens': data['num_created']})
             return error_response("Could not create a token contract with that many individual token. Max is {}"
-                                  .format(MAX_TOKEN_LIMIT))
+                                  .format(MAX_TOKEN_LIMIT), status_code=89)
 
         # Update the original data given after validation for contract creation binds.
         data.update({'i_id': g.issuer_info['i_id']})
 
         # If we have an image save it.
-        file_location = None
+        file_location = 'default.png'
         if 'token_image' in request.files:
-            file_location = save_file(request.files['token_image'],  ImageFolders.CONTRACTS.value,
+            file_location = save_file(request.files['token_image'], Folders.CONTRACTS.value,
                                       g.issuer_info['i_id'])
-
-        if file_location is None:
-            file_location = 'default.png'
         data.update({'pic_location': file_location})
+
+        # If meta data is persistent save it.
+        if 'meta_json_data' in request.form:
+            data['metadata_location'] = save_json_data(request.form['meta_json_data'], g.issuer_info['i_id'])
 
         try:
             # Get the received constraints in array format for the smart contract
@@ -75,24 +80,43 @@ class Contract(Resource):
             issuer = GetIssuerInfo().execute_n_fetchone(binds={'i_id': g.issuer_info['i_id']})
             # Ensure we retrieved an issuer.
             if issuer is None:
-                error_response('Failed to retrieve issuer specified.')
+                error_response('Failed to retrieve issuer specified.', status_code=45)
 
-            data['con_tx'], data['con_abi'] = g.geth.issue_contract(issuer['i_hash'],
-                                                                    issuer_name=issuer['username'],
-                                                                    name=data['name'],
-                                                                    desc=data['description'],
-                                                                    img_url=data['pic_location'],
-                                                                    num_tokes=data['num_created'],
-                                                                    code_reqs=code_constraints,
-                                                                    date_reqs=date_constraints,
-                                                                    loc_reqs=loc_constraints,
-                                                                    tradable=data['tradable'])
+            data['con_tx'], data['con_abi'], data['gas_price'] = g.geth.issue_contract(issuer['i_hash'],
+                                                                                       issuer_name=issuer['username'],
+                                                                                       name=data['name'],
+                                                                                       desc=data['description'],
+                                                                                       img_url=data['pic_location'],
+                                                                                       num_tokes=data['num_created'],
+                                                                                       code_reqs=code_constraints,
+                                                                                       date_reqs=date_constraints,
+                                                                                       loc_reqs=loc_constraints,
+                                                                                       tradable=data['tradable'],
+                                                                                       metadata_uri=data[
+                                                                                           'metadata_location'])
 
             # Insert into the database
-            con_id = insert_bulk_tokens(data['num_created'], data, g.sesh)
+            con_id, t_ids = insert_bulk_tokens(data['num_created'], data, g.sesh)
 
-            # If constraints were passed in we need to process them.
-            if 'constraints' in data:
+            # It is either qr_codes or other contstraints it cannot be both.
+            if data['qr_code_claimable']:
+                # Get all tokens to associate qr code with.
+                for t_id in t_ids:
+                    # Generate the data to place in qr code.
+                    json_data_dict = dumps({'con_id': con_id, 't_id': t_id,
+                                            'jwt': generate_jwt({'con_id': con_id, 't_id': 't_id'})})
+
+                    # Make qr_code and save it.
+                    qrc = qrcode.make(json_data_dict)
+                    saved_location = save_qrcode(qrc, con_id, t_id)
+
+                    # If we successfully saved the image persist it into database.
+                    if saved_location is None:
+                        log_kv(LOG_ERROR, {'error': 'failed to make qrcode.'})
+                    else:
+                        UpdateQRCODE().execute({'qr_code_location': saved_location, 'con_id': con_id, 't_id': t_id})
+            elif 'constraints' in data:
+                # If constraints were passed in we need to process them.
                 process_constraints(data['constraints'], con_id)
 
             g.sesh.commit()
@@ -147,8 +171,9 @@ class Contract(Resource):
         return code_constraints, date_constraints, loc_constraints
 
     @contract_docs.document(url_prefix, 'GET',
-                            'Method to get all contracts deployed by the issuer verified in the jwt.',
-                            req_i_jwt=True)
+                            """
+                            Method to get all contracts deployed by the issuer verified in the jwt.
+                            """, req_i_jwt=True)
     @requires_db
     @verify_issuer_jwt
     def get(self):
@@ -171,20 +196,40 @@ class Contract(Resource):
             return error_response(status="Couldn't retrieve contract with that con_id", status_code=-1, http_code=200)
 
 
-contract_api = Api(contract_bp)
-contract_api.add_resource(Contract, url_prefix)
-
-
 @contract_bp.route(url_prefix + '/image=<string:image>')
 def server_image(image):
-    return serve_file(image, ImageFolders.CONTRACTS.value)
+    return serve_file(image, Folders.CONTRACTS.value)
+
+
+@contract_bp.route(url_prefix + '/qr_code=<string:qr_code>')
+def serve_qr_code(qr_code):
+    return serve_file(qr_code, Folders.QR_CODES.value)
+
+
+@contract_bp.route(url_prefix + '/metadata=<string:metadata>')
+def serve_metadata(metadata):
+    return serve_file(metadata, Folders.METADATA.value)
+
+
+@contract_bp.route(url_prefix + '/qr_code/con_id=<int:con_id>')
+@requires_db
+@verify_issuer_jwt
+@contract_docs.document(url_prefix + 'qr_code/con_id=<int:con_id>', 'GET',
+                        """
+                        Method to retrieve all the qr_codes associated with a given con_id.
+                        """, req_i_jwt=True)
+def qr_codes_by_con_id(con_id):
+    qr_codes = GetAllQRCodes().execute_n_fetchall({'con_id': con_id})
+    return success_response({'qr_codes': [q['qr_code_location'] for q in qr_codes]})
 
 
 @contract_bp.route(url_prefix + '/con_id=<int:con_id>', methods=['GET'])
 @verify_issuer_jwt
 @requires_db
 @contract_docs.document(url_prefix + '/con_id=<int:con_id>', 'GET',
-                        "Method to retrieve contract information by con_id. Constraint info included.",
+                        """
+                        Method to retrieve contract information by con_id. Constraint info included.
+                        """,
                         output_schema=GetContractResponse, req_i_jwt=True)
 def get_contract_by_con_id(con_id):
     contract = GetContractByConID().execute_n_fetchone({'con_id': con_id})
@@ -203,10 +248,11 @@ def get_contract_by_con_id(con_id):
 @verify_issuer_jwt
 @requires_db
 @contract_docs.document(url_prefix + '/name=<string:name>', 'GET',
-                        "Method to retrieve contract information by names like it.",
-                        req_i_jwt=True)
+                        """
+                        Method to retrieve contract information by names like it.
+                        """, req_i_jwt=True)
 def get_contract_by_name(name):
-    contracts_by_name = GetContractByName().execute_n_fetchall({'name': '%'+name+'%'}, close_connection=True)
+    contracts_by_name = GetContractByName().execute_n_fetchall({'name': '%' + name + '%'}, close_connection=True)
     if contracts_by_name is not None:
         log_kv(LOG_DEBUG, {'debug': 'found contract by name', 'contract_name': name})
         return success_response({'contracts': contracts_by_name})
@@ -215,19 +261,5 @@ def get_contract_by_name(name):
         return error_response(status="Couldn't retrieve contract with that con_id", status_code=-1, http_code=200)
 
 
-# Constraints endpoint
-constraint_bp = Blueprint('constraint', __name__)
-constraint_url_prefix = '/contract/constraints'
-
-
-class Constraint(Resource):
-
-    def put(self, data):
-        raise NotImplemented
-
-    def delete(self):
-        raise NotImplemented
-
-
-constraint_api = Api(constraint_bp)
-constraint_api.add_resource(Constraint, constraint_url_prefix)
+contract_api = Api(contract_bp)
+contract_api.add_resource(Contract, url_prefix)

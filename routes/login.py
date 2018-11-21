@@ -17,14 +17,15 @@ url_prefix = '/login'
 @load_with_schema(LoginCollectorRequest)
 @requires_db
 @login_docs.document(url_prefix + '/collector', 'POST',
-                     'This method verifies collector creds and generates a JWT if successful verification takes place.',
-                     input_schema=LoginCollectorRequest)
+                     """
+                     This method verifies collector creds and generates a JWT if successful verification takes place.
+                     """, input_schema=LoginCollectorRequest, error_codes={'420': 'Failed authorization.'})
 def get_collector_jwt(data):
     # Gather up login details.
     login_deets = GetCollectorLoginDetails().execute_n_fetchone(binds=data, close_connection=True)
     if login_deets is None:
         log_kv(LOG_WARNING, {'warning': 'could not find login details for user', 'username': data['username']})
-        return error_response("Authorization Failed for Collector Login.")
+        return error_response("Authorization Failed for Collector Login.", status_code=420)
 
     # If we got some deets back then check if passwords match.
     if data['password'] == login_deets['password']:
@@ -40,8 +41,9 @@ def get_collector_jwt(data):
 @load_with_schema(LoginIssuerRequest)
 @requires_db
 @login_docs.document(url_prefix + '/issuer', 'POST',
-                     'This method verifies issuer creds and generates a JWT if successful verification takes place.',
-                     input_schema=LoginIssuerRequest)
+                     """
+                     This method verifies issuer creds and generates a JWT if successful verification takes place.
+                     """, input_schema=LoginIssuerRequest, error_codes={'420': 'Failed authorization.'})
 def get_issuer_jwt(data):
     # Gather up login details.
     login_deets = GetIssuerLoginDetails().execute_n_fetchone(binds=data, close_connection=True)
