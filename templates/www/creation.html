@@ -270,11 +270,16 @@
 
                     </div>
                         
-                    <label class="form-control form-control-2" data-toggle="tooltip"
-                    data-placement="left" title="Collectors can trade this Token"><input id="tradable" type="checkbox" value=""> Tradable?</label>
-                    <label class="form-control form-control-2" data-toggle="tooltip"
-                    data-placement="left" title="Advanced Options will be disabled"><input id="qrcode" type="checkbox" value=""> QR CODE</label>
+                    <div class="btn-group container">
+                        <label class="form-control form-control-2" data-toggle="tooltip"  data-placement="left"
+                               title="Can this token be traded?">
+                            <input id="tradable" type="checkbox"> Tradable?
+                        </label>
 
+                        <label class="form-control form-control-2" data-toggle="tooltip"
+                        data-placement="right" title="Advanced Constraint Options will be disabled">
+                            <input id="qrcode" type="checkbox"> QR CODE</label>
+                    </div>
 
                     <button class="btn btn-secondary advanced" id="advanced" type="button" data-toggle="collapse" onclick="toggle()"
                         data-target="#collapseExample" aria-expanded="false" aria-controls="collapseExample">
