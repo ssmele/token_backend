@@ -110,6 +110,7 @@
                 var start_time = formatDate($("#starttime").val())
                 var end_time = formatDate($("#endtime").val())
                 var tradable = $('#tradable').is(":checked");
+                var qr_code_claimable = $('#qrcode').is(":checked");
                 var code = ""
                 code = $("#code").val()
 
@@ -117,6 +118,7 @@
                 console.log("end_time = " + end_time);
                 console.log("tradable = " + tradable);
                 console.log("code = " + code);
+                console.log("qr_code_claimable = " + qr_code_claimable);
                 console.log("latitude = " + latitude);
                 console.log("longitude = " + longitude);
                 console.log("radius = " + radius);
@@ -151,7 +153,8 @@
                     "description": description,
                     "num_created": num_created,
                     "constraints": constraints,
-                    "tradable": tradable
+                    "tradable": tradable,
+                    "qr_code_claimable": qr_code_claimable
                 }
                 var formData = new FormData();
 
