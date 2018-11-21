@@ -10,6 +10,7 @@ from ether.geth_keeper import GethException
 from models.constraints import get_all_constraints
 from models.contract import ContractRequest, GetContractByConID, GetContractByName, \
     GetContractsByIssuerID, process_constraints, insert_bulk_tokens, GetContractResponse, UpdateQRCODE, GetAllQRCodes
+from ether.contract_source import DEFAULT_JSON_METADATA
 from models.issuer import GetIssuerInfo
 from routes import requires_geth
 from utils.db_utils import requires_db
@@ -72,7 +73,11 @@ class Contract(Resource):
         if 'meta_json_data' in request.form:
             data['metadata_location'] = save_json_data(request.form['meta_json_data'], g.issuer_info['i_id'])
         else:
-            data['metadata_location'] = None
+            img_location = "project-token.com/contract/image=" + data['pic_location']
+            data['metadata_location'] = save_json_data(DEFAULT_JSON_METADATA.format(name=data['name'],
+                                                                                    description=data['description'],
+                                                                                    img_loc=img_location),
+                                                       g.issuer_info['i_id'])
 
         try:
             # Get the received constraints in array format for the smart contract
@@ -106,7 +111,7 @@ class Contract(Resource):
                 for t_id in t_ids:
                     # Generate the data to place in qr code.
                     json_data_dict = dumps({'con_id': con_id, 't_id': t_id,
-                                            'jwt': generate_jwt({'con_id': con_id, 't_id': 't_id'})})
+                                            'jwt': generate_jwt({'con_id': con_id, 't_id': t_id})})
 
                     # Make qr_code and save it.
                     qrc = qrcode.make(json_data_dict)
