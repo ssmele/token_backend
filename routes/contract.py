@@ -75,7 +75,7 @@ class Contract(Resource):
         else:
             img_location = "project-token.com/contract/image=" + data['pic_location']
             data['metadata_location'] = save_json_data(DEFAULT_JSON_METADATA.format(name=data['name'],
-                                                                                    description=data['description'],
+                                                                                            description=data['description'],
                                                                                     img_loc=img_location),
                                                        g.issuer_info['i_id'])
 
