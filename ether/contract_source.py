@@ -447,10 +447,9 @@ contract issuer_contract is ERC721, SupportsInterface {
 }
 """
 
-DEFAULT_JSON_METADATA = """
-{{
-   “name”: {name},
-   “description”: {description},
-   “image”: {img_loc} 
+DEFAULT_JSON_METADATA = """{{
+   “name”: "{name}",
+   “description”: "{description}",
+   “image”: "{img_loc}" 
 }}
 """

@@ -74,11 +74,6 @@ CREATE TABLE tokens (
   FOREIGN KEY (owner_c_id) REFERENCES collectors(c_id),
   FOREIGN KEY (con_id) REFERENCES contracts(con_id)
 );
-CREATE TABLE  wallets (
-  w_id INTEGER PRIMARY KEY AUTOINCREMENT,
-  hash CHAR(42) NOT NULL CHECK(length(hash) == 42),
-  priv_key TEXT NOT NULL
-);
 
 
 
