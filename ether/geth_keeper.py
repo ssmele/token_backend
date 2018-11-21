@@ -76,7 +76,6 @@ class MockGethKeeper(object):
 class GethKeeper(object):
 
     def __init__(self):
-        # TODO: remove middleware when moving to main ethereum network
         try:
             from web3.middleware import geth_poa_middleware
             self._w3 = Web3(IPCProvider(IPC_LOCATION))
@@ -86,7 +85,7 @@ class GethKeeper(object):
 
             # Set the root funding account
             self._root_acct = self._w3.toChecksumAddress('0xff95b24806e3d93afc628c4bb684fd245e9853e9')
-            self._root_priv_key = 'jhensley1234'  # TODO: Fix this
+            self._root_priv_key = 'jhensley1234'
         except Exception as e:
             raise GethException(str(e), 'Could not establish connection to node')
 
@@ -288,7 +287,6 @@ class GethKeeper(object):
         except Exception as e:
             raise GethException(str(e), message='Could not mint token')
 
-    # TODO: add function to get contract instance and get a user's collection
     def get_user_from_token_id(self, contract_addr, json_abi, token_id):
         """ Gets the address of the user who owns the given token_id for the given contract
 

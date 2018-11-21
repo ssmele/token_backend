@@ -65,7 +65,6 @@ class Collector(Resource):
             # Create the collector account and bind the hash and private key
             data['c_hash'], data['c_priv_key'] = g.geth.create_account()
 
-            # TODO: EXTEND THIS TO TAKE MORE VALUES FROM THE USER. ONLY HAVE TO CHANGE MARSHMALLOW OBEJCT. (HOPEFULLY)
             collector = create_collector(data)
             g.sesh.commit()
             log_kv(LOG_INFO, {'message': 'successfully created collector'})

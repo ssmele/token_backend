@@ -383,8 +383,6 @@ def insert_bulk_tokens(num_to_create, contract_deets, sesh):
     """
     # Insert the contract.
     InsertNewContract().execute(contract_deets, sesh=sesh)
-    # TODO: look into if this will always return the insert from above.
-
     con_id = sesh.execute("select last_insert_rowid() as 'con_id'").fetchone()['con_id']
 
     # Insert all token records associated with it.

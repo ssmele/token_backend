@@ -4,7 +4,7 @@ from flask import request, jsonify, g, current_app
 from marshmallow import ValidationError
 
 from ether.geth_keeper import GethKeeper, MockGethKeeper
-
+from utils.utils import error_response, log_kv, LOG_ERROR
 
 def requires_geth(f):
     """
@@ -47,7 +47,8 @@ def load_with_schema(schema_cls, dump=False, **schema_kwargs):
                     data = schema.load(json)
                 return f(data=data, *args, **kwargs)
             except ValidationError as err:
-                return make_error_response('Validation Failed', errors=err.messages)
+                log_kv(LOG_ERROR,{'exception': str(err), 'error': "failed to validate schema."}, exception=True)
+                return error_response("Validation Failed", errors=err.messages)
 
         return wrapper
     return outer

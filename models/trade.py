@@ -190,8 +190,6 @@ def validate_offer_and_trade(trade_items, tradee_id, trader_id, trader_eth_offer
     :param trader_id: The id of the trader
     :param trader_eth_offer: The amount of eth being offered
     """
-    # TODO: Get estimated gas cost so we can validate there is enough for the transfers!!!
-
     # Get the account information for both the tradee and trader
     tradee_info = GetTraderInfo().execute_n_fetchone({'c_id': tradee_id}, schema_out=False)
     trader_info = GetTraderInfo().execute_n_fetchone({'c_id': trader_id}, schema_out=False)

@@ -112,7 +112,6 @@ if __name__ == '__main__':
     #
     # print(gk.issue_contract('0xff95b24806e3d93afc628c4bb684fd245e9853e9', 'test', 'c_name', num_tokes=4))
 
-    # TODO: Below is the result of a token claim mine. From here we can extract gasUsed
     # AttributeDict({'blockHash': HexBytes('0xa818276648751254b064c065d1bd6eb258c546e4da8cc10e2ff6d185026b3b96'),
     #                'blockNumber': 3080493, 'contractAddress': None, 'cumulativeGasUsed': 3450099,
     #                'from': '0xff95b24806e3d93afc628c4bb684fd245e9853e9', 'gasUsed': 90776, 'logs': [],

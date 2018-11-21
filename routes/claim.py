@@ -37,8 +37,6 @@ def claim_by_qr_code(data):
         g.sesh.rollback()
         return error_response(msg, status_code=err_code)
 
-# TODO: SHOULD I ADD CONSTRAINTS SO ONLY QR_CODE CLAIMABLE TOKENS ARE AVIALBE IN EACH OF THERE RESPECTIVE METHODS?
-
 
 def claim_qr_code(con_id, t_id, c_id, lat, long):
     """ Method that is very similar to the claim_token_for_user method but only attempts to claim token by given t_id.

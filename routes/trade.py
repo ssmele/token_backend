@@ -10,14 +10,12 @@ from routes import load_with_schema, requires_geth
 from models.trade import TradeRequest, DeleteTradeRequest, TradeResponseRequest, GetTradeByTRID, UpdateTradeStatus, \
     TradeStatus, GetTradeItems, InvalidateTradeRequests, GetActiveTradeRequests, GetUntradables, \
     create_trade_request, check_trade_item_ownership, check_active_trade_item, is_valid_trade_items, \
-    validate_offer_and_trade, GetTokenInfo, TradeResponse
+    validate_offer_and_trade, GetTokenInfo, TradeResponse, GetTraderInfo
 from models.collector import GetCollectorByCID
 
 trade_bp = Blueprint('trade', __name__)
 trade_docs = BlueprintDocumentation(trade_bp, 'Trade')
 url_prefix = '/trade'
-
-# TODO: Fix error handling on form validation.
 
 
 class Trade(Resource):
@@ -32,7 +30,8 @@ class Trade(Resource):
                          error_codes={'42': "Untradable tokens in the trade offer.",
                                       '67': "Collector doesn't have ownership of tokens in the trade.",
                                       '90': "Collector making request with tokens already active in trade.",
-                                      '91': "Tradee doesn't own all tokens on their side."})
+                                      '91': "Tradee doesn't own all tokens on their side.",
+                                      '127': "Trader doesn't have enough ethereum."})
     def post(self, data):
         try:
             # Ensure the trader is the one making the request.
@@ -40,7 +39,6 @@ class Trade(Resource):
                 return error_response('Not allowed to issue this trade request.')
 
             # Ensure all the items put up for trade are tradable tokens.
-            # TODO: FIX THIS.
             con_ids = set([t_i['con_id'] for t_i in data['trader']['offers']] +
                           [t_i['con_id'] for t_i in data['tradee']['offers']])
             untradable_con_ids = GetUntradables(con_ids).execute_n_fetchall({}, schema_out=False)
@@ -75,7 +73,14 @@ class Trade(Resource):
                     return error_response("Collector making request for token the tradee doesn't have ownership of.",
                                           status_code=91)
 
-            # TODO: Need to add validation for the eth_offer here. - Once tokens are put up for trade
+            # Ensures the trader has the appropriate amount of eth.
+            if data['trader']['eth_offer']:
+                trader_info = GetTraderInfo().execute_n_fetchone({'c_id': g.collector_info['c_id']}, schema_out=False)
+                trader_acct = trader_info['address']
+                balance = g.geth.get_eth_balance(trader_acct)
+                if balance <= data['trader']['eth_offer']:
+                    log_kv(LOG_INFO, {'info': "Trader {} does not have enough eth.".format(g.collector_info['c_id'])})
+                    return error_response("Trader does not have enough for specified eth offer.", status_code=127)
 
             # If we are dealing with a valid trade request persist it within the database.
             new_tr_id = create_trade_request(data)
@@ -114,8 +119,6 @@ class Trade(Resource):
             log_kv(LOG_INFO, {'info': "Attempted deletion of trade request not owned by authorized collector",
                               'c_id': g.collector_info['c_id']})
             return error_response('Authorized collector does not have ownership over this trade.')
-
-        # TODO: transfer items back from intermittent account - Once tokens are put up for trade
 
         # If identity has be verified update the status.
         data.update({'new_status': TradeStatus.CANCELED.value})
@@ -215,9 +218,6 @@ class Trade(Resource):
                     return error_response(status='Unable to decline trade request.')
         # Logic for declining the request.
         else:
-
-            # TODO: transfer items back from intermittent account - once tokens are put up for trade
-
             # Perform logic to decline the trade.
             data.update({'new_status': TradeStatus.DECLINED.value})
             if UpdateTradeStatus().execute(data):
