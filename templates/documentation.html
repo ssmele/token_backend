@@ -1,37 +1,52 @@
 <!DOCTYPE html>
 
 <style>
-td, th {
-    border: 1px solid #dddddd;
-    text-align: left;
-    padding: 8px;
-}
+    td, th {
+        border: 1px solid #dddddd;
+        text-align: left;
+        padding: 8px;
+    }
 
-tr:nth-child(even) {
-    background-color: #dddddd;
-}
+    tr:nth-child(even) {
+        background-color: #dddddd;
+    }
 
     /* Style the button that is used to open and close the collapsible content */
-.collapsible {
-  background-color: #eee;
-  color: #444;
-  cursor: pointer;
-  padding: 18px;
-  width: 100%;
-  border: none;
-  text-align: left;
-  outline: none;
-  font-size: 15px;
-}
-.active, .collapsible:hover {
-  background-color: #ffdd00;
-}
-.content {
-  padding: 0 18px;
-  display: none;
-  overflow: hidden;
-  background-color: #f1f1f1;
-}
+    .collapsible {
+        background-color: #eee;
+        color: #444;
+        cursor: pointer;
+        padding: 18px;
+        width: 100%;
+        border: none;
+        text-align: left;
+        outline: none;
+        font-size: 15px;
+    }
+
+    .horz_line {
+        height:3px;
+        border:black;
+        color:red;
+        background-color: #ffb200;"
+    }
+
+    .yeet_button {
+        background-color: white;
+        color: black;
+        border: 2px solid #440041;"
+    }
+
+    .active, .collapsible:hover {
+        background-color: #ffdd00;
+    }
+
+    .content {
+        padding: 0 18px;
+        display: none;
+        overflow: hidden;
+        background-color: #f1f1f1;
+    }
 </style>
 
 <html lang="en">
@@ -40,33 +55,25 @@ tr:nth-child(even) {
     <title>TOKEN API Docs</title>
 
     <head>
-<title> text conversion</title>
+        <title> text conversion</title>
 
-<script language="JavaScript">z
-function collapse_stuff(element) {
-    var coll = document.getElementsByClassName("collapsible");
-    var i;
-
-    for (i = 0; i < coll.length; i++) {
-        coll[i].addEventListener("click", function () {
-            var content = this.nextElementSibling;
-            if (content.style.display === "block") {
-                content.style.display = "none";
-            } else {
-                content.style.display = "block";
+        <script language="JavaScript">
+            function toggle_visibility(element) {
+                var e = element.nextElementSibling;
+                if (e.style.display == 'block')
+                    e.style.display = 'none';
+                else
+                    e.style.display = 'block';
             }
-        });
-    }
-}
-</script>
-</head>
+        </script>
+    </head>
 
 </head>
 <body>
-<h1>TOKEN API Documentation.</h1>
-<h1>Provided by stone. Any questions, concerns, likes, or dislikes contact me at 801-541-9341</h1>
-<hr style="height:3px;border:black;color:red;background-color:#0055ff;"/>
-<h2>Response Info</h2>
+<h1>TOKEN API DOCUMENTATION:</h1>
+<h3>Provided by stone. Any questions, concerns, likes, or dislikes contact me at 801-541-9341</h3>
+<hr class="horz_line"/>
+<h1>RESPONSE INFO:</h1>
 <p>All successful responses are wrapped in a common json response. This common json response consists of a 'status',
     'status_code' and 'resp_data' keys.</p>
 <p>"status" is a string stating the successful action that just took place. By default this is "Success".</p>
@@ -75,90 +82,94 @@ function collapse_stuff(element) {
     This will be a json object and the contents are specified per method below in the docs. Below is an example of
     what a base response will look like.</p>
 <pre>{{ base_resp|tojson_pretty|safe }}</pre>
-<hr style="height:3px;border:black;color:red;background-color:#0055ff;"/>
-<h2>Authorization:</h2>
+<hr class="horz_line"/>
+<h1>AUTHORIZATION:</h1>
 <p>JWT's can be retrieved from creating issuer/collector accounts or from using the login methods for both issuer
     and collectors. Place your JWT inside the 'Authorization' header.</p>
-<hr style="height:3px;border:black;color:red;background-color:#0055ff;"/>
-<h1>Enumerations:</h1>
+<hr class="horz_line"/>
+
+<h1>ENUMERATIONS:</h1>
 {% for enum in enums %}
-<hr style="height:3px;border:black;color:yellow;background-color:#0055ff;"/>
-<h2>{{ enum.__name__ }}:</h2>
-    {% for e in enum %}
-        <p>{{ e.name }}: {{ e.value }}</p>
-    {% endfor %}
-<hr style="height:3px;border:black;color:yellow;background-color:#0055ff;"/>
-{% endfor %}
-{% for bp in bp_docs %}
-    <hr style="height:3px;border:black;color:red;background-color:red;"/>
-    <button class="collapsible" onclick="collapse_stuff(this)">{{ bp.bp_name }}</button>
+    <button class="collapsible yeet_button" onclick="toggle_visibility(this)">{{ enum.__name__ }}:</button>
     <div class="content">
-    <h1><u><em>{{ bp.bp_name }} Methods:</em></u></h1>
-    {% for key, value in bp.registered_endpoints.items() %}
-        <h2> {{ key[0] }} [{{ value.endpoint_type }}]
-            {% if value.req_i_jwt %} <span style="color: green"> [ISSUER JWT REQUIRED] </span>{% endif %}
-            {% if value.req_c_jwt %} <span style="color: #ffdd00"> [COLLECTOR JWT REQUIRED] </span>{% endif %}</h2>
-        <u><p> Description:</p></u> <p>{{ value.description }}</p>
-        {% if value.error_codes %}
-            <u><em><p>Error Codes:</p></em></u>
-            {% for k, v in value.error_codes.items() %}
-                <p>{{ k }}: {{ v }}</p>
-            {% endfor %}
-        {% endif %}
-        {% if value.input_schema %}
-            <u><em><p>Method Request Json Fields:</p></em></u>
-            <table style="width: 100%">
-                <tr>
-                    <th>Param Name</th>
-                    <th>Param Description</th>
-                </tr>
-                {% for k, v in value.input_schema.items() %}
-                    <tr>
-                        <th>{{ k }}</th>
-                        <th>
-                            <pre>{{ v|tojson_pretty|safe }}</pre>
-                        </th>
-                    </tr>
+        {% for e in enum %}
+            <p>{{ e.name }}: {{ e.value }}</p>
+        {% endfor %}
+    </div>
+{% endfor %}
+
+<h1>HTTP ENDPOINTS:</h1>
+{% for bp in bp_docs %}
+    <button class="collapsible yeet_button" onclick="toggle_visibility(this)">
+        {{ bp.bp_name }}</button>
+    <div class="content">
+        <h1><u><em>{{ bp.bp_name }} Methods:</em></u></h1>
+        {% for key, value in bp.registered_endpoints.items() %}
+            <h2> {{ key[0] }} [{{ value.endpoint_type }}]
+                {% if value.req_i_jwt %} <span style="color: green"> [ISSUER JWT REQUIRED] </span>{% endif %}
+                {% if value.req_c_jwt %} <span style="color: #ffdd00"> [COLLECTOR JWT REQUIRED] </span>{% endif %}</h2>
+            <u><p> Description:</p></u> <p>{{ value.description }}</p>
+            {% if value.error_codes %}
+                <u><em><p>Error Codes:</p></em></u>
+                {% for k, v in value.error_codes.items() %}
+                    <p>{{ k }}: {{ v }}</p>
                 {% endfor %}
-            </table>
-        {% endif %}
-        {% if value.url_params %}
-            <u><em><p>Method Url Data:</p></em></u>
-            <table style="width: 100%">
-                <tr>
-                    <th>Param Name</th>
-                    <th>Param Description</th>
-                </tr>
-                {% for k, v in value.url_params.items() %}
+            {% endif %}
+            {% if value.input_schema %}
+                <u><em><p>Method Request Json Fields:</p></em></u>
+                <table style="width: 100%">
                     <tr>
-                        <th>{{ k }}</th>
-                        <th>
-                            <pre>{{ v|tojson_pretty|safe }}</pre>
-                        </th>
+                        <th>Param Name</th>
+                        <th>Param Description</th>
                     </tr>
-                {% endfor %}
-            </table>
-        {% endif %}
-        {% if value.output_schema %}
-            <u><em><p>Method Response Json Fields:</p></em></u>
-            <table style="width: 100%">
-                <tr>
-                    <th>Param Name</th>
-                    <th>Param Description</th>
-                </tr>
-                {% for k, v in value.output_schema.items() %}
+                    {% for k, v in value.input_schema.items() %}
+                        <tr>
+                            <th>{{ k }}</th>
+                            <th>
+                                <pre>{{ v|tojson_pretty|safe }}</pre>
+                            </th>
+                        </tr>
+                    {% endfor %}
+                </table>
+            {% endif %}
+            {% if value.url_params %}
+                <u><em><p>Method Url Data:</p></em></u>
+                <table style="width: 100%">
                     <tr>
-                        <th>{{ k }}</th>
-                        <th>
-                            <pre>{{ v|tojson_pretty|safe }}</pre>
-                        </th>
+                        <th>Param Name</th>
+                        <th>Param Description</th>
                     </tr>
-                {% endfor %}
-            </table>
-        {% endif %}
-    {% else %}
-        <p>No methods for this endpoint</p>
-    {% endfor %}
+                    {% for k, v in value.url_params.items() %}
+                        <tr>
+                            <th>{{ k }}</th>
+                            <th>
+                                <pre>{{ v|tojson_pretty|safe }}</pre>
+                            </th>
+                        </tr>
+                    {% endfor %}
+                </table>
+            {% endif %}
+            {% if value.output_schema %}
+                <u><em><p>Method Response Json Fields:</p></em></u>
+                <table style="width: 100%">
+                    <tr>
+                        <th>Param Name</th>
+                        <th>Param Description</th>
+                    </tr>
+                    {% for k, v in value.output_schema.items() %}
+                        <tr>
+                            <th>{{ k }}</th>
+                            <th>
+                                <pre>{{ v|tojson_pretty|safe }}</pre>
+                            </th>
+                        </tr>
+                    {% endfor %}
+                </table>
+            {% endif %}
+            <hr class="horz_line"/>
+        {% else %}
+            <p>No methods for this endpoint</p>
+        {% endfor %}
     </div>
 {% endfor %}
 <br>

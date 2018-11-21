@@ -34,6 +34,7 @@ from routes.explore import explore_bp, explore_docs
 from routes.analytics import analytics_bp
 from routes.frontend import frontend_bp
 from routes.trade import trade_bp, trade_docs, TradeStatus
+from models.contract import TokenStatus, ContractStatus
 
 # Registering blueprints.
 app.register_blueprint(collector_bp)
@@ -77,7 +78,7 @@ def docs():
                           trade_docs]
     return render_template('documentation.html', bp_docs=blueprint_doc_list,
                            base_resp=success_response_dict({}),
-                           enums=[TradeStatus])
+                           enums=[TradeStatus, ContractStatus, TokenStatus])
 
 
 if __name__ == '__main__':
