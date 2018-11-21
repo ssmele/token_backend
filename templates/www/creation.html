@@ -4,17 +4,16 @@
 <head>
     <title>T o k e n</title>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" ">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
     <link rel="
         stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.1/ace.js"></script>
     <link href="{{ url_for('static',filename='css/home.css') }}" rel="stylesheet">
     <link href="{{ url_for('static',filename='css/loader.css') }}" rel="stylesheet">
-    <link href="css/home.css" rel="stylesheet">
-    <link href="css/loader.css" rel="stylesheet">
 
 
 
@@ -159,6 +158,19 @@
                 }
                 var formData = new FormData();
 
+
+                if (document.getElementById("meta_check").checked) {
+                    var meta_json_data = validate_and_get_json();
+                    if (meta_json_data == null){
+                        $('#loader').hide();
+                        $('#screen').hide();
+                        alert("JSON must be formatted correctly to send as meta data!");
+                        return false;
+                    }else{
+                        formData.append("meta_json_data", meta_json_data);
+                    }
+                }
+
                 formData.append("json_data", JSON.stringify(json_data));
                 formData.append("token_image", $('input[type=file]')[0].files[0]);
 
@@ -203,9 +215,6 @@
                     hidden = true;
                 }
             }
-            
-            
-
         </script>
         <form class="form" id="target" enctype="multipart/form-data" action="javascript:publish();">
             <div class="container">
@@ -272,7 +281,7 @@
 
                     <button class="btn btn-secondary advanced" id="advanced" type="button" data-toggle="collapse" onclick="toggle()"
                         data-target="#collapseExample" aria-expanded="false" aria-controls="collapseExample">
-                        + Advanced Option
+                        + Advanced Constraint Options
                     </button>
 
                     <div class="collapse" id="collapseExample">
@@ -347,6 +356,26 @@
                             onchange="updateSlider(this.value)">
                         <div id="sliderAmount">Radius</div>
                     </div>
+
+
+                    <div class="container">
+                        <div class="panel panel-default">
+                            <div class="panel-heading">
+                                <h3 class="panel-title">Token Meta Data:</h3>
+                                <div class="form-check">
+                                <input type="checkbox" class="form-check-input" id="meta_check" onclick="hide_open_editor()">
+                                <label class="form-check-label" for="exampleCheck1">Enable Token Meta Data</label>
+                            </div>
+                            </div>
+
+                            <div class="panel-body" id="editor_div">
+                                <div id="editor"></div>
+                            </div>
+                        </div>
+                    </div>
+
+
+
                     <div class="row" style="margin: 10px;">
                     <button type="submit" class="btn btn-primary">Publish</button>
                 </div>
@@ -387,6 +416,41 @@
                     $('#advanced').prop('disabled', false);
                 }
             })
+
+
+    var editor = ace.edit("editor");
+    editor.setTheme("ace/theme/solarized_light");
+    editor.session.setMode("ace/mode/json");
+
+    function validate_and_get_json() {
+        /**
+         * This method trys to parse the json data given. If it cannot it will return null.
+         */
+        try {
+            return JSON.stringify(JSON.parse(editor.getValue()));
+        } catch (err) {
+            return null;
+        }
+
+    }
+
+    function toggle_visibility(id) {
+       var e = document.getElementById(id);
+       if(e.style.display == 'block')
+          e.style.display = 'none';
+       else
+          e.style.display = 'block';
+    }
+
+    function hide_open_editor(){
+        toggle_visibility('editor_div')
+    }
+
+    // Start with the editor hidden.
+    var e = document.getElementById('editor_div');
+    e.style.display = 'none';
+
+
 </script>
 
 </html>

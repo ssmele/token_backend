@@ -245,3 +245,10 @@ div.contain.shrink{
 .solo{
 	margin: 0;
 }
+
+
+#editor {
+  /** Setting height is also important, otherwise editor wont showup**/
+  height: 300px;
+  width: 100%;
+}

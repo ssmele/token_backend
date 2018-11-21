@@ -54,6 +54,27 @@ def save_qrcode(file, tag0, tag1):
         return None
 
 
+def save_json_data(json_data, tag0):
+    """
+    This method saves json_data given and returns saved location.
+    :param json_string: json data to save for contract.
+    :param tag0: should be con_id of the contract.
+    :return: filename of newly saved qrcode.
+    """
+    try:
+        file_type = 'json'
+        new_file_name = "{}_{}.{}".format(tag0, uuid1(), file_type)
+
+        # Generate the full path of where to save the file.
+        file_save_path = os.path.join(*[current_app.root_path, 'PICTURES', Folders.METADATA.value, new_file_name])
+        with open(file_save_path, 'w') as outfile:
+            outfile.write(json_data)
+
+        return new_file_name
+    except Exception as e:
+        log_kv(LOG_ERROR, {"info": "Error saving json meta data", "error": str(e)}, exception=True)
+        return None
+
 def serve_file(name, folder_type):
     # Specify location to look into.
     folder = os.path.join(*[current_app.root_path, 'PICTURES', folder_type])

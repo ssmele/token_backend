@@ -43,10 +43,9 @@ class Trade(Resource):
             # TODO: FIX THIS.
             con_ids = set([t_i['con_id'] for t_i in data['trader']['offers']] +
                           [t_i['con_id'] for t_i in data['tradee']['offers']])
-            untradable_con_ids = GetUntradables().execute_n_fetchall({'con_ids': ','.join(map(str, set(con_ids)))},
-                                                                     schema_out=False)
+            untradable_con_ids = GetUntradables(con_ids).execute_n_fetchall({}, schema_out=False)
             if len(untradable_con_ids) != 0:
-                return error_response('Attempting to issue trade request with untrabable tokens.',
+                return error_response('Attempting to issue trade request with untradable tokens.',
                                       untradable_cons=untradable_con_ids, status_code=42)
 
             # Ensure trader owns all tokens put up by trader.

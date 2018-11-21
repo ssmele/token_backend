@@ -167,7 +167,6 @@ def is_valid_trade_items(trade_items):
     :param trade_items: list of trade_item db records.
     :return: Boolean representing validity of trade.
     """
-    # TODO: ADD ETHEREUM VERIFICATION HERE.
     # Go through each token and ensure it is owned by the correct collector.
     for trade_item in trade_items:
 
@@ -459,12 +458,12 @@ class UpdateOwnership(DataQuery):
 
 class GetUntradables(DataQuery):
 
-    def __init__(self):
+    def __init__(self, con_ids):
         self.sql_text = """
         select con_id from contracts 
-        where con_id in (:con_ids)
+        where con_id in (%s)
         and tradable = 0;
-        """
+        """ % ",".join(str(x) for x in con_ids)
         self.schema_out = None
         super().__init__()
 
