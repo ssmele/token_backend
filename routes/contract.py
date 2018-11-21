@@ -220,8 +220,8 @@ def serve_metadata(metadata):
 
 @contract_bp.route(url_prefix + '/qr_code/con_id=<int:con_id>')
 @requires_db
-@verify_issuer_jwt
-@contract_docs.document(url_prefix + 'qr_code/con_id=<int:con_id>', 'GET',
+#@verify_issuer_jwt
+@contract_docs.document(url_prefix + '/qr_code/con_id=<int:con_id>', 'GET',
                         """
                         Method to retrieve all the qr_codes associated with a given con_id.
                         """, req_i_jwt=True)
