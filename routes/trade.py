@@ -233,7 +233,7 @@ class Trade(Resource):
 @trade_bp.route('/trader', methods=['GET'], defaults={'version': 'trader'})
 @requires_db
 @verify_collector_jwt
-@trade_docs.document(url_prefix + '     ', 'GET',
+@trade_docs.document(url_prefix, 'GET',
                      """
                      Method to get all active trade requests.
                      """, req_c_jwt=True, output_schema=TradeResponse)

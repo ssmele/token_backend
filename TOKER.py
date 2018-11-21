@@ -34,6 +34,7 @@ from routes.explore import explore_bp, explore_docs
 from routes.analytics import analytics_bp
 from routes.frontend import frontend_bp
 from routes.trade import trade_bp, trade_docs, TradeStatus
+from routes.transfer import transfer_bp, transfer_docs
 from models.contract import TokenStatus, ContractStatus
 
 # Registering blueprints.
@@ -47,6 +48,7 @@ app.register_blueprint(explore_bp)
 app.register_blueprint(analytics_bp)
 app.register_blueprint(frontend_bp)
 app.register_blueprint(trade_bp)
+app.register_blueprint(transfer_bp)
 
 
 @app.before_request
@@ -75,7 +77,7 @@ def docs():
     """
     app.jinja_env.filters['tojson_pretty'] = to_pretty_json
     blueprint_doc_list = [collector_docs, issuer_docs, contract_docs, login_docs, ping_docs, claim_docs, explore_docs,
-                          trade_docs]
+                          trade_docs, transfer_docs]
     return render_template('documentation.html', bp_docs=blueprint_doc_list,
                            base_resp=success_response_dict({}),
                            enums=[TradeStatus, ContractStatus, TokenStatus])

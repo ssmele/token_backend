@@ -18,6 +18,7 @@ class TokenStatus(Enum):
     CLAIMED = 'P'
     CLAIM_MINED = 'S'
     FAILED = 'F'
+    EXTERNAL = 'X'
 
 
 class ContractStatus(Enum):
@@ -156,6 +157,23 @@ class GetContractByConID(DataQuery):
 
         self.schema_out = GetContractResponse()
 
+        super().__init__()
+
+
+class UpdateTokenStatus(DataQuery):
+    """ Updates the status and gas_cost of a token
+
+    **binds**:
+        * new_status: The new status of the token
+        * this_id: The ID of the token
+    """
+
+    def __init__(self):
+        self.sql_text = """
+        UPDATE tokens 
+        SET status = :new_status 
+        WHERE t_id = :this_id
+        """
         super().__init__()
 
 
