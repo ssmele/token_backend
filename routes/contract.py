@@ -71,6 +71,8 @@ class Contract(Resource):
         # If meta data is persistent save it.
         if 'meta_json_data' in request.form:
             data['metadata_location'] = save_json_data(request.form['meta_json_data'], g.issuer_info['i_id'])
+        else:
+            data['metadata_location'] = None
 
         try:
             # Get the received constraints in array format for the smart contract
