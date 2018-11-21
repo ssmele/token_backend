@@ -87,7 +87,7 @@ class Contract(Resource):
             issuer = GetIssuerInfo().execute_n_fetchone(binds={'i_id': g.issuer_info['i_id']})
             # Ensure we retrieved an issuer.
             if issuer is None:
-                error_response('Failed to retrieve issuer specified.', status_code=45)
+                return error_response('Failed to retrieve issuer specified.', status_code=45)
 
             data['con_tx'], data['con_abi'], data['gas_price'] = g.geth.issue_contract(issuer['i_hash'],
                                                                                        issuer_name=issuer['username'],
