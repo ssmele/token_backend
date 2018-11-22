@@ -98,13 +98,46 @@ def token_time_windows(con_id):
 
 
 def price_and_timestamps(con_id):
-    d_timestamps = g.sesh.execute("""select claim_ts, gas_price from tokens where tokens.con_id=:contract_id and status = 'S';
-       """, {'contract_id': con_id}).fetchall()
+    prices_by_actions = {}
 
-    timestamps = []
-    for i in range(len(d_timestamps)):
-        timestamps.append([d_timestamps[i].claim_ts, d_timestamps[i].gas_price])
-    return timestamps
+    # Gas cost/price data for trades
+    d_trades = g.sesh.execute("""select trade.tr_id, gas_price, gas_cost, creation_ts from trade_item, trade where 
+    trade_item.con_id=:contract_id AND trade_item.tr_id=trade.tr_id; """, {'contract_id': con_id}).fetchall()
+    trade_transaction_cost = []
+    trade_gas_price = []
+    trade_gas_cost = []
+    trade_timestamps = []
+    for i in range(len(d_trades)):
+        trade_transaction_cost.append(d_trades[i].gas_price * d_trades[i].gas_cost)
+        trade_gas_cost.append(d_trades[i].gas_cost)
+        trade_gas_price.append(d_trades[i].gas_price)
+        trade_timestamps.append(d_trades[i].creation_ts)
+
+    prices_by_actions["trade_timestamps"] = trade_timestamps
+    prices_by_actions["trade_transaction_cost"] = trade_transaction_cost
+    prices_by_actions["trade_gas_cost"] = trade_gas_cost
+    prices_by_actions["trade_gas_price"] = trade_gas_price
+
+    # Gas cost/price data for claims
+    d_claims = g.sesh.execute("""select claim_ts, gas_price, gas_cost from tokens where
+     con_id=:contract_id and status = 'S'; """, {'contract_id': con_id}).fetchall()
+    claim_transaction_cost = []
+    claim_gas_price = []
+    claim_gas_cost = []
+    claim_timestamps = []
+
+    for i in range(len(d_claims)):
+        claim_transaction_cost.append(d_claims[i].gas_price * d_claims[i].gas_cost)
+        claim_gas_cost.append(d_claims[i].gas_cost)
+        claim_gas_price.append(d_claims[i].gas_price)
+        claim_timestamps.append(d_claims[i].claim_ts)
+
+    prices_by_actions["claim_timestamps"] = claim_timestamps
+    prices_by_actions["claim_transaction_cost"] = claim_transaction_cost
+    prices_by_actions["claim_gas_cost"] = claim_gas_cost
+    prices_by_actions["claim_gas_price"] = claim_gas_price
+
+    return prices_by_actions
 
 
 def num_traded(con_id):

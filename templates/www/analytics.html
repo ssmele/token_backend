@@ -33,6 +33,7 @@
 
 	//Gas price
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.2.1/Chart.bundle.min.js"></script>
+	<script src=https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.13.0/moment.min.js></script>
 
 
 </head>
@@ -86,7 +87,7 @@
 					drawMap(data.resp_data.loc_constraints, data.resp_data.coordinates);
 					$('#ex1').on('shown.bs.modal', function () {
 						drawChart(data.resp_data.num_claimed, data.resp_data.num_unclaimed);
-						drawGasPrices(data.resp_data.time_windows, data.resp_data.price_and_time);
+						drawGasPrices(data.resp_data.price_and_time);
 						drawCalendar(data.resp_data.time_windows, data.resp_data.price_and_time);
 						numTraded(data.resp_data.traded);
 					});
@@ -182,8 +183,13 @@
 						<div class="carousel-item modal-body">
 							<div class="row justify-content-md-center" style="padding: 50px;">
 
-								<h4>Gas price for token claim</h4>
-								<canvas id="canvas" width="40%" height="70%"></canvas>
+
+                                    <canvas id="lineChart" width="500" height="500"></canvas>
+                                    <button id="gasprice" type="button" >Gas Price</button>
+                                    <button id="gascost" type="button" >Gas Cost</button>
+                                    <button id="transactioncost" type="button" >Total Cost</button>
+
+
 							</div>
 						</div>
 						<div class="carousel-item modal-body text-center" style="min-height: 500px;">
@@ -410,59 +416,130 @@
 	</script>
 
 	<script>
-		var chart = new Chart(document.getElementById("canvas"));
-		function drawGasPrices(timeWindows, timeAndPrice) {
-			claimBegin = timeWindows[0][0]; //Assuming only 1 time window for claiming
-			claimEnd = timeWindows[0][1];
+	var claim_cost_data = [];
+    var claim_price_data = [];
+    var claim_total_cost_data = [];
 
-			if (claimEnd == -1)
-				claimEnd = new Date();
+    var trade_cost_data = [];
+    var trade_price_data = [];
+    var trade_total_cost_data = [];
 
-			var formattedData = [];
-			var datum = {};
-			//Get the data in the correct form:
-			// { x : 'date' ,
-			//  y : 'price' , ...}
-			for (var d in timeAndPrice) {
-				datum = {};
-				datum["x"] = new Date(timeAndPrice[d][0]);
-				datum["y"] = timeAndPrice[d][1];
-				formattedData.push(datum);
-			}
+	var chartColors = {
+          red: 'rgb(255, 99, 132)',
+          orange: 'rgb(255, 159, 64)',
+          yellow: 'rgb(255, 205, 86)',
+          green: 'rgb(75, 192, 192)',
+          blue: 'rgb(54, 162, 235)',
+          purple: 'rgb(153, 102, 255)',
+          grey: 'rgb(231,233,237)'
+    };
 
-			chart.destroy();
-			chart = new Chart(document.getElementById("canvas"), {
-				type: 'line',
-				data: {
-					datasets: [{
-						label: 'gas price',
-						data: formattedData,
-						fill: false,
-						borderColor: 'red'
-					}]
-				},
-				options: {
-					tooltips: {
-						callbacks: {
-							title(datasets) {
-								var time = new Date(datasets[0].xLabel);
-								return (time.toISOString());
-							}
-						}
-					},
-					legend: { display: false },
-					scales: {
-						bounds: 'ticks',
-						xAxes: [{
-							type: 'time',
-							time: { minUnit: 'hour' },
-							position: 'bottom'
-						}]
-					},
-				}
-			});
-		}
+    var chart = new Chart(document.getElementById("lineChart"));
 
+	function drawGasPrices(priceAndTime) {
+
+        claim_cost_data = formatData(priceAndTime["claim_timestamps"], priceAndTime["claim_gas_cost"]);
+        claim_price_data = formatData(priceAndTime["claim_timestamps"], priceAndTime["claim_gas_price"]);
+        claim_total_cost_data = formatData(priceAndTime["claim_timestamps"], priceAndTime["claim_transaction_cost"]);
+
+        trade_cost_data = formatData(priceAndTime["trade_timestamps"], priceAndTime["trade_gas_cost"]);
+        trade_price_data = formatData(priceAndTime["trade_timestamps"], priceAndTime["trade_gas_price"]);
+        trade_total_cost_data = formatData(priceAndTime["trade_timestamps"], priceAndTime["trade_transaction_cost"]);
+
+
+
+        var config = {
+            type: 'scatter',
+            data: {
+                datasets: [{
+                    label: 'Claim',
+                    data: claim_price_data,
+                    showLine: true,
+                    fill: false,
+                    backgroundColor: chartColors.red,
+                    borderColor: chartColors.red,
+                },
+                {
+                    label: 'Trade',
+                    data: trade_price_data,
+                    showLine: true,
+                    fill: false,
+                    backgroundColor: chartColors.blue,
+                    borderColor: chartColors.blue,
+                }
+                ]
+            },
+            options: {
+                title: {
+                    display: true,
+                    text: 'Transaction Cost'
+                },
+                legend: { display: true},
+                scales: {
+                    bounds: 'ticks',
+                    xAxes: [{
+                        display: true,
+
+                        scaleLabel: {
+                            display: true,
+                            labelString: 'Time of Transaction'
+                        }
+                    }],
+                    yAxes: [{
+                        scaleLabel: {
+                            display: true,
+                            labelString: "Gas Price"
+                        }
+                    }]
+                }
+            }
+        }
+
+        var ctx = document.getElementById("lineChart").getContext('2d');
+	    chart = new Chart(ctx, config);
+		console.log("new chart");
+
+
+	$("#gasprice").click(function() {
+		var data = chart.config.data;
+		chart.options.scales.yAxes[0].scaleLabel.labelString = "Gas Price";
+		data.datasets[0].data = claim_price_data;
+		data.datasets[1].data = trade_price_data;
+		chart.update();
+	});
+
+	$("#gascost").click(function() {
+		var data = chart.config.data;
+		chart.options.scales.yAxes[0].scaleLabel.labelString = "Gas Cost";
+		data.datasets[0].data = claim_cost_data;
+		data.datasets[1].data = trade_cost_data;
+		chart.update();
+	});
+
+	$("#transactioncost").click(function() {
+		var data = chart.config.data;
+		chart.options.scales.yAxes[0].scaleLabel.labelString = "Total cost";
+		data.datasets[0].data = claim_total_cost_data;
+		data.datasets[1].data = trade_total_cost_data;
+		chart.update();
+	});
+
+	};
+	function formatData(xvals, yvals) {
+		var formattedData = [];
+		var datum = {};
+		//Get the data in the correct form:
+		// { x : 'date' ,
+		//  y : 'price' , ...}
+		for (var i in xvals) {
+			datum = {};
+			datum["x"] = new Date(xvals[i]);
+			datum["y"] = yvals[i];
+			formattedData.push(datum);
+	  }
+
+	  return formattedData;
+	}
 	</script>
 
 	<script>
