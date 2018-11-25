@@ -136,7 +136,7 @@ def price_and_timestamps(con_id):
     prices_by_actions["claim_transaction_cost"] = claim_transaction_cost
     prices_by_actions["claim_gas_cost"] = claim_gas_cost
     prices_by_actions["claim_gas_price"] = claim_gas_price
-
+    print(prices_by_actions)
     return prices_by_actions
 
 
