@@ -40,8 +40,8 @@
 
     .col-lg-3, .col-lg-5, .col-lg-6, .col-lg-4, .col-lg-2 {
 		position: relative;
-		margin: 10px 10px;
-		padding: 3px 3px 3px;
+		margin: 7px 7px;
+		padding: 10px 10px 10px;
 		background-color: #fff;
 		border: 1px solid #ebebeb;
 		-webkit-border-radius: 4px;
@@ -107,7 +107,7 @@
 					drawMap(data.resp_data.loc_constraints, data.resp_data.coordinates);
 					$('#ex1').on('shown.bs.modal', function () {
 						drawChart(data.resp_data.num_claimed, data.resp_data.num_unclaimed);
-						drawGasPrices(data.resp_data.price_and_time);
+						drawGasPrices(data.resp_data.price_and_time, data.resp_data.traded);
 						drawCalendar(data.resp_data.time_windows, data.resp_data.price_and_time["claim_timestamps"]);
 						numTraded(data.resp_data.traded);
 					});
@@ -468,6 +468,8 @@
     var trade_price_data = [];
     var trade_total_cost_data = [];
 
+	var tradable = 0;
+
 	var chartColors = {
           red: 'rgb(255, 99, 132)',
           orange: 'rgb(255, 159, 64)',
@@ -480,8 +482,8 @@
 
     var chart = new Chart(document.getElementById("lineChart"));
 	var first = true;
-	function drawGasPrices(priceAndTime) {
-
+	function drawGasPrices(priceAndTime, traded) {
+		tradable = traded;
 		claim_cost_data = formatData(priceAndTime["claim_timestamps"], priceAndTime["claim_gas_cost"]);
 		claim_price_data = formatData(priceAndTime["claim_timestamps"], priceAndTime["claim_gas_price"]);
 		claim_total_cost_data = formatData(priceAndTime["claim_timestamps"], priceAndTime["claim_transaction_cost"]);
@@ -490,7 +492,6 @@
 		trade_price_data = formatData(priceAndTime["trade_timestamps"], priceAndTime["trade_gas_price"]);
 		trade_total_cost_data = formatData(priceAndTime["trade_timestamps"], priceAndTime["trade_transaction_cost"]);
 		if (first == true) {
-			console.log("first");
 			chart.destroy();
 			var config = {
 				type: 'scatter',
@@ -502,14 +503,6 @@
 						fill: false,
 						backgroundColor: chartColors.red,
 						borderColor: chartColors.red,
-					},
-					{
-						label: 'Trade',
-						data: trade_price_data,
-						showLine: true,
-						fill: false,
-						backgroundColor: chartColors.blue,
-						borderColor: chartColors.blue,
 					}
 					]
 				},
@@ -562,15 +555,42 @@
 			var data = chart.config.data;
 			chart.options.scales.yAxes[0].scaleLabel.labelString = "Gas Price";
 			data.datasets[0].data = claim_price_data;
-			data.datasets[1].data = trade_price_data;
+
+			if (data.datasets.length > 1) {
+				console.log("length:");
+				console.log(data.datasets.length);
+				data.datasets.pop();
+				console.log("removing dataset..");
+			}
+			console.log("new length:");
+			console.log(data.datasets.length);
 			chart.update();
 		}
+
+		if (tradable != -1) //Token is tradable
+		{
+			var trade_dataset = {
+				label: "Trade",
+				data: trade_price_data,
+				showLine: true,
+				fill: false,
+				backgroundColor: chartColors.blue,
+				borderColor: chartColors.blue
+			}
+
+			chart.data.datasets.push(trade_dataset);
+			chart.update();
+		}
+	}
 
 	$("#gasprice").click(function() {
 		var data = chart.config.data;
 		chart.options.scales.yAxes[0].scaleLabel.labelString = "Gas Price";
 		data.datasets[0].data = claim_price_data;
-		data.datasets[1].data = trade_price_data;
+
+		if (tradable != -1) {
+			data.datasets[1].data = trade_price_data;
+		}
 		chart.update();
 	});
 
@@ -578,7 +598,10 @@
 		var data = chart.config.data;
 		chart.options.scales.yAxes[0].scaleLabel.labelString = "Gas Cost";
 		data.datasets[0].data = claim_cost_data;
-		data.datasets[1].data = trade_cost_data;
+
+		if (tradable != -1) {
+			data.datasets[1].data = trade_cost_data;
+		}
 		chart.update();
 	});
 
@@ -586,11 +609,13 @@
 		var data = chart.config.data;
 		chart.options.scales.yAxes[0].scaleLabel.labelString = "Total cost";
 		data.datasets[0].data = claim_total_cost_data;
-		data.datasets[1].data = trade_total_cost_data;
+
+		if (tradable != -1) {
+			data.datasets[1].data = trade_total_cost_data;
+		}
 		chart.update();
 	});
 
-	};
 	function formatData(xvals, yvals) {
 		var formattedData = [];
 		var datum = {};
