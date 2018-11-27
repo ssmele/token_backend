@@ -10,7 +10,6 @@
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"></script>
 	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
 	<link href="{{ url_for('static',filename='css/home.css')}}" rel="stylesheet">
-	<link href="css/home.css" rel="stylesheet">
 
 
 	<link rel="stylesheet" href="https://unpkg.com/leaflet@1.3.4/dist/leaflet.css" integrity="sha512-puBpdR0798OZvTTbP4A8Ix/l+A4dHDD0DGqYW6RQ+9jxkRFclaxxQb/SJAWZfWAkuyeQUytO7+7N4QKrDh+drA=="
@@ -38,8 +37,8 @@
 
     .col-lg-3, .col-lg-5, .col-lg-6, .col-lg-4, .col-lg-2, #code {
 		position: relative;
-		margin: 10px 10px;
-		padding: 3px 3px 3px;
+		margin: 7px 7px;
+		padding: 10px 10px 10px;
 		background-color: #fff;
 		border: 1px solid #ebebeb;
 		-webkit-border-radius: 4px;
@@ -49,14 +48,14 @@
 
 	.modal-content {
     	background-color:#fafafa;
-	}
+	},
 
 	.btn {
 
 		 margin-top: 15px;
-		 border: none;
+		 border: none;"
 	}
-	
+	}
 
 	</style>
 </head>
@@ -69,7 +68,7 @@
 		 data-placement="bottom" title="Alpha 1.0"></img>
 
 		<a class="nav-btn" href="home">Home</a>
-		<a class="nav-btn active" href="" data-placement="bottom" title="View token analytics">My Tokens</a>
+		<a class="nav-btn active" href="" data-placement="bottom" title="View token analytics">Analytics</a>
 		<a class="nav-btn" href="explore" data-placement="bottom" title="Explore all issued tokens">Explore</a>
 		<a class="nav-btn" href="creation" data-placement="bottom" title="Issue your very own token">Issuing</a>
 		<a class="nav-btn" href="about" data-placement="bottom" title="Learn about Token and its developers">About</a>
@@ -105,46 +104,12 @@
 					drawMap(data.resp_data.loc_constraints, data.resp_data.coordinates);
 					$('#ex1').on('shown.bs.modal', function () {
 						drawChart(data.resp_data.num_claimed, data.resp_data.num_unclaimed);
-						drawGasPrices(data.resp_data.price_and_time);
+						drawGasPrices(data.resp_data.price_and_time, data.resp_data.traded);
 						drawCalendar(data.resp_data.time_windows, data.resp_data.price_and_time["claim_timestamps"]);
 						numTraded(data.resp_data.traded);
 					});
 					$('#ex1').modal('show');
-					qr_code(con_id);
 					map.invalidateSize();
-				},
-
-				'json')
-				.fail(function (response) {
-					//status
-					//status_code
-					//var obj = JSON.parse(response.responseText);
-					console.log(response.responseText);
-				});
-		}
-		function display_codes(codes) {
-			var qrs = '<div id="code" class="row"><p>QR-Codes</p>';
-			for (var i = 0; i < codes.length; i++) {
-				//$('#collection').append(collection.contracts[i].name + ":<br>" + collection.contracts[i].description + "<br>");
-				qrs += '<img style="padding: 10px" src=' + codes[i] + ' alt="" height="220" width="220"/>';
-			}
-			qrs += '</div>';
-			$('#qr').append(qrs);
-		}
-		function qr_code(con_id) {
-			$.ajaxSetup({
-				headers: {
-					'Authorization': document.cookie
-				}
-			});
-			$.get(
-				"http://" + url + "/contract/qr_code/con_id=" + con_id,
-				function (data, status) {
-					console.log(data); // read
-					$('#qr').text("");
-
-					if(data.resp_data.qr_codes.length > 1)
-						display_codes(data.resp_data.qr_codes)
 				},
 
 				'json')
@@ -193,6 +158,39 @@
 					console.log(response.responseText);
 				});
 		});
+		function display_codes(codes) {
+			var qrs = '<div id="code" class="row"><p>QR-Codes</p>';
+			for (var i = 0; i < codes.length; i++) {
+				//$('#collection').append(collection.contracts[i].name + ":<br>" + collection.contracts[i].description + "<br>");
+				qrs += '<img style="padding: 10px" src=' + codes[i] + ' alt="" height="220" width="220"/>';
+			}
+			qrs += '</div>';
+			$('#qr').append(qrs);
+		}
+		function qr_code(con_id) {
+			$.ajaxSetup({
+				headers: {
+					'Authorization': document.cookie
+				}
+			});
+			$.get(
+				"http://" + url + "/contract/qr_code/con_id=" + con_id,
+				function (data, status) {
+					console.log(data); // read
+					$('#qr').text("");
+
+					if (data.resp_data.qr_codes.length > 1)
+						display_codes(data.resp_data.qr_codes)
+				},
+
+				'json')
+				.fail(function (response) {
+					//status
+					//status_code
+					//var obj = JSON.parse(response.responseText);
+					console.log(response.responseText);
+				});
+		}
 	</script>
 	<div id="collection"></div>
 	<form class="form-inline my-2 my-lg-0" id="target" action="javascript:view();" style="display:none;">
@@ -238,6 +236,7 @@
 							<div id="mapid" style="height: 400px;"></div>
 						</div>
 					</div>
+
 					<div class="row">
 						<div id="qr"></div>
 					</div>
@@ -503,6 +502,8 @@
 		var trade_price_data = [];
 		var trade_total_cost_data = [];
 
+		var tradable = 0;
+
 		var chartColors = {
 			red: 'rgb(255, 99, 132)',
 			orange: 'rgb(255, 159, 64)',
@@ -515,8 +516,8 @@
 
 		var chart = new Chart(document.getElementById("lineChart"));
 		var first = true;
-		function drawGasPrices(priceAndTime) {
-
+		function drawGasPrices(priceAndTime, traded) {
+			tradable = traded;
 			claim_cost_data = formatData(priceAndTime["claim_timestamps"], priceAndTime["claim_gas_cost"]);
 			claim_price_data = formatData(priceAndTime["claim_timestamps"], priceAndTime["claim_gas_price"]);
 			claim_total_cost_data = formatData(priceAndTime["claim_timestamps"], priceAndTime["claim_transaction_cost"]);
@@ -525,7 +526,6 @@
 			trade_price_data = formatData(priceAndTime["trade_timestamps"], priceAndTime["trade_gas_price"]);
 			trade_total_cost_data = formatData(priceAndTime["trade_timestamps"], priceAndTime["trade_transaction_cost"]);
 			if (first == true) {
-				console.log("first");
 				chart.destroy();
 				var config = {
 					type: 'scatter',
@@ -537,14 +537,6 @@
 							fill: false,
 							backgroundColor: chartColors.red,
 							borderColor: chartColors.red,
-						},
-						{
-							label: 'Trade',
-							data: trade_price_data,
-							showLine: true,
-							fill: false,
-							backgroundColor: chartColors.blue,
-							borderColor: chartColors.blue,
 						}
 						]
 					},
@@ -597,35 +589,67 @@
 				var data = chart.config.data;
 				chart.options.scales.yAxes[0].scaleLabel.labelString = "Gas Price";
 				data.datasets[0].data = claim_price_data;
-				data.datasets[1].data = trade_price_data;
+
+				if (data.datasets.length > 1) {
+					console.log("length:");
+					console.log(data.datasets.length);
+					data.datasets.pop();
+					console.log("removing dataset..");
+				}
+				console.log("new length:");
+				console.log(data.datasets.length);
 				chart.update();
 			}
 
-			$("#gasprice").click(function () {
-				var data = chart.config.data;
-				chart.options.scales.yAxes[0].scaleLabel.labelString = "Gas Price";
-				data.datasets[0].data = claim_price_data;
+			if (tradable != -1) //Token is tradable
+			{
+				var trade_dataset = {
+					label: "Trade",
+					data: trade_price_data,
+					showLine: true,
+					fill: false,
+					backgroundColor: chartColors.blue,
+					borderColor: chartColors.blue
+				}
+
+				chart.data.datasets.push(trade_dataset);
+				chart.update();
+			}
+		}
+
+		$("#gasprice").click(function () {
+			var data = chart.config.data;
+			chart.options.scales.yAxes[0].scaleLabel.labelString = "Gas Price";
+			data.datasets[0].data = claim_price_data;
+
+			if (tradable != -1) {
 				data.datasets[1].data = trade_price_data;
-				chart.update();
-			});
+			}
+			chart.update();
+		});
 
-			$("#gascost").click(function () {
-				var data = chart.config.data;
-				chart.options.scales.yAxes[0].scaleLabel.labelString = "Gas Cost";
-				data.datasets[0].data = claim_cost_data;
+		$("#gascost").click(function () {
+			var data = chart.config.data;
+			chart.options.scales.yAxes[0].scaleLabel.labelString = "Gas Cost";
+			data.datasets[0].data = claim_cost_data;
+
+			if (tradable != -1) {
 				data.datasets[1].data = trade_cost_data;
-				chart.update();
-			});
+			}
+			chart.update();
+		});
 
-			$("#transactioncost").click(function () {
-				var data = chart.config.data;
-				chart.options.scales.yAxes[0].scaleLabel.labelString = "Total cost";
-				data.datasets[0].data = claim_total_cost_data;
+		$("#transactioncost").click(function () {
+			var data = chart.config.data;
+			chart.options.scales.yAxes[0].scaleLabel.labelString = "Total cost";
+			data.datasets[0].data = claim_total_cost_data;
+
+			if (tradable != -1) {
 				data.datasets[1].data = trade_total_cost_data;
-				chart.update();
-			});
+			}
+			chart.update();
+		});
 
-		};
 		function formatData(xvals, yvals) {
 			var formattedData = [];
 			var datum = {};
