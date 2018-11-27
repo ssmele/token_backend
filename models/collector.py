@@ -106,7 +106,8 @@ class GetCollection(DataQuery):
         FROM tokens, contracts, issuers
         WHERE owner_c_id = :c_id
         AND contracts.con_id = tokens.con_id
-        AND contracts.i_id = issuers.i_id;
+        AND contracts.i_id = issuers.i_id
+        AND tokens.status != 'X';
         """
 
         self.schema_out = TokenResponse()
