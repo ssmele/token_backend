@@ -9,6 +9,7 @@
 	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"></script>
 	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
 	<link href="{{ url_for('static',filename='css/home.css')}}" rel="stylesheet">
 
 
@@ -35,7 +36,7 @@
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.2.1/Chart.bundle.min.js"></script>
 	<script src=https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.13.0/moment.min.js> </script> <style>
 
-    .col-lg-3, .col-lg-5, .col-lg-6, .col-lg-4, .col-lg-2, #code {
+    .col-lg-3, .col-lg-5, .col-lg-6, .col-lg-4, .col-lg-2, .col-lg-12, #code {
 		position: relative;
 		margin: 7px 7px;
 		padding: 10px 10px 10px;
@@ -48,13 +49,12 @@
 
 	.modal-content {
     	background-color:#fafafa;
-	},
+	}
 
 	.btn {
 
 		 margin-top: 15px;
 		 border: none;"
-	}
 	}
 
 	</style>
@@ -89,6 +89,24 @@
 	<div class="spacing"></div>
 
 	<script>
+        function toggle_visibility(element) {
+                var e = element;
+                if (e.style.display == 'block')
+                    e.style.display = 'none';
+                else
+                    e.style.display = 'block';
+            }
+
+        function toggle_on(element) {
+                var e = element;
+                e.style.display = 'block';
+            }
+        function toggle_off(element) {
+                var e = element;
+                e.style.display = 'none';
+            }
+
+
 		var map;
 		function analyze(con_id) {
 			$.ajaxSetup({
@@ -106,6 +124,7 @@
 						drawChart(data.resp_data.num_claimed, data.resp_data.num_unclaimed);
 						drawGasPrices(data.resp_data.price_and_time, data.resp_data.traded);
 						drawCalendar(data.resp_data.time_windows, data.resp_data.price_and_time["claim_timestamps"]);
+						drawConstraints(data.resp_data.qr_code_claimable, data.resp_data.constraints);
 						numTraded(data.resp_data.traded);
 					});
 					$('#ex1').modal('show');
@@ -204,12 +223,31 @@
 		<div class="modal-dialog modal-lg" style="max-width: 90%!important; color:black;">
 			<div class="modal-content">
 				<div class="modal-body">
+                    <div class="row">
+                        <div class="col-lg-12" id="constraints">
+                            <h1>Constraints: <span id="constraint_icon"></span></h1>
+                            <div class="row" id="all_constraints">
+                                <div class="col-lg-4" id="uc_codes">
+                                    <h4>Code Constraints:</h4>
+                                    <ul id="code_list" class="list-group list-group-flush"></ul>
+                                </div>
+                                <div class="col-lg-4" id="location_constraints">
+                                    <h4>Location Constraints (Placed on map)</h4>
+                                    <ul id="loc_list" class="list-group list-group-flush"></ul>
+                                </div>
+                                <div class="col-lg-4" id="time_constraints">
+                                    <h4>Time Constraints (Highlighted on calendar)</h4>
+                                    <ul id="time_list" class="list-group list-group-flush"></ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
 					<div class="row">
-						<div class="col-lg-3">
+						<div class="col-lg-4">
 							<p>Percent Claimed</p>
 							<canvas id="pie-chart" style="height: 100px;"></canvas>
 						</div>
-						<div class="col-lg-2">
+						<div class="col-lg-3">
 							<p>Number of Trades</p>
 							<p id="traded"></p>
 						</div>
@@ -224,7 +262,7 @@
 						</div>
 					</div>
 					<div class="row">
-						<div class="col-lg-4">
+						<div class="col-lg-6">
 							<p>Transaction Cost</p>
 							<canvas id="lineChart" width="50%" height="80%"></canvas>
 							<button id="gasprice" type="button" class="btn">Gas Price</button>
@@ -246,6 +284,70 @@
 		</div>
 	</div>
 
+
+    <script>
+        function drawConstraints(qr_code_claimable, constraints){
+            var ul = document.getElementById("code_list");
+            ul.innerHTML = "";
+            var ul = document.getElementById("time_list");
+            ul.innerHTML = "";
+            var ul = document.getElementById("loc_list");
+            ul.innerHTML = "";
+
+            if(qr_code_claimable){
+                document.getElementById("constraint_icon").className = "glyphicon glyphicon-remove-circle text-danger";
+                toggle_off(document.getElementById("all_constraints"))
+            }else{
+                document.getElementById("constraint_icon").className = "glyphicon glyphicon-ok-circle text-success";
+                toggle_on(document.getElementById("all_constraints"))
+
+                var code_constraints = document.getElementById("uc_codes");
+                toggle_on(code_constraints);
+                var location_constrains = document.getElementById("location_constraints");
+                toggle_on(location_constrains);
+                var time_constraints = document.getElementById("time_constraints");
+                toggle_on(time_constraints);
+
+                var codes = constraints['code_constraints'];
+                if(codes.length == 0){
+                    toggle_off(code_constraints);
+                }else{
+                    var ul = document.getElementById("code_list");
+                    ul.innerHTML = "";
+                    for (ix in codes){
+                        var li = document.createElement("li");
+                        li.appendChild(document.createTextNode(codes[ix]["code"]));
+                        ul.appendChild(li)
+                    }
+                }
+                var locations = constraints['location_constraints'];
+                if(locations.length == 0){
+                    toggle_off(location_constrains);
+                }else{
+                    var ul = document.getElementById("loc_list");
+                    ul.innerHTML = "";
+                    for (ix in locations){
+                        var li = document.createElement("li");
+                        li.appendChild(document.createTextNode("Latitude: " + locations[ix]["latitude"] + " Longitude: " + locations[ix]["longitude"]));
+                        ul.appendChild(li)
+                    }
+                }
+                var times = constraints['time_constraints'];
+                if(times.length == 0){
+                    toggle_off(time_constraints);
+                }else{
+                    var ul = document.getElementById("time_list");
+                    ul.innerHTML = "";
+                    for (ix in times){
+                        var li = document.createElement("li");
+                        li.appendChild(document.createTextNode("Start: " + times[ix]["start"] + " End: " + times[ix]["end"]));
+                        ul.appendChild(li)
+                    }
+                }
+
+            }
+        }
+    </script>
 	<script>
 		function numTraded(traded) {
 
