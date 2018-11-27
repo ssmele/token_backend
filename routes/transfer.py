@@ -38,8 +38,7 @@ class Transfer(Resource):
             g.geth.perform_transfer(contract['con_addr'], contract['con_abi'], data['t_id'],
                                     src_acct=collector['c_hash'],
                                     dest_acct=data['destination_wallet_hash'])
-            UpdateTokenStatus().execute({'new_status': TokenStatus.EXTERNAL.value, 'this_id': data['t_id']},
-                                        close_connection=True)
+            UpdateTokenStatus().execute({'new_status': TokenStatus.EXTERNAL.value, 'this_id': data['t_id']})
             g.sesh.commit()
         except Exception as e:
             g.sesh.rollback()
