@@ -10,6 +10,7 @@
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"></script>
 	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
 	<link href="{{ url_for('static',filename='css/home.css')}}" rel="stylesheet">
+	<link href="css/home.css" rel="stylesheet">
 
 
 	<link rel="stylesheet" href="https://unpkg.com/leaflet@1.3.4/dist/leaflet.css" integrity="sha512-puBpdR0798OZvTTbP4A8Ix/l+A4dHDD0DGqYW6RQ+9jxkRFclaxxQb/SJAWZfWAkuyeQUytO7+7N4QKrDh+drA=="
@@ -33,12 +34,9 @@
 
 	//Gas price
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.2.1/Chart.bundle.min.js"></script>
-	<script src=https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.13.0/moment.min.js></script>
+	<script src=https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.13.0/moment.min.js> </script> <style>
 
-
-	<style>
-
-    .col-lg-3, .col-lg-5, .col-lg-6, .col-lg-4, .col-lg-2 {
+    .col-lg-3, .col-lg-5, .col-lg-6, .col-lg-4, .col-lg-2, #code {
 		position: relative;
 		margin: 10px 10px;
 		padding: 3px 3px 3px;
@@ -51,14 +49,14 @@
 
 	.modal-content {
     	background-color:#fafafa;
-	},
+	}
 
 	.btn {
 
 		 margin-top: 15px;
-		 border: none;"
+		 border: none;
 	}
-	}
+	
 
 	</style>
 </head>
@@ -71,7 +69,7 @@
 		 data-placement="bottom" title="Alpha 1.0"></img>
 
 		<a class="nav-btn" href="home">Home</a>
-		<a class="nav-btn active" href="" data-placement="bottom" title="View token analytics">Analytics</a>
+		<a class="nav-btn active" href="" data-placement="bottom" title="View token analytics">My Tokens</a>
 		<a class="nav-btn" href="explore" data-placement="bottom" title="Explore all issued tokens">Explore</a>
 		<a class="nav-btn" href="creation" data-placement="bottom" title="Issue your very own token">Issuing</a>
 		<a class="nav-btn" href="about" data-placement="bottom" title="Learn about Token and its developers">About</a>
@@ -112,7 +110,41 @@
 						numTraded(data.resp_data.traded);
 					});
 					$('#ex1').modal('show');
+					qr_code(con_id);
 					map.invalidateSize();
+				},
+
+				'json')
+				.fail(function (response) {
+					//status
+					//status_code
+					//var obj = JSON.parse(response.responseText);
+					console.log(response.responseText);
+				});
+		}
+		function display_codes(codes) {
+			var qrs = '<div id="code" class="row"><p>QR-Codes</p>';
+			for (var i = 0; i < codes.length; i++) {
+				//$('#collection').append(collection.contracts[i].name + ":<br>" + collection.contracts[i].description + "<br>");
+				qrs += '<img style="padding: 10px" src=' + codes[i] + ' alt="" height="220" width="220"/>';
+			}
+			qrs += '</div>';
+			$('#qr').append(qrs);
+		}
+		function qr_code(con_id) {
+			$.ajaxSetup({
+				headers: {
+					'Authorization': document.cookie
+				}
+			});
+			$.get(
+				"http://" + url + "/contract/qr_code/con_id=" + con_id,
+				function (data, status) {
+					console.log(data); // read
+					$('#qr').text("");
+
+					if(data.resp_data.qr_codes.length > 1)
+						display_codes(data.resp_data.qr_codes)
 				},
 
 				'json')
@@ -186,7 +218,7 @@
 							<p>Token Claim Timestamps</p>
 
 							<div id="cal-heatmap"></div>
-							<div id = "container" style="float: right;">
+							<div id="container" style="float: right;">
 								<button id="minDate-previous" class="btn"><i class="fa fa-angle-left"></i></button>
 								<button id="minDate-next" class="btn"><i class="fa fa-angle-right"></i></button>
 							</div>
@@ -200,11 +232,14 @@
 							<button id="gascost" type="button" class="btn">Gas Cost</button>
 							<button id="transactioncost" type="button" class="btn">Total Cost</button>
 
-							</div>
+						</div>
 						<div class="col-lg-5">
 							<p>Location</p>
 							<div id="mapid" style="height: 400px;"></div>
 						</div>
+					</div>
+					<div class="row">
+						<div id="qr"></div>
 					</div>
 				</div>
 			</div>
@@ -224,51 +259,51 @@
 
 	<script>
 		Chart.pluginService.register({
-		beforeDraw: function (chart) {
-			if (chart.config.options.elements.center) {
-        //Get ctx from string
-        var ctx = chart.chart.ctx;
+			beforeDraw: function (chart) {
+				if (chart.config.options.elements.center) {
+					//Get ctx from string
+					var ctx = chart.chart.ctx;
 
-				//Get options from the center object in options
-        var centerConfig = chart.config.options.elements.center;
-      	var fontStyle = centerConfig.fontStyle || 'Arial';
-				var txt = centerConfig.text;
-        var color = centerConfig.color || '#000';
-        var sidePadding = centerConfig.sidePadding || 20;
-        var sidePaddingCalculated = (sidePadding/100) * (chart.innerRadius * 2)
-        //Start with a base font of 30px
-        ctx.font = "30px " + fontStyle;
+					//Get options from the center object in options
+					var centerConfig = chart.config.options.elements.center;
+					var fontStyle = centerConfig.fontStyle || 'Arial';
+					var txt = centerConfig.text;
+					var color = centerConfig.color || '#000';
+					var sidePadding = centerConfig.sidePadding || 20;
+					var sidePaddingCalculated = (sidePadding / 100) * (chart.innerRadius * 2)
+					//Start with a base font of 30px
+					ctx.font = "30px " + fontStyle;
 
-				//Get the width of the string and also the width of the element minus 10 to give it 5px side padding
-        var stringWidth = ctx.measureText(txt).width;
-        var elementWidth = (chart.innerRadius * 2) - sidePaddingCalculated;
+					//Get the width of the string and also the width of the element minus 10 to give it 5px side padding
+					var stringWidth = ctx.measureText(txt).width;
+					var elementWidth = (chart.innerRadius * 2) - sidePaddingCalculated;
 
-        // Find out how much the font can grow in width.
-        var widthRatio = elementWidth / stringWidth;
-        var newFontSize = Math.floor(30 * widthRatio);
-        var elementHeight = (chart.innerRadius * 2);
+					// Find out how much the font can grow in width.
+					var widthRatio = elementWidth / stringWidth;
+					var newFontSize = Math.floor(30 * widthRatio);
+					var elementHeight = (chart.innerRadius * 2);
 
-        // Pick a new font size so it will not be larger than the height of label.
-        var fontSizeToUse = Math.min(newFontSize, elementHeight);
+					// Pick a new font size so it will not be larger than the height of label.
+					var fontSizeToUse = Math.min(newFontSize, elementHeight);
 
-				//Set font settings to draw it correctly.
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        var centerX = ((chart.chartArea.left + chart.chartArea.right) / 2);
-        var centerY = ((chart.chartArea.top + chart.chartArea.bottom) / 2);
-        ctx.font = fontSizeToUse+"px " + fontStyle;
-        ctx.fillStyle = color;
+					//Set font settings to draw it correctly.
+					ctx.textAlign = 'center';
+					ctx.textBaseline = 'middle';
+					var centerX = ((chart.chartArea.left + chart.chartArea.right) / 2);
+					var centerY = ((chart.chartArea.top + chart.chartArea.bottom) / 2);
+					ctx.font = fontSizeToUse + "px " + fontStyle;
+					ctx.fillStyle = color;
 
-        //Draw text in center
-        ctx.fillText(txt, centerX, centerY);
+					//Draw text in center
+					ctx.fillText(txt, centerX, centerY);
+				}
 			}
-		}
-	});
+		});
 
 
 		var piechart = new Chart(document.getElementById("pie-chart"));
 		function drawChart(claimed, unclaimed) {
-			var percentage = Math.round(100 * (claimed / (claimed + unclaimed)) );
+			var percentage = Math.round(100 * (claimed / (claimed + unclaimed)));
 			piechart.destroy();
 			piechart = new Chart(document.getElementById("pie-chart"), {
 				type: 'doughnut',
@@ -286,8 +321,8 @@
 					elements: {
 						center: {
 							text: percentage + "%",
-          					fontStyle: 'Arial', // Default is Arial
-          					sidePadding: 70 // Defualt is 20 (as a percentage)
+							fontStyle: 'Arial', // Default is Arial
+							sidePadding: 70 // Defualt is 20 (as a percentage)
 						}
 					}
 				}
@@ -296,9 +331,9 @@
 	</script>
 
 	<script>
-	var map = L.map("mapid");
-	var tileLayer = L.tileLayer('https://cartodb-basemaps-{s}.global.ssl.fastly.net/dark_nolabels/{z}/{x}/{y}{r}.png', {
-	attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="http://cartodb.com/attributions">CartoDB</a>',
+		var map = L.map("mapid");
+		var tileLayer = L.tileLayer('https://cartodb-basemaps-{s}.global.ssl.fastly.net/dark_nolabels/{z}/{x}/{y}{r}.png', {
+			attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="http://cartodb.com/attributions">CartoDB</a>',
 			subdomains: 'abcd',
 			minZoom: 1,
 			maxZoom: 16,
@@ -460,152 +495,152 @@
 	</script>
 
 	<script>
-	var claim_cost_data = [];
-    var claim_price_data = [];
-    var claim_total_cost_data = [];
+		var claim_cost_data = [];
+		var claim_price_data = [];
+		var claim_total_cost_data = [];
 
-    var trade_cost_data = [];
-    var trade_price_data = [];
-    var trade_total_cost_data = [];
+		var trade_cost_data = [];
+		var trade_price_data = [];
+		var trade_total_cost_data = [];
 
-	var chartColors = {
-          red: 'rgb(255, 99, 132)',
-          orange: 'rgb(255, 159, 64)',
-          yellow: 'rgb(255, 205, 86)',
-          green: 'rgb(75, 192, 192)',
-          blue: 'rgb(54, 162, 235)',
-          purple: 'rgb(153, 102, 255)',
-          grey: 'rgb(231,233,237)'
-    };
+		var chartColors = {
+			red: 'rgb(255, 99, 132)',
+			orange: 'rgb(255, 159, 64)',
+			yellow: 'rgb(255, 205, 86)',
+			green: 'rgb(75, 192, 192)',
+			blue: 'rgb(54, 162, 235)',
+			purple: 'rgb(153, 102, 255)',
+			grey: 'rgb(231,233,237)'
+		};
 
-    var chart = new Chart(document.getElementById("lineChart"));
-	var first = true;
-	function drawGasPrices(priceAndTime) {
+		var chart = new Chart(document.getElementById("lineChart"));
+		var first = true;
+		function drawGasPrices(priceAndTime) {
 
-		claim_cost_data = formatData(priceAndTime["claim_timestamps"], priceAndTime["claim_gas_cost"]);
-		claim_price_data = formatData(priceAndTime["claim_timestamps"], priceAndTime["claim_gas_price"]);
-		claim_total_cost_data = formatData(priceAndTime["claim_timestamps"], priceAndTime["claim_transaction_cost"]);
+			claim_cost_data = formatData(priceAndTime["claim_timestamps"], priceAndTime["claim_gas_cost"]);
+			claim_price_data = formatData(priceAndTime["claim_timestamps"], priceAndTime["claim_gas_price"]);
+			claim_total_cost_data = formatData(priceAndTime["claim_timestamps"], priceAndTime["claim_transaction_cost"]);
 
-		trade_cost_data = formatData(priceAndTime["trade_timestamps"], priceAndTime["trade_gas_cost"]);
-		trade_price_data = formatData(priceAndTime["trade_timestamps"], priceAndTime["trade_gas_price"]);
-		trade_total_cost_data = formatData(priceAndTime["trade_timestamps"], priceAndTime["trade_transaction_cost"]);
-		if (first == true) {
-			console.log("first");
-			chart.destroy();
-			var config = {
-				type: 'scatter',
-				data: {
-					datasets: [{
-						label: 'Claim',
-						data: claim_price_data,
-						showLine: true,
-						fill: false,
-						backgroundColor: chartColors.red,
-						borderColor: chartColors.red,
+			trade_cost_data = formatData(priceAndTime["trade_timestamps"], priceAndTime["trade_gas_cost"]);
+			trade_price_data = formatData(priceAndTime["trade_timestamps"], priceAndTime["trade_gas_price"]);
+			trade_total_cost_data = formatData(priceAndTime["trade_timestamps"], priceAndTime["trade_transaction_cost"]);
+			if (first == true) {
+				console.log("first");
+				chart.destroy();
+				var config = {
+					type: 'scatter',
+					data: {
+						datasets: [{
+							label: 'Claim',
+							data: claim_price_data,
+							showLine: true,
+							fill: false,
+							backgroundColor: chartColors.red,
+							borderColor: chartColors.red,
+						},
+						{
+							label: 'Trade',
+							data: trade_price_data,
+							showLine: true,
+							fill: false,
+							backgroundColor: chartColors.blue,
+							borderColor: chartColors.blue,
+						}
+						]
 					},
-					{
-						label: 'Trade',
-						data: trade_price_data,
-						showLine: true,
-						fill: false,
-						backgroundColor: chartColors.blue,
-						borderColor: chartColors.blue,
-					}
-					]
-				},
-				options: {
-					title: {
+					options: {
+						title: {
 
-					},
-					legend: { display: true},
-					scales: {
-						bounds: 'ticks',
-						xAxes: [{
-							display: true,
-							type: 'time',
-							  time: {
-										displayFormats: {
-								  'millisecond': 'MMM DD',
-								  'second': 'MMM DD',
-								  'minute': 'MMM DD',
-								  'hour': 'MMM DD',
-								  'day': 'MMM DD',
-								  'week': 'MMM DD',
-								  'month': 'MMM DD',
-								  'quarter': 'MMM DD',
-								  'year': 'MMM DD',
+						},
+						legend: { display: true },
+						scales: {
+							bounds: 'ticks',
+							xAxes: [{
+								display: true,
+								type: 'time',
+								time: {
+									displayFormats: {
+										'millisecond': 'MMM DD',
+										'second': 'MMM DD',
+										'minute': 'MMM DD',
+										'hour': 'MMM DD',
+										'day': 'MMM DD',
+										'week': 'MMM DD',
+										'month': 'MMM DD',
+										'quarter': 'MMM DD',
+										'year': 'MMM DD',
+									}
+								},
+								scaleLabel: {
+									display: true,
+									labelString: 'Time of Transaction'
 								}
-							},
-							scaleLabel: {
-								display: true,
-								labelString: 'Time of Transaction'
-							}
-						}],
-						yAxes: [{
-							scaleLabel: {
-								display: true,
-								labelString: "Gas Price"
-							}
-						}]
+							}],
+							yAxes: [{
+								scaleLabel: {
+									display: true,
+									labelString: "Gas Price"
+								}
+							}]
+						}
 					}
 				}
+
+				var ctx = document.getElementById("lineChart");
+				chart = new Chart(ctx, config);
+				console.log("new chart");
+				first = false;
+				chart.update();
 			}
 
-			var ctx = document.getElementById("lineChart");
-			chart = new Chart(ctx, config);
-			console.log("new chart");
-			first = false;
-			chart.update();
+			else {
+				var data = chart.config.data;
+				chart.options.scales.yAxes[0].scaleLabel.labelString = "Gas Price";
+				data.datasets[0].data = claim_price_data;
+				data.datasets[1].data = trade_price_data;
+				chart.update();
+			}
+
+			$("#gasprice").click(function () {
+				var data = chart.config.data;
+				chart.options.scales.yAxes[0].scaleLabel.labelString = "Gas Price";
+				data.datasets[0].data = claim_price_data;
+				data.datasets[1].data = trade_price_data;
+				chart.update();
+			});
+
+			$("#gascost").click(function () {
+				var data = chart.config.data;
+				chart.options.scales.yAxes[0].scaleLabel.labelString = "Gas Cost";
+				data.datasets[0].data = claim_cost_data;
+				data.datasets[1].data = trade_cost_data;
+				chart.update();
+			});
+
+			$("#transactioncost").click(function () {
+				var data = chart.config.data;
+				chart.options.scales.yAxes[0].scaleLabel.labelString = "Total cost";
+				data.datasets[0].data = claim_total_cost_data;
+				data.datasets[1].data = trade_total_cost_data;
+				chart.update();
+			});
+
+		};
+		function formatData(xvals, yvals) {
+			var formattedData = [];
+			var datum = {};
+			//Get the data in the correct form:
+			// { x : 'date' ,
+			//  y : 'price' , ...}
+			for (var i in xvals) {
+				datum = {};
+				datum["x"] = new Date(xvals[i]);
+				datum["y"] = yvals[i];
+				formattedData.push(datum);
+			}
+
+			return formattedData;
 		}
-
-		else {
-			var data = chart.config.data;
-			chart.options.scales.yAxes[0].scaleLabel.labelString = "Gas Price";
-			data.datasets[0].data = claim_price_data;
-			data.datasets[1].data = trade_price_data;
-			chart.update();
-		}
-
-	$("#gasprice").click(function() {
-		var data = chart.config.data;
-		chart.options.scales.yAxes[0].scaleLabel.labelString = "Gas Price";
-		data.datasets[0].data = claim_price_data;
-		data.datasets[1].data = trade_price_data;
-		chart.update();
-	});
-
-	$("#gascost").click(function() {
-		var data = chart.config.data;
-		chart.options.scales.yAxes[0].scaleLabel.labelString = "Gas Cost";
-		data.datasets[0].data = claim_cost_data;
-		data.datasets[1].data = trade_cost_data;
-		chart.update();
-	});
-
-	$("#transactioncost").click(function() {
-		var data = chart.config.data;
-		chart.options.scales.yAxes[0].scaleLabel.labelString = "Total cost";
-		data.datasets[0].data = claim_total_cost_data;
-		data.datasets[1].data = trade_total_cost_data;
-		chart.update();
-	});
-
-	};
-	function formatData(xvals, yvals) {
-		var formattedData = [];
-		var datum = {};
-		//Get the data in the correct form:
-		// { x : 'date' ,
-		//  y : 'price' , ...}
-		for (var i in xvals) {
-			datum = {};
-			datum["x"] = new Date(xvals[i]);
-			datum["y"] = yvals[i];
-			formattedData.push(datum);
-	  }
-
-	  return formattedData;
-	}
 	</script>
 
 	<script>
@@ -615,6 +650,6 @@
 	</script>
 
 
-</body>
+	</body>
 
 </html>
