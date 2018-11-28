@@ -9,7 +9,6 @@
 	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"></script>
 	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
 	<link href="{{ url_for('static',filename='css/home.css')}}" rel="stylesheet">
 
 
@@ -36,7 +35,7 @@
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.2.1/Chart.bundle.min.js"></script>
 	<script src=https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.13.0/moment.min.js> </script> <style>
 
-    .col-lg-3, .col-lg-5, .col-lg-6, .col-lg-4, .col-lg-2, .col-lg-12, #code {
+    .col-lg-3, .col-lg-5, .col-lg-6, .col-lg-4, .col-lg-2, .col-lg-12, col-lg-11, #code {
 		position: relative;
 		margin: 7px 7px;
 		padding: 10px 10px 10px;
@@ -224,19 +223,19 @@
 			<div class="modal-content">
 				<div class="modal-body">
                     <div class="row">
-                        <div class="col-lg-12" id="constraints">
-                            <h1>Constraints: <span id="constraint_icon"></span></h1>
+                        <div class="col-lg-11" id="constraints">
+                            <p>Claiming Constraints: <span id="constraint_icon"></span></p>
                             <div class="row" id="all_constraints">
                                 <div class="col-lg-4" id="uc_codes">
-                                    <h4>Code Constraints:</h4>
+                                    <p>Input Codes:</p>
                                     <ul id="code_list" class="list-group list-group-flush"></ul>
                                 </div>
                                 <div class="col-lg-4" id="location_constraints">
-                                    <h4>Location Constraints (Placed on map)</h4>
+                                    <p>Location</p>
                                     <ul id="loc_list" class="list-group list-group-flush"></ul>
                                 </div>
                                 <div class="col-lg-4" id="time_constraints">
-                                    <h4>Time Constraints (Highlighted on calendar)</h4>
+                                    <p>Time Window</p>
                                     <ul id="time_list" class="list-group list-group-flush"></ul>
                                 </div>
                             </div>
@@ -450,10 +449,11 @@
 
 		function drawMap(loc_constraints, coordinates) {
 
+			console.log(loc_constraints);
 			map.removeLayer(clusters);
 			map.removeLayer(claimingRegion);
 			clusters.clearLayers();
-
+			map.setView([0, 0], 0);
 
 			for (i = 0; i < coordinates.length; i++) {
 				var circle = L.circleMarker(coordinates[i],
@@ -469,6 +469,18 @@
 				clusters.addLayer(circle);
 			}
 			map.addLayer(clusters);
+			if (loc_constraints.length > 0) {
+				console.log("real");
+				claimingRegion = L.circle([loc_constraints[0], loc_constraints[1]],
+				{
+						radius: loc_constraints[2],
+						fill: false,
+				})
+				claimingRegion.addTo(map)
+
+			}
+
+
 
 			$('#ex1').on('shown.bs.modal', function () {
 				map.invalidateSize();
@@ -683,7 +695,6 @@
 
 				var ctx = document.getElementById("lineChart");
 				chart = new Chart(ctx, config);
-				console.log("new chart");
 				first = false;
 				chart.update();
 			}
@@ -694,13 +705,8 @@
 				data.datasets[0].data = claim_price_data;
 
 				if (data.datasets.length > 1) {
-					console.log("length:");
-					console.log(data.datasets.length);
 					data.datasets.pop();
-					console.log("removing dataset..");
 				}
-				console.log("new length:");
-				console.log(data.datasets.length);
 				chart.update();
 			}
 
