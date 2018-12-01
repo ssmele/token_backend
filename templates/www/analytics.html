@@ -223,9 +223,11 @@
 					console.log(data); // read
 					$('#qr').text("");
 
-					if (data.resp_data.qr_codes.length > 1)
-					    zip_download_location = "http://" + url + "/contract/qr_code/zip/con_id=" + con_id
-						display_codes(data.resp_data.qr_codes, zip_download_location)
+					if (data.resp_data.qr_codes.length > 1) {
+                        $("#qr").innerHTML = "";
+                        zip_download_location = "http://" + url + "/contract/qr_code/zip/con_id=" + con_id
+                        display_codes(data.resp_data.qr_codes, zip_download_location)
+                    }
 				},
 
 				'json')
