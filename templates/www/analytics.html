@@ -35,7 +35,7 @@
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.2.1/Chart.bundle.min.js"></script>
 	<script src=https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.13.0/moment.min.js> </script> <style>
 
-    .col-lg-3, .col-lg-5, .col-lg-6, .col-lg-4, .col-lg-2, .col-lg-12, col-lg-11, #code {
+    .col-lg-3, .col-lg-5, .col-lg-6, .col-lg-4, .col-lg-2, col-lg-11, #code {
 		position: relative;
 		margin: 7px 7px;
 		padding: 10px 10px 10px;
@@ -45,6 +45,17 @@
 		-moz-border-radius: 4px;
 		border-radius: 4px;
 	}
+
+    .good-border {
+        position: relative;
+		margin: 7px 7px;
+		padding: 10px 10px 10px;
+		background-color: #fff;
+		border: 1px solid #ebebeb;
+		-webkit-border-radius: 4px;
+		-moz-border-radius: 4px;
+		border-radius: 4px;
+    }
 
 	.modal-content {
     	background-color:#fafafa;
@@ -178,10 +189,12 @@
 				});
 		});
 		function display_codes(codes) {
-			var qrs = '<div id="code" class="row"><p>QR-Codes</p>';
+			var qrs = '<div id="code" class="row"><div class="col-lg-12"><h2>QR CODES:</h2></div>';
 			for (var i = 0; i < codes.length; i++) {
-				//$('#collection').append(collection.contracts[i].name + ":<br>" + collection.contracts[i].description + "<br>");
-				qrs += '<img style="padding: 10px" src=' + codes[i] + ' alt="" height="220" width="220"/>';
+				qrs += '<div class="col-lg-3">' +
+                            '<img style="padding: 10px" src=' + codes[i] + ' id="qr-code-image" height="220" width="220"/> ' +
+                            '<a class="btn btn-primary" href=' + codes[i] + ' download="qr_code' + i + '.png">DOWNLOAD</a>' +
+                        '</div>';
 			}
 			qrs += '</div>';
 			$('#qr').append(qrs);
@@ -276,7 +289,7 @@
 					</div>
 
 					<div class="row">
-						<div id="qr"></div>
+						<div class="col-lg-12" id="qr"></div>
 					</div>
 				</div>
 			</div>
