@@ -82,6 +82,14 @@ def serve_file(name, folder_type):
     return send_from_directory(folder, name)
 
 
+def get_qr_code_root_dir(con_id):
+    return os.path.join(*[current_app.root_path, 'PICTURES', Folders.QR_CODES.value, str(con_id) + '-*'])
+
+
+def get_qr_code_zip_dir(con_id):
+    return os.path.join(*[current_app.root_path, 'PICTURES', Folders.QR_CODES.value, str(con_id) + '.zip'])
+
+
 class Folders(Enum):
     CONTRACTS = 'CONTRACTS'
     QR_CODES = 'QR_CODES'

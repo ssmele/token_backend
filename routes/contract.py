@@ -1,5 +1,8 @@
 from datetime import datetime
 from json import dumps
+from zipfile import ZipFile
+import glob
+import os
 
 import qrcode
 from flask import Blueprint, g, request
@@ -10,12 +13,14 @@ from ether.contract_source import DEFAULT_JSON_METADATA
 from ether.geth_keeper import GethException
 from models.constraints import get_all_constraints
 from models.contract import ContractRequest, GetContractByConID, GetContractByName, \
-    GetContractsByIssuerID, process_constraints, insert_bulk_tokens, GetContractResponse, UpdateQRCODE, GetAllQRCodes
+    GetContractsByIssuerID, process_constraints, insert_bulk_tokens, GetContractResponse, UpdateQRCODE, GetAllQRCodes, \
+    DoesContractHaveQRCode
 from models.issuer import GetIssuerInfo
 from routes import requires_geth
 from utils.db_utils import requires_db
 from utils.doc_utils import BlueprintDocumentation
-from utils.image_utils import save_file, serve_file, save_qrcode, Folders, save_json_data
+from utils.image_utils import save_file, serve_file, save_qrcode, Folders, save_json_data, get_qr_code_root_dir,\
+    get_qr_code_zip_dir
 from utils.utils import success_response, error_response, log_kv, LOG_WARNING, LOG_INFO, LOG_ERROR, LOG_DEBUG
 from utils.verify_utils import verify_issuer_jwt, generate_jwt
 
@@ -188,7 +193,7 @@ class Contract(Resource):
         Method to use for get requests to the /contract method.
         :return:
         """
-        contracts = GetContractsByIssuerID().execute_n_fetchall({'i_id': g.issuer_info['i_id']}, close_connection=True)
+        contracts = GetContractsByIssuerID().execute_n_fetchall({'i_id': g.issuer_info['i_id']})
         if contracts is not None:
             log_kv(LOG_INFO, {'message': 'succesfully retrieved issuer\'s contracts',
                               'issuer_id': g.issuer_info['i_id']})
@@ -220,14 +225,38 @@ def serve_metadata(metadata):
 
 @contract_bp.route(url_prefix + '/qr_code/con_id=<int:con_id>')
 @requires_db
-#@verify_issuer_jwt
 @contract_docs.document(url_prefix + '/qr_code/con_id=<int:con_id>', 'GET',
                         """
                         Method to retrieve all the qr_codes associated with a given con_id.
                         """, req_i_jwt=True)
 def qr_codes_by_con_id(con_id):
-    qr_codes = GetAllQRCodes().execute_n_fetchall({'con_id': con_id})
-    return success_response({'qr_codes': [q['qr_code_location'] for q in qr_codes]})
+    if bool(DoesContractHaveQRCode().execute_n_fetchone({'con_id': con_id}, schema_out=False)['qr_code_claimable']):
+        qr_codes = GetAllQRCodes().execute_n_fetchall({'con_id': con_id})
+        return success_response({'qr_codes': [q['qr_code_location'] for q in qr_codes]})
+    else:
+        return success_response({"qr_codes": []})
+
+
+@contract_bp.route(url_prefix + '/qr_code/zip/con_id=<int:con_id>')
+@requires_db
+@contract_docs.document(url_prefix + '/qr_code/zip/con_id=<int:con_id>', 'GET',
+                        """
+                        Method to retrieve all the qr_codes associated with a given con_id zipped into a single file..
+                        """, req_i_jwt=True)
+def qr_codes_by_con_id_zip(con_id):
+    qr_code_dir = get_qr_code_root_dir(con_id)
+    qr_code_files = glob.glob(qr_code_dir)
+
+    if len(qr_code_files) == 0:
+        return success_response("No QR CODES associated with con_id.")
+
+    save_location = get_qr_code_zip_dir(con_id)
+
+    with ZipFile(save_location, 'w') as zip_file:
+        for f in qr_code_files:
+            zip_file.write(f, os.path.basename(f))
+
+    return serve_file(str(con_id) + '.zip', Folders.QR_CODES.value)
 
 
 @contract_bp.route(url_prefix + '/con_id=<int:con_id>', methods=['GET'])

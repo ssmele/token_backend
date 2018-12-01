@@ -146,6 +146,15 @@ class GetAllQRCodes(DataQuery):
         super().__init__()
 
 
+class DoesContractHaveQRCode(DataQuery):
+
+    def __init__(self):
+        self.sql_text = """
+        SELECT qr_code_claimable from contracts where con_id=:con_id;
+        """
+        self.schema_out = None
+        super().__init__()
+
 class GetContractByConID(DataQuery):
 
     def __init__(self):

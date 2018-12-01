@@ -37,7 +37,7 @@
 	<style>
 
 
-    .col-lg-3, .col-lg-5, .col-lg-6, .col-lg-4, .col-lg-2, .col-lg-12, col-lg-11, #code {
+    .col-lg-3, .col-lg-5, .col-lg-6, .col-lg-4, .col-lg-2, col-lg-11, #code {
 		position: relative;
 		padding: 20px 20px;
 		margin: 5px;
@@ -47,6 +47,17 @@
 		display: inline-block;
 
 	}
+
+    .good-border {
+        position: relative;
+		margin: 7px 7px;
+		padding: 10px 10px 10px;
+		background-color: #fff;
+		border: 1px solid #ebebeb;
+		-webkit-border-radius: 4px;
+		-moz-border-radius: 4px;
+		border-radius: 4px;
+    }
 
 	.box {
 
@@ -188,12 +199,15 @@
 					console.log(response.responseText);
 				});
 		});
-		function display_codes(codes) {
-			var qrs = '<div id="code" class="row"><p>QR-Codes</p>';
+		function display_codes(codes, zip_url) {
+			var qrs = '<div id="code" class="row"><div class="col-lg-12"><h2>QR CODES:</h2></div>';
 			for (var i = 0; i < codes.length; i++) {
-				//$('#collection').append(collection.contracts[i].name + ":<br>" + collection.contracts[i].description + "<br>");
-				qrs += '<img style="padding: 10px" src=' + codes[i] + ' alt="" height="220" width="220"/>';
+				qrs += '<div class="col-lg-3">' +
+                            '<img style="padding: 10px" src=' + codes[i] + ' id="qr-code-image" height="220" width="220"/> ' +
+                            '<a class="btn btn-primary" href=' + codes[i] + ' download="qr_code' + i + '.png">DOWNLOAD</a>' +
+                        '</div>';
 			}
+			qrs += '<div class="col-lg-12"><a class="btn btn-primary btn-lg btn-block" href=' + zip_url + ' download="qr_codes.zip">DOWNLOAD ALL</a></div>'
 			qrs += '</div>';
 			$('#qr').append(qrs);
 		}
@@ -209,8 +223,11 @@
 					console.log(data); // read
 					$('#qr').text("");
 
-					if (data.resp_data.qr_codes.length > 1)
-						display_codes(data.resp_data.qr_codes)
+					if (data.resp_data.qr_codes.length > 1) {
+                        $("#qr").innerHTML = "";
+                        zip_download_location = "http://" + url + "/contract/qr_code/zip/con_id=" + con_id
+                        display_codes(data.resp_data.qr_codes, zip_download_location)
+                    }
 				},
 
 				'json')
@@ -238,7 +255,7 @@
 
 					 <div class="container-fluid" id="all_constraints">
 
-						 <p>Claiming Constraints</p>
+						 <p id="claim_text">Claiming Constraints</p>
 
 						 <div class="row">
                                 <div class="col-lg-3" id="uc_codes">
@@ -284,7 +301,7 @@
 								<p>Percent Traded</p>
 								<canvas id="pie-chart2" style="height: 100px;"></canvas>
 								<p id="traded"></p>
-								
+
 							</div>
 							<div class="col-lg-5">
 								<div class="box">
@@ -313,9 +330,8 @@
 							</div>
 						</div>
 
-						<div class="row">
-							<div id="qr"></div>
-						</div>
+					<div class="row">
+						<div class="col-lg-12" id="qr"></div>
 					</div>
 				</div>
 			</div>
@@ -334,6 +350,8 @@
 
             if(qr_code_claimable){
                 toggle_off(document.getElementById("all_constraints"))
+                toggle_on(document.getElementById("trade_constraint"));
+                toggle_on(document.getElementById("claim_text"));
             }
 
             else{
@@ -531,8 +549,8 @@
 
 	<script>
 		var map = L.map("mapid");
-		var tileLayer = L.tileLayer('https://cartodb-basemaps-{s}.global.ssl.fastly.net/dark_nolabels/{z}/{x}/{y}{r}.png', {
-			attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="http://cartodb.com/attributions">CartoDB</a>',
+		var tileLayer = L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
+			 attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors',
 			subdomains: 'abcd',
 			minZoom: 1,
 			maxZoom: 16,
