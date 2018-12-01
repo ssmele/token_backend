@@ -475,7 +475,8 @@ class GetTokenInfo(DataQuery):
         self.sql_text = """
         SELECT  contracts.con_id, issuers.i_id, issuers.username as issuer_username, contracts.con_tx as con_hash,
                 contracts.name, contracts.description, contracts.num_created, contracts.pic_location, contracts.tradable,
-                contracts.status, tokens.t_id, tokens.t_hash, tokens.owner_c_id
+                contracts.status, contracts.metadata_location, contracts.qr_code_claimable,
+                tokens.t_id, tokens.t_hash, tokens.owner_c_id
         FROM tokens, contracts, issuers
         WHERE tokens.t_id = :t_id
         AND contracts.con_id = :con_id
