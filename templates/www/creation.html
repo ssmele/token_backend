@@ -86,8 +86,9 @@
 
 
         <script>
-            var url = "localhost:8088"
-            //var url = "167.99.26.0:80";
+            //var url = "localhost:8088"
+            var url = "167.99.26.0:80";
+
             var longitude;
             var latitude;
             var radius;
@@ -133,7 +134,6 @@
                 }
                 var locs = []
                 if (latitude != null && longitude != null) {
-                    radius = 100
                     locs = [
                         {
                             "latitude": latitude,
@@ -328,20 +328,27 @@
                                 .addTo(map);
 
                             var latlng = [0, 0];
-                            var marker = L.marker([0, 0]);
-                            var circle = L.circle([0, 0], {
-                                radius: 100
-                            });
-                            marker.addTo(map);
-                            circle.addTo(map);
+                            var marker = L.marker();
+                            var circle = L.circle();
+                            var first = true;
 
                             function onMapClick(e) {
                                 marker.setLatLng(e.latlng);
                                 circle.setLatLng(e.latlng);
+
+                                if (first) {
+                                    marker.addTo(map);
+                                    circle.setRadius(100);
+                                    circle.addTo(map);
+                                    first = false;
+                                }
+
                                 latlng = e.latlng;
                                 latitude = latlng.lat;
                                 longitude = latlng.lng;
+                                radius = circle.getRadius();
                                 console.log(latlng);
+
                             }
 
                             map.on('click', onMapClick);
