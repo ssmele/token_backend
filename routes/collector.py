@@ -2,7 +2,8 @@ from flask import Blueprint, g
 from flask_restful import Resource, Api
 
 from ether.geth_keeper import GethException
-from models.collector import CreateCollectorRequest, GetCollectorByUsername, GetCollectorByCID, GetCollection, CollectorInfoRequest
+from models.collector import CreateCollectorRequest, GetCollectorByUsername, GetCollectorByCID, GetCollection, \
+    CollectorInfoRequest
 from models.collector import create_collector
 from routes import load_with_schema, requires_geth
 from utils.db_utils import requires_db
@@ -62,6 +63,12 @@ class Collector(Resource):
                              input_schema=CreateCollectorRequest)
     def post(self, data):
         try:
+            # If the user already exists, return a jwt to them
+            collector = GetCollectorByUsername().execute_n_fetchone({'username': data['username']})
+            if collector:
+                log_kv(LOG_INFO, {'message': 'the given user already exists', 'username': data['username']})
+                return success_response({'jwt': generate_jwt(collector)}, http_code=201)
+
             # Create the collector account and bind the hash and private key
             data['c_hash'], data['c_priv_key'] = g.geth.create_account()
 
