@@ -13,7 +13,8 @@ from ether.contract_source import DEFAULT_JSON_METADATA
 from ether.geth_keeper import GethException
 from models.constraints import get_all_constraints
 from models.contract import ContractRequest, GetContractByConID, GetContractByName, \
-    GetContractsByIssuerID, process_constraints, insert_bulk_tokens, GetContractResponse, UpdateQRCODE, GetAllQRCodes
+    GetContractsByIssuerID, process_constraints, insert_bulk_tokens, GetContractResponse, UpdateQRCODE, GetAllQRCodes, \
+    DoesContractHaveQRCode
 from models.issuer import GetIssuerInfo
 from routes import requires_geth
 from utils.db_utils import requires_db
@@ -192,7 +193,7 @@ class Contract(Resource):
         Method to use for get requests to the /contract method.
         :return:
         """
-        contracts = GetContractsByIssuerID().execute_n_fetchall({'i_id': g.issuer_info['i_id']}, close_connection=True)
+        contracts = GetContractsByIssuerID().execute_n_fetchall({'i_id': g.issuer_info['i_id']})
         if contracts is not None:
             log_kv(LOG_INFO, {'message': 'succesfully retrieved issuer\'s contracts',
                               'issuer_id': g.issuer_info['i_id']})
@@ -229,8 +230,11 @@ def serve_metadata(metadata):
                         Method to retrieve all the qr_codes associated with a given con_id.
                         """, req_i_jwt=True)
 def qr_codes_by_con_id(con_id):
-    qr_codes = GetAllQRCodes().execute_n_fetchall({'con_id': con_id})
-    return success_response({'qr_codes': [q['qr_code_location'] for q in qr_codes]})
+    if bool(DoesContractHaveQRCode().execute_n_fetchone({'con_id': con_id}, schema_out=False)['qr_code_claimable']):
+        qr_codes = GetAllQRCodes().execute_n_fetchall({'con_id': con_id})
+        return success_response({'qr_codes': [q['qr_code_location'] for q in qr_codes]})
+    else:
+        return success_response({"qr_codes": []})
 
 
 @contract_bp.route(url_prefix + '/qr_code/zip/con_id=<int:con_id>')
