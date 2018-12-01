@@ -33,17 +33,19 @@
 
 	//Gas price
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.2.1/Chart.bundle.min.js"></script>
-	<script src=https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.13.0/moment.min.js> </script> <style>
+	<script src=https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.13.0/moment.min.js> </script>
+	<style>
+
 
     .col-lg-3, .col-lg-5, .col-lg-6, .col-lg-4, .col-lg-2, col-lg-11, #code {
 		position: relative;
-		margin: 7px 7px;
-		padding: 10px 10px 10px;
+		padding: 20px 20px;
+		margin: 5px;
 		background-color: #fff;
 		border: 1px solid #ebebeb;
-		-webkit-border-radius: 4px;
-		-moz-border-radius: 4px;
-		border-radius: 4px;
+		border-radius: 7px;
+		display: inline-block;
+
 	}
 
     .good-border {
@@ -57,6 +59,13 @@
 		border-radius: 4px;
     }
 
+	.box {
+
+	}
+
+	.modal-header {
+		background-color:#fafafa;
+	}
 	.modal-content {
     	background-color:#fafafa;
 	}
@@ -101,15 +110,15 @@
 	<script>
         function toggle_visibility(element) {
                 var e = element;
-                if (e.style.display == 'block')
+                if (e.style.display == 'inline-block')
                     e.style.display = 'none';
                 else
-                    e.style.display = 'block';
+                    e.style.display = 'inline-block';
             }
 
         function toggle_on(element) {
                 var e = element;
-                e.style.display = 'block';
+                e.style.display = 'inline-block';
             }
         function toggle_off(element) {
                 var e = element;
@@ -118,6 +127,7 @@
 
 
 		var map;
+
 		function analyze(con_id) {
 			$.ajaxSetup({
 				headers: {
@@ -131,7 +141,8 @@
 
 					drawMap(data.resp_data.loc_constraints, data.resp_data.coordinates);
 					$('#ex1').on('shown.bs.modal', function () {
-						drawChart(data.resp_data.num_claimed, data.resp_data.num_unclaimed);
+						drawChart(data.resp_data.num_claimed, data.resp_data.num_unclaimed, "Claimed", "Unclaimed", chartColors.claimColor, "#ededed", "pie_chart");
+						drawTradedChart(data.resp_data.num_traded_tokens, data.resp_data.num_claimed - data.resp_data.num_traded_tokens);
 						drawGasPrices(data.resp_data.price_and_time, data.resp_data.traded);
 						drawCalendar(data.resp_data.time_windows, data.resp_data.price_and_time["claim_timestamps"]);
 						drawConstraints(data.resp_data.qr_code_claimable, data.resp_data.constraints);
@@ -233,62 +244,89 @@
 	</form>
 
 
+
 	<div id="ex1" class="modal">
 		<div class="modal-dialog modal-lg" style="max-width: 90%!important; color:black;">
 			<div class="modal-content">
-				<div class="modal-body">
-                    <div class="row">
-                        <div class="col-lg-11" id="constraints">
-                            <p>Claiming Constraints: <span id="constraint_icon"></span></p>
-                            <div class="row" id="all_constraints">
-                                <div class="col-lg-4" id="uc_codes">
+				<div class="modal-header">
+
+
+					 <div class="container-fluid" id="all_constraints">
+
+						 <p>Claiming Constraints</p>
+
+						 <div class="row">
+                                <div class="col-lg-3" id="uc_codes">
+
                                     <p>Input Codes:</p>
                                     <ul id="code_list" class="list-group list-group-flush"></ul>
+
                                 </div>
-                                <div class="col-lg-4" id="location_constraints">
+
+								 <div class="col-lg-3" id="time_constraints">
+
+                                    <p>Time Window:</p>
+                                    <ul id="time_list" class="list-group list-group-flush"></ul>
+
+                                </div>
+
+                                <div class="col-lg-3" id="location_constraints">
                                     <p>Location</p>
                                     <ul id="loc_list" class="list-group list-group-flush"></ul>
                                 </div>
-                                <div class="col-lg-4" id="time_constraints">
-                                    <p>Time Window</p>
-                                    <ul id="time_list" class="list-group list-group-flush"></ul>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-					<div class="row">
-						<div class="col-lg-4">
-							<p>Percent Claimed</p>
-							<canvas id="pie-chart" style="height: 100px;"></canvas>
-						</div>
-						<div class="col-lg-3">
-							<p>Number of Trades</p>
-							<p id="traded"></p>
-						</div>
-						<div class="col-lg-4">
-							<p>Token Claim Timestamps</p>
 
-							<div id="cal-heatmap"></div>
-							<div id="container" style="float: right;">
-								<button id="minDate-previous" class="btn"><i class="fa fa-angle-left"></i></button>
-								<button id="minDate-next" class="btn"><i class="fa fa-angle-right"></i></button>
+						<div class="col-lg-3">
+							<p id="trade_constraint"> Tradable: </p>
+						</div>
+
+						 </div>
+
+					</div>
+				</div>
+				<div class="modal-body">
+
+
+					<div class="container-fluid">
+						<div class="row">
+							<div class="col-lg-3">
+
+								<p>Percent Claimed</p>
+								<canvas id="pie-chart" style="height: 100px;"></canvas>
+
+							</div>
+							<div class="col-lg-3" id="traded_div">
+
+								<p>Percent Traded</p>
+								<canvas id="pie-chart2" style="height: 100px;"></canvas>
+								<p id="traded"></p>
+
+							</div>
+							<div class="col-lg-5">
+								<div class="box">
+								<p>Token Claim Timestamps</p>
+
+								<div id="cal-heatmap"></div>
+								<div id="container" style="float: right;">
+									<button id="minDate-previous" class="btn"><i class="fa fa-angle-left"></i></button>
+									<button id="minDate-next" class="btn"><i class="fa fa-angle-right"></i></button>
+								</div>
+								</div>
 							</div>
 						</div>
-					</div>
-					<div class="row">
-						<div class="col-lg-6">
-							<p>Transaction Cost</p>
-							<canvas id="lineChart" width="50%" height="80%"></canvas>
-							<button id="gasprice" type="button" class="btn">Gas Price</button>
-							<button id="gascost" type="button" class="btn">Gas Cost</button>
-							<button id="transactioncost" type="button" class="btn">Total Cost</button>
+						<div class="row">
+							<div class="col-lg-6">
+								<p>Transaction Cost</p>
+								<canvas id="lineChart" width="50%" height="80%"></canvas>
+								<button id="gasprice" type="button" class="btn">Gas Price</button>
+								<button id="gascost" type="button" class="btn">Gas Cost</button>
+								<button id="transactioncost" type="button" class="btn">Total Cost</button>
 
+							</div>
+							<div class="col-lg-5">
+								<p>Location</p>
+								<div id="mapid" style="height: 400px;"></div>
+							</div>
 						</div>
-						<div class="col-lg-5">
-							<p>Location</p>
-							<div id="mapid" style="height: 400px;"></div>
-						</div>
-					</div>
 
 					<div class="row">
 						<div class="col-lg-12" id="qr"></div>
@@ -305,14 +343,14 @@
             ul.innerHTML = "";
             var ul = document.getElementById("time_list");
             ul.innerHTML = "";
-            var ul = document.getElementById("loc_list");
+            ul = document.getElementById("loc_list");
             ul.innerHTML = "";
 
             if(qr_code_claimable){
-                document.getElementById("constraint_icon").className = "glyphicon glyphicon-remove-circle text-danger";
                 toggle_off(document.getElementById("all_constraints"))
-            }else{
-                document.getElementById("constraint_icon").className = "glyphicon glyphicon-ok-circle text-success";
+            }
+
+            else{
                 toggle_on(document.getElementById("all_constraints"))
 
                 var code_constraints = document.getElementById("uc_codes");
@@ -342,7 +380,10 @@
                     ul.innerHTML = "";
                     for (ix in locations){
                         var li = document.createElement("li");
-                        li.appendChild(document.createTextNode("Latitude: " + locations[ix]["latitude"] + " Longitude: " + locations[ix]["longitude"]));
+                        latitude =  parseFloat(locations[ix]["latitude"]).toFixed(2);
+                        longitude = parseFloat(locations[ix]["longitude"]).toFixed(2);
+ 						radius = locations[ix]["radius"];
+                        li.appendChild(document.createTextNode("Must be within " + radius + " meters of " + "(" + latitude + "," + longitude + ")" ));
                         ul.appendChild(li)
                     }
                 }
@@ -354,7 +395,11 @@
                     ul.innerHTML = "";
                     for (ix in times){
                         var li = document.createElement("li");
-                        li.appendChild(document.createTextNode("Start: " + times[ix]["start"] + " End: " + times[ix]["end"]));
+                        var options = {year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' , second: '2-digit'};
+                        start = new Date(times[ix]["start"]).toLocaleDateString("en-US", options);
+                        end = new Date(times[ix]["end"]).toLocaleDateString("en-US", options);
+                        li.appendChild(document.createTextNode("Start Date: " + start + ", \n"));
+						li.appendChild(document.createTextNode("End Date: " + end ));
                         ul.appendChild(li)
                     }
                 }
@@ -365,11 +410,25 @@
 	<script>
 		function numTraded(traded) {
 
-			if (traded == -1)
-				document.getElementById("traded").innerHTML = "This token is not tradable";
+			if (traded == -1) {
+				document.getElementById("trade_constraint").innerHTML = "Tradable: No";
+				document.getElementById("traded").innerHTML = "";
+			}
 
+			else {
+				document.getElementById("trade_constraint").innerHTML = "Tradable: Yes";
+				document.getElementById("traded").innerHTML = "\n Total number of trades: " + traded;
+			}
+		}
+
+		function drawTradedChart(traded, untraded) {
+			if (untraded > 0) {
+				toggle_on(document.getElementById("traded_div"));
+				drawSecondChart(traded, untraded, "Traded", "Original Owner", chartColors.tradeColor, chartColors.claimColor, "pie-chart2");
+			}
 			else
-				document.getElementById("traded").innerHTML = traded;
+				toggle_off(document.getElementById("traded_div"))
+
 		}
 	</script>
 
@@ -416,18 +475,56 @@
 			}
 		});
 
+		var claimed_chart = new Chart(document.getElementById("pie-chart"));
+		function drawChart(d1, d2, label1, label2, color1, color2, id) {
+			console.log("d1", d1);
+			console.log("d2", d2);
 
-		var piechart = new Chart(document.getElementById("pie-chart"));
-		function drawChart(claimed, unclaimed) {
-			var percentage = Math.round(100 * (claimed / (claimed + unclaimed)));
-			piechart.destroy();
-			piechart = new Chart(document.getElementById("pie-chart"), {
+			var percentage = Math.round(100 * (d1 / (d1 + d2)));
+			claimed_chart.destroy();
+
+			claimed_chart = new Chart(document.getElementById("pie-chart"), {
 				type: 'doughnut',
 				data: {
-					labels: ["Claimed", "Unclaimed"],
+					labels: [label1, label2],
 					datasets: [{
-						backgroundColor: ["#141d29", "#ededed"],
-						data: [claimed, unclaimed]
+						backgroundColor: [color1, color2],
+						backgroundColor: [color1, color2],
+						data: [d1, d2]
+					}]
+				},
+
+				options: {
+					legend: { display: false },
+					cutoutPercentage: 70,
+					elements: {
+						center: {
+							text: percentage + "%",
+							fontStyle: 'Arial', // Default is Arial
+							sidePadding: 70 // Defualt is 20 (as a percentage)
+						}
+					}
+				}
+			});
+		}
+
+
+		var traded_chart = new Chart(document.getElementById("pie-chart2"));
+		function drawSecondChart(d1, d2, label1, label2, color1, color2, id) {
+			console.log("d1", d1);
+			console.log("d2", d2);
+
+			var percentage = Math.round(100 * (d1 / (d1 + d2)));
+			traded_chart.destroy();
+
+			traded_chart = new Chart(document.getElementById(id), {
+				type: 'doughnut',
+				data: {
+					labels: [label1, label2],
+					datasets: [{
+						backgroundColor: [color1, color2],
+						backgroundColor: [color1, color2],
+						data: [d1, d2]
 					}]
 				},
 
@@ -555,7 +652,7 @@
 			}
 
 			var range = monthRange(minDate, maxDate);
-			var maxRangeToDisplay = 4;
+			var maxRangeToDisplay = 3;
 			if (range <= maxRangeToDisplay) {
 				document.getElementById('minDate-previous').style.visibility = 'hidden';
 				document.getElementById('minDate-next').style.visibility = 'hidden';
@@ -639,7 +736,8 @@
 			orange: 'rgb(255, 159, 64)',
 			yellow: 'rgb(255, 205, 86)',
 			green: 'rgb(75, 192, 192)',
-			blue: 'rgb(54, 162, 235)',
+			claimColor: '#141d29',
+			tradeColor: 'rgb(107,194,195)',
 			purple: 'rgb(153, 102, 255)',
 			grey: 'rgb(231,233,237)'
 		};
@@ -665,8 +763,8 @@
 							data: claim_price_data,
 							showLine: true,
 							fill: false,
-							backgroundColor: chartColors.red,
-							borderColor: chartColors.red,
+							backgroundColor: chartColors.claimColor,
+							borderColor: chartColors.claimColor,
 						}
 						]
 					},
@@ -732,8 +830,8 @@
 					data: trade_price_data,
 					showLine: true,
 					fill: false,
-					backgroundColor: chartColors.blue,
-					borderColor: chartColors.blue
+					backgroundColor: chartColors.tradeColor,
+					borderColor: chartColors.tradeColor
 				}
 
 				chart.data.datasets.push(trade_dataset);
