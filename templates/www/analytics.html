@@ -188,7 +188,7 @@
 					console.log(response.responseText);
 				});
 		});
-		function display_codes(codes) {
+		function display_codes(codes, zip_url) {
 			var qrs = '<div id="code" class="row"><div class="col-lg-12"><h2>QR CODES:</h2></div>';
 			for (var i = 0; i < codes.length; i++) {
 				qrs += '<div class="col-lg-3">' +
@@ -196,6 +196,7 @@
                             '<a class="btn btn-primary" href=' + codes[i] + ' download="qr_code' + i + '.png">DOWNLOAD</a>' +
                         '</div>';
 			}
+			qrs += `<div class="col-lg-12"><a class="btn btn-primary btn-lg btn-block" href=' + zip_url + ' download="qr_codes.zip">DOWNLOAD ALL</a></div>`
 			qrs += '</div>';
 			$('#qr').append(qrs);
 		}
@@ -212,7 +213,8 @@
 					$('#qr').text("");
 
 					if (data.resp_data.qr_codes.length > 1)
-						display_codes(data.resp_data.qr_codes)
+					    zip_download_location = "http://" + url + "/contract/qr_code/zip/con_id=" + con_id
+						display_codes(data.resp_data.qr_codes, zip_download_location)
 				},
 
 				'json')
