@@ -3,6 +3,7 @@ from utils.doc_utils import BlueprintDocumentation
 from utils.verify_utils import verify_issuer_jwt
 from utils.utils import error_response, success_response
 from utils.db_utils import requires_db
+from models.constraints import get_all_constraints
 
 analytics_bp = Blueprint('analytics', __name__)
 analytics_docs = BlueprintDocumentation(analytics_bp, 'Analytics')
@@ -32,7 +33,10 @@ def summary():
 def analytics(con_id):
 
     # Get contract.
-    data = g.sesh.execute("""select num_created from contracts where contracts.con_id = :contract_id;""",
+    data = g.sesh.execute("""
+                          select num_created, qr_code_claimable 
+                          from contracts 
+                          where contracts.con_id = :contract_id;""",
                           {"contract_id": con_id}).fetchall()
 
     # Check that the data is there
@@ -40,12 +44,18 @@ def analytics(con_id):
         return error_response("Con id doesn't exist")
 
     num_created = data[0]['num_created']
+    qr_code_claimable = data[0]['qr_code_claimable']
 
     # Figure out how many have been claimed.
     d_num_claimed = g.sesh.execute("""select count(*) as count1 from tokens where tokens.con_id=:contract_id 
     and status='S';""", {'contract_id': con_id}).fetchall()
 
     num_claimed = d_num_claimed[0]['count1']
+
+    if qr_code_claimable:
+        constraints = None
+    else:
+        constraints = get_all_constraints(con_id)
 
     return success_response({
         'num_claimed': num_claimed,
@@ -54,8 +64,11 @@ def analytics(con_id):
         'coordinates': claimed_coordinates(con_id),
         'loc_constraints': loc_constraints(con_id),
         'time_windows': token_time_windows(con_id),
+        'qr_code_claimable': qr_code_claimable,
+        'constraints': constraints,
         'price_and_time': price_and_timestamps(con_id),
-        'traded':  num_traded(con_id)
+        'traded':  num_trades(con_id),
+        'num_traded_tokens': num_traded_tokens(con_id)
     })
 
 
@@ -102,7 +115,7 @@ def price_and_timestamps(con_id):
 
     # Gas cost/price data for trades
     d_trades = g.sesh.execute("""select trade.tr_id, gas_price, gas_cost, creation_ts from trade_item, trade where 
-    trade_item.con_id=:contract_id AND trade_item.tr_id=trade.tr_id; """, {'contract_id': con_id}).fetchall()
+    trade_item.con_id=:contract_id AND trade_item.tr_id=trade.tr_id AND trade.status='A'; """, {'contract_id': con_id}).fetchall()
     trade_transaction_cost = []
     trade_gas_price = []
     trade_gas_cost = []
@@ -136,11 +149,10 @@ def price_and_timestamps(con_id):
     prices_by_actions["claim_transaction_cost"] = claim_transaction_cost
     prices_by_actions["claim_gas_cost"] = claim_gas_cost
     prices_by_actions["claim_gas_price"] = claim_gas_price
-    print(prices_by_actions)
     return prices_by_actions
 
-
-def num_traded(con_id):
+#Total number of times this token has been traded
+def num_trades(con_id):
     d_tradable = g.sesh.execute("""select tradable from contracts where contracts.con_id=:contract_id;
        """, {'contract_id': con_id}).fetchall()
 
@@ -154,4 +166,12 @@ def num_traded(con_id):
     return num_trades
 
 
+def num_traded_tokens(con_id):
+    d_traded_tokens = g.sesh.execute("""select distinct t_id from trade, trade_item where 
+                                        trade.tr_id = trade_item.tr_id and status = 'A' and con_id=:contract_id ;""",
+                                        {'contract_id': con_id}).fetchall()
+    if len(d_traded_tokens) > 0:
+        return len(d_traded_tokens[0])
+    else:
+        return 0
 

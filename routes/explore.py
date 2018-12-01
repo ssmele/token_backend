@@ -40,12 +40,12 @@ def get_all_contracts(keyword):
 @explore_bp.route(url_prefix + '/proximity/keyword=<string:keyword>', methods=['POST'])
 @load_with_schema(Location)
 @requires_db
-@explore_docs.document(url_prefix + '/proximity', 'GET',
+@explore_docs.document(url_prefix + '/proximity', 'POST',
                        """
                        Returns all contracts that have some sort of location constraint on it. Also returns distance 
                        given location is from the constraint. Distance in meters.
                        """, input_schema=Location, output_schema=GetProximityContracts)
-@explore_docs.document(url_prefix + '/proximity/keyword=<string:keyword>', 'GET',
+@explore_docs.document(url_prefix + '/proximity/keyword=<string:keyword>', 'POST',
                        """
                        Same as proximmity with keyword.
                        """,

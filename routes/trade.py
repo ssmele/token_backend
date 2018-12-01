@@ -22,6 +22,7 @@ class Trade(Resource):
 
     @load_with_schema(TradeRequest, dump=True)
     @requires_db
+    @requires_geth
     @verify_collector_jwt
     @trade_docs.document(url_prefix, 'POST',
                          """
