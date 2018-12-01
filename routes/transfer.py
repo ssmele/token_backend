@@ -42,8 +42,9 @@ class Transfer(Resource):
             g.sesh.commit()
         except Exception as e:
             g.sesh.rollback()
-            log_kv(LOG_ERROR, {'error': str(e), 'message': "Could not perform external token transfer!"}, exception=True)
-            return error_response('Couldnt not perform external token transfer', status_code=423)
+            log_kv(LOG_ERROR, {'error': str(e), 'message': "Could not perform external token transfer!"},
+                   exception=True)
+            return error_response('Unable to perform transfer. Please check the given wallet address', status_code=423)
 
         return success_response("Went through.")
 
