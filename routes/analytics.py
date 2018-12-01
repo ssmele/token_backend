@@ -67,7 +67,8 @@ def analytics(con_id):
         'qr_code_claimable': qr_code_claimable,
         'constraints': constraints,
         'price_and_time': price_and_timestamps(con_id),
-        'traded':  num_traded(con_id)
+        'traded':  num_trades(con_id),
+        'num_traded_tokens': num_traded_tokens(con_id)
     })
 
 
@@ -150,8 +151,8 @@ def price_and_timestamps(con_id):
     prices_by_actions["claim_gas_price"] = claim_gas_price
     return prices_by_actions
 
-
-def num_traded(con_id):
+#Total number of times this token has been traded
+def num_trades(con_id):
     d_tradable = g.sesh.execute("""select tradable from contracts where contracts.con_id=:contract_id;
        """, {'contract_id': con_id}).fetchall()
 
@@ -165,4 +166,12 @@ def num_traded(con_id):
     return num_trades
 
 
+def num_traded_tokens(con_id):
+    d_traded_tokens = g.sesh.execute("""select distinct t_id from trade, trade_item where 
+                                        trade.tr_id = trade_item.tr_id and status = 'A' and con_id=:contract_id ;""",
+                                        {'contract_id': con_id}).fetchall()
+    if len(d_traded_tokens) > 0:
+        return len(d_traded_tokens[0])
+    else:
+        return 0
 
