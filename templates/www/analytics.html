@@ -346,7 +346,8 @@
 
     <script>
         function setMetaDataURL(con_id){
-            $('#metadata_id').append('<a class="btn btn-primary btn-lg btn-block" href="http://' + url + '/contract/metadata/con_id=' + con_id + '" download="metadata.json"> DOWNLOAD METADATA</a>')
+            $('#metadata_id').empty();
+            $('#metadata_id').append('<a class="btn btn-primary btn-lg btn-block" href="http://' + url + '/contract/metadata/con_id=' + con_id + '" download="metadata.json"> DOWNLOAD METADATA</a>');
         }
 
         function drawConstraints(qr_code_claimable, constraints){
