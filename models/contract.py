@@ -226,7 +226,7 @@ class GetContractByName(DataQuery):
 
 class GetAllContracts(DataQuery):
 
-    def __init__(self, keyword=None):
+    def __init__(self, keyword=None, include_nearby=0):
         if keyword is not None:
             self.sql_text = """
             SELECT contracts.con_id, issuers.i_id, issuers.username as issuer_username, contracts.con_tx as con_hash,
@@ -235,16 +235,20 @@ class GetAllContracts(DataQuery):
             FROM contracts, issuers
             WHERE contracts.i_id = issuers.i_id
             AND (contracts.name like '%{keyword}%'
+            AND ((contracts.con_id NOT IN (SELECT con_id FROM location_claim) AND {nearby} = 0)
+              OR {nearby} = 1)
             OR contracts.description like '%{keyword}%');
-            """.format(keyword=keyword)
+            """.format(keyword=keyword, nearby=include_nearby)
         else:
             self.sql_text = """
             SELECT contracts.con_id, issuers.i_id, issuers.username as issuer_username, contracts.con_tx as con_hash,
             contracts.name, contracts.description, contracts.num_created, contracts.pic_location, contracts.tradable,
             contracts.status, contracts.qr_code_claimable, contracts.metadata_location
             FROM contracts, issuers
-            WHERE contracts.i_id = issuers.i_id;
-            """
+            WHERE contracts.i_id = issuers.i_id
+            AND ((contracts.con_id NOT IN (SELECT con_id FROM location_claim) AND {nearby} = 0)
+              OR {nearby} = 1);
+            """.format(nearby=include_nearby)
 
         self.schema_out = GetContractResponse()
 
