@@ -54,6 +54,21 @@ body {
 	text-align: right;
 }
 
+.block4 {
+	display: block;
+	background-color: #a9c5e6;
+	font-size: 20px;
+	color: #141d29;
+	text-align: right;
+}
+
+.block5 {
+	display: block;
+	background-color: #666669;
+	font-size: 20px;
+	color: #222223;
+	text-align: left;
+}
 footer{
 height: 200px;
 border-top: 3px solid rgb(60,100,165);

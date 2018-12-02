@@ -362,7 +362,7 @@
 
 							</div>
 							<div class="col-lg-9 good-border" id="calendar_div">
-								<h5>Token Claim Timestamps<h5>
+								<h5>Token Claim Timestamps</h5>
                                 <div class="row">
 								    <div id="cal-heatmap" class="middle2"></div>
                                 </div>
@@ -488,14 +488,12 @@
 				toggle_off(document.getElementById("traded_div"));
 				document.getElementById("calendar_div").className = "col-lg-9 good-border";
                 console.log("turned trade off");
-			}
-
-			else {
+			} else {
 				document.getElementById("trade_constraint").innerHTML = "Tradable: Yes";
 				if (claimed > 0) {
 				    toggle_on(document.getElementById("traded_div"));
 				    console.log("turned trade on");
-				document.getElementById("traded").innerHTML = "\n Total number of trades: " + traded;
+				    document.getElementById("traded").innerHTML = "\n Total number of trades: " + traded;
 				    document.getElementById("calendar_div").className = "col-lg-6 good-border";
 				}
 			}
