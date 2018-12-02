@@ -147,6 +147,7 @@
 						drawCalendar(data.resp_data.time_windows, data.resp_data.price_and_time["claim_timestamps"]);
 						drawConstraints(data.resp_data.qr_code_claimable, data.resp_data.constraints);
 						numTraded(data.resp_data.traded);
+						setMetaDataURL(con_id);
 					});
 					$('#ex1').modal('show');
 					map.invalidateSize();
@@ -207,7 +208,7 @@
                             '<a class="btn btn-primary" href=' + codes[i] + ' download="qr_code' + i + '.png">DOWNLOAD</a>' +
                         '</div>';
 			}
-			qrs += '<div class="col-lg-12"><a class="btn btn-primary btn-lg btn-block" href=' + zip_url + ' download="qr_codes.zip">DOWNLOAD ALL</a></div>'
+			qrs += '<div class="col-lg-12"><a class="btn btn-primary btn-lg btn-block" href=' + zip_url + ' download="qr_codes.zip">DOWNLOAD ALL QR CODES</a></div>'
 			qrs += '</div>';
 			$('#qr').append(qrs);
 		}
@@ -341,6 +342,10 @@
 					<div class="row">
 						<div class="col-lg-12" id="qr"></div>
 					</div>
+
+                    <div class="row">
+                        <div class="col-lg-12" id="metadata_id"/>
+                    </div>
 				</div>
 			</div>
 		</div>
@@ -348,6 +353,10 @@
 
 
     <script>
+        function setMetaDataURL(con_id){
+            $('#metadata_id').append('<a class="btn btn-primary btn-lg btn-block" href="http://' + url + '/contract/metadata/con_id=' + con_id + '" download="metadata.json"> DOWNLOAD METADATA</a>')
+        }
+
         function drawConstraints(qr_code_claimable, constraints){
             var ul = document.getElementById("code_list");
             ul.innerHTML = "";

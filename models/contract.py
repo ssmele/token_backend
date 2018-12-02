@@ -136,6 +136,16 @@ class InsertToken(DataQuery):
         super().__init__()
 
 
+class GetMetaDataByConID(DataQuery):
+
+    def __init__(self):
+        self.sql_text = """
+        SELECT metadata_location from contracts where con_id=:con_id;
+        """
+        self.schema_out = None
+        super().__init__()
+
+
 class GetAllQRCodes(DataQuery):
 
     def __init__(self):
