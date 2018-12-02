@@ -15,8 +15,13 @@ explore_docs = BlueprintDocumentation(explore_bp, 'Explore')
 url_prefix = '/explore'
 
 
-@explore_bp.route(url_prefix + '/contracts', defaults={'keyword': None}, methods=['GET'])
-@explore_bp.route(url_prefix + '/contracts/keyword=<string:keyword>', methods=['GET'])
+@explore_bp.route(url_prefix + '/contracts', defaults={'keyword': None, 'include_nearby': 1}, methods=['GET'])
+@explore_bp.route(url_prefix + '/contracts/keyword=<string:keyword>', defaults={'include_nearby': 1},
+                  methods=['GET'])
+@explore_bp.route(url_prefix + '/contracts/include_nearby=<int:include_nearby>', defaults={'keyword': None},
+                  methods=['GET'])
+@explore_bp.route(url_prefix + '/contracts/keyword=<string:keyword>&include_nearby=<int:include_nearby>',
+                  methods=['GET'])
 @requires_db
 @explore_docs.document(url_prefix + '/contracts', 'GET',
                        """
@@ -26,8 +31,8 @@ url_prefix = '/explore'
                        """
                        Get's all contracts for the explore page that have keyword in name or description.
                        """, output_schema=GET_CONTRACT_DOC_EXPLORE)
-def get_all_contracts(keyword):
-    contracts = GetAllContracts(keyword).execute_n_fetchall({}, close_connection=True)
+def get_all_contracts(keyword, include_nearby):
+    contracts = GetAllContracts(keyword, include_nearby).execute_n_fetchall({}, close_connection=True)
     if contracts is not None:
         log_kv(LOG_DEBUG, {'debug': 'succesfully got all contracts'})
         return success_response({'contracts': contracts})
