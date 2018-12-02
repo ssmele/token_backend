@@ -23,22 +23,30 @@ body {
 	font-size: 20px;
 
 }
-.end{
-display: block;
-background: #505560;
-height: 100%;
-width: 100%;
-z-index: 1;
-position: fixed;
-}
-.middle{
-position: absolute;
-  top: 50%;
-  left:50%;
-  transform: translate(-50%,-50%);
+
+.end {
+	display: block;
+	background: #505560;
+	height: 100%;
+	width: 100%;
+	z-index: 1;
+	position: fixed;
 }
 
-.block2{
+.middle {
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+}
+
+.middle2 {
+	position: absolute;
+	left: 50%;
+	transform: translate(-50%, -0%);
+}
+
+.block2 {
 	display: block;
 	background-color: #222223;
 	padding: 10px;

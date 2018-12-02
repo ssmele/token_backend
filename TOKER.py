@@ -68,7 +68,18 @@ def handle_bad_request(e):
 
 
 # Setting up the documentation.
+@app.route('/api-docs')
+@app.route('/token-api')
+@app.route('/how-to-toke')
+@app.route('/swagger-docs')
+@app.route('/help')
+@app.route('/user-help')
+@app.route('/userhelp')
+@app.route('/specifications')
+@app.route('/specs')
+@app.route('/documentation')
 @app.route('/docs')
+@app.route('/runescape')
 def docs():
     """
     This endpoint simple servers the documentation to the user. The universe is gonna end from heat death anyway f the

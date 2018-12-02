@@ -79,6 +79,20 @@
             inset 0 0 0 6px #fff;
 	}
 
+.nested_constraints {
+        text-align: left;
+         padding: 25px;
+         border-radius: 15px;
+         border: 2px solid #fff;
+         box-shadow:
+            inset 0 0 0 1px #fff,
+            inset 0 0 0 2px #fff,
+            inset 0 0 0 3px #fff,
+            inset 0 0 0 4px #e9ebef,
+            inset 0 0 0 5px #fff,
+            inset 0 0 0 6px #fff;
+	}
+
 	.modal-header {
 		background-color: var(--bg);
 	}
@@ -232,14 +246,14 @@
 				});
 		});
 		function display_codes(codes, zip_url) {
-			var qrs = '<div id="code" class="row"><div class="col-lg-12"><h2>QR CODES:</h2></div>';
+			var qrs = '<div id="code" class="row"><div class="col-lg-12"><h5>QR Codes:</h5></div>';
 			for (var i = 0; i < codes.length; i++) {
 				qrs += '<div class="col-lg-3 nested">' +
                             '<img style="display: block; margin-left: auto; margin-right: auto; padding: 10px" src=' + codes[i] + ' id="qr-code-image" height="220" width="220"/> ' +
                             '<a class="btn btn-primary" href=' + codes[i] + ' download="qr_code' + i + '.png">DOWNLOAD</a>' +
                         '</div>';
 			}
-			qrs += '<div class="col-lg-12"><a class="btn btn-primary btn-lg btn-block" href=' + zip_url + ' download="qr_codes.zip">DOWNLOAD ALL</a></div>'
+			qrs += '<div class="col-lg-12"><a class="btn btn-primary btn-lg btn-block" href=' + zip_url + ' download="qr_codes.zip">DOWNLOAD ALL QR CODES</a></div>'
 			qrs += '</div>';
 			$('#qr').append(qrs);
 		}
@@ -299,33 +313,33 @@
                             <div class="col-lg-12 good-border">
                                 <div class="container-fluid">
                                     <div class="row">
-                                        <div class="col-lg-12"><p id="claim_text">Claiming Constraints</p></div>
+                                        <div class="col-lg-12"><h3 id="claim_text">Claiming Constraints:</h3></div>
                                     </div>
 
-						 <div class="row">
-                                        <div class="col-lg-3 nested" id="uc_codes">
+                                    <div class="row">
+                                        <div class="col-lg-3 nested_constraints" id="uc_codes">
 
-                                    <p>Input Codes:</p>
-                                    <ul id="code_list" class="list-group list-group-flush"></ul>
+                                            <h5 style="text-align: center">Input Codes:</h5>
+                                            <ul id="code_list" class="list-group list-group-flush"></ul>
 
-                                </div>
+                                        </div>
 
-                                        <div class="col-lg-3 nested" id="time_constraints">
+                                        <div class="col-lg-3 nested_constraints" id="time_constraints">
 
-                                    <p>Time Window:</p>
-                                    <ul id="time_list" class="list-group list-group-flush"></ul>
+                                            <h5 style="text-align: center">Time Window:</h5>
+                                            <ul id="time_list" class="list-group list-group-flush"></ul>
 
-                                </div>
+                                        </div>
 
-                                        <div class="col-lg-3 nested" id="location_constraints">
-                                    <p>Location</p>
-                                    <ul id="loc_list" class="list-group list-group-flush"></ul>
-                                </div>
+                                        <div class="col-lg-3 nested_constraints" id="location_constraints">
+                                            <h5 style="text-align: center">Location:</h5>
+                                            <ul id="loc_list" class="list-group list-group-flush"></ul>
+                                        </div>
 
                                         <div class="col-lg-3 nested">
-							<p id="trade_constraint"> Tradable: </p>
-						</div>
-						 </div>
+                                            <h5 id="trade_constraint"> Tradable: </h5>
+                                        </div>
+						            </div>
                                 </div>
                             </div>
                         </div>
@@ -336,21 +350,22 @@
 						<div class="row">
 							<div class="col-lg-3 good-border" id="claimed_div">
 
-								<p>Percent Claimed</p>
+								<h5>Percent Claimed</h5>
 								<canvas id="pie-chart" style="height: 50px;"></canvas>
 
 							</div>
 							<div class="col-lg-3 good-border" id="traded_div">
 
-								<p>Percent Traded</p>
+								<h5>Percent Traded</h5>
 								<canvas id="pie-chart2" style="width: 50px;"></canvas>
 								<p id="traded"></p>
 
 							</div>
-							<div class="col-lg-6 good-border" id="calendar_div">
-								<p>Token Claim Timestamps</p>
-
-								<div id="cal-heatmap"></div>
+							<div class="col-lg-9 good-border" id="calendar_div">
+								<h5>Token Claim Timestamps<h5>
+                                <div class="row">
+								    <div id="cal-heatmap" class="middle2"></div>
+                                </div>
 								<div id="container" style="float: right;">
 									<button id="minDate-previous" class="btn"><i class="fa fa-angle-left"></i></button>
 									<button id="minDate-next" class="btn"><i class="fa fa-angle-right"></i></button>
@@ -361,7 +376,7 @@
 						</div>
 						<div class="row">
 							<div class="col-lg-6 good-border">
-								<p>Transaction Cost</p>
+								<h5>Transaction Cost</h5>
 								<canvas id="lineChart" width="50%" height="80%"></canvas>
 								<button id="gasprice" type="button" class="btn">Gas Price</button>
 								<button id="gascost" type="button" class="btn">Gas Cost</button>
@@ -369,7 +384,7 @@
 
 							</div>
 							<div class="col-lg-6 good-border">
-								<p>Location</p>
+								<h5>Location</h5>
 								<div id="mapid" style="height: 400px;"></div>
 							</div>
 						</div>
@@ -386,11 +401,10 @@
 		</div>
 	</div>
 
-
     <script>
         function setMetaDataURL(con_id){
             $('#metadata_id').empty();
-            $('#metadata_id').append('<a class="btn btn-primary btn-lg btn-block" href="http://' + url + '/contract/metadata/con_id=' + con_id + '" download="metadata.json"> DOWNLOAD METADATA</a>');
+            $('#metadata_id').append('<a class="btn btn-primary btn-lg btn-block" href="http://' + url + '/contract/metadata/con_id=' + con_id + '" download="metadata.json"> DOWNLOAD CONTRACT METADATA</a>');
         }
 
         function drawConstraints(qr_code_claimable, constraints){
@@ -455,7 +469,9 @@
                         var options = {year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' , second: '2-digit'};
                         start = new Date(times[ix]["start"]).toLocaleDateString("en-US", options);
                         end = new Date(times[ix]["end"]).toLocaleDateString("en-US", options);
-                        li.appendChild(document.createTextNode("Start Date: " + start + ", \n"));
+                        li.appendChild(document.createTextNode("Start Date: " + start));
+                        ul.appendChild(li)
+                        var li = document.createElement("li");
 						li.appendChild(document.createTextNode("End Date: " + end ));
                         ul.appendChild(li)
                     }
