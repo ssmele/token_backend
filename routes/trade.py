@@ -153,7 +153,7 @@ class Trade(Resource):
         # Ensure requester has access to respond to this request.
         if trade['tradee_c_id'] != g.collector_info['c_id']:
             log_kv(LOG_INFO, {'info': "Attempted manipulation of trade request not directed to authorized collector.",
-                              'c_id': g.gollector_info['c_id']})
+                              'c_id': g.collector_info['c_id']})
             return error_response('Authorized collector is not the collector trade was intended for.')
 
         # logic for accepting the request
