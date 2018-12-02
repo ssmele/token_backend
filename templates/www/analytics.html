@@ -38,44 +38,64 @@
 	<style>
 
 
-    .col-lg-3, .col-lg-5, .col-lg-6, .col-lg-4, .col-lg-2, col-lg-11, #code {
-		position: relative;
-		padding: 20px 20px;
-		margin: 5px;
-		background-color: #fff;
-		border: 1px solid #ebebeb;
-		border-radius: 7px;
-		display: inline-block;
-
+:root {
+    --bg : 	#fafafa;
 	}
 
+    #calendar_div {
+    text-align: center;
+    }
     .good-border {
+        text-align: center;
         position: relative;
-		margin: 7px 7px;
-		padding: 10px 10px 10px;
+		padding: 25px;
 		background-color: #fff;
-		border: 1px solid #ebebeb;
+
 		-webkit-border-radius: 4px;
 		-moz-border-radius: 4px;
-		border-radius: 4px;
+		border-radius: 15px;
+
+
+         border: 2px solid var(--bg);
+         box-shadow:
+            inset 0 0 0 1px var(--bg),
+            inset 0 0 0 2px var(--bg),
+            inset 0 0 0 3px var(--bg),
+            inset 0 0 0 4px #e9ebef,
+            inset 0 0 0 5px #fff,
+            inset 0 0 0 6px transparent;
     }
 
-	.box {
-
+.nested {
+         padding: 25px;
+         border-radius: 15px;
+         border: 2px solid #fff;
+         box-shadow:
+            inset 0 0 0 1px #fff,
+            inset 0 0 0 2px #fff,
+            inset 0 0 0 3px #fff,
+            inset 0 0 0 4px #e9ebef,
+            inset 0 0 0 5px #fff,
+            inset 0 0 0 6px #fff;
 	}
 
 	.modal-header {
-		background-color:#fafafa;
+		background-color: var(--bg);
 	}
 	.modal-content {
-    	background-color:#fafafa;
+    	background-color: var(--bg);
 	}
 
 	.btn {
-
 		 margin-top: 15px;
 		 border: none;"
 	}
+
+    .btn-primary {
+        margin-left: auto;
+        margin-right: auto;
+    }
+
 
 	</style>
 </head>
@@ -125,6 +145,16 @@
                 e.style.display = 'none';
             }
 
+        function toggle_on_all() {
+                toggle_on(document.getElementById("uc_codes"));
+                toggle_on(document.getElementById("time_constraints"));
+                toggle_on(document.getElementById("location_constraints"));
+            }
+        function toggle_off_all() {
+                 toggle_off(document.getElementById("uc_codes"));
+                toggle_off(document.getElementById("time_constraints"));
+                toggle_off(document.getElementById("location_constraints"));
+            }
 
 		var map;
 
@@ -141,12 +171,13 @@
 
 					drawMap(data.resp_data.loc_constraints, data.resp_data.coordinates);
 					$('#ex1').on('shown.bs.modal', function () {
-						drawChart(data.resp_data.num_claimed, data.resp_data.num_unclaimed, "Claimed", "Unclaimed", chartColors.claimColor, "#ededed", "pie_chart");
+
 						drawTradedChart(data.resp_data.num_traded_tokens, data.resp_data.num_claimed - data.resp_data.num_traded_tokens);
+						drawChart(data.resp_data.num_claimed, data.resp_data.num_unclaimed, "Claimed", "Unclaimed", chartColors.claimColor, "#ededed", "pie_chart");
+						numTraded(data.resp_data.traded, data.resp_data.num_claimed);
 						drawGasPrices(data.resp_data.price_and_time, data.resp_data.traded);
 						drawCalendar(data.resp_data.time_windows, data.resp_data.price_and_time["claim_timestamps"]);
 						drawConstraints(data.resp_data.qr_code_claimable, data.resp_data.constraints);
-						numTraded(data.resp_data.traded);
 						setMetaDataURL(con_id);
 					});
 					$('#ex1').modal('show');
@@ -203,12 +234,12 @@
 		function display_codes(codes, zip_url) {
 			var qrs = '<div id="code" class="row"><div class="col-lg-12"><h2>QR CODES:</h2></div>';
 			for (var i = 0; i < codes.length; i++) {
-				qrs += '<div class="col-lg-3">' +
-                            '<img style="padding: 10px" src=' + codes[i] + ' id="qr-code-image" height="220" width="220"/> ' +
+				qrs += '<div class="col-lg-3 nested">' +
+                            '<img style="display: block; margin-left: auto; margin-right: auto; padding: 10px" src=' + codes[i] + ' id="qr-code-image" height="220" width="220"/> ' +
                             '<a class="btn btn-primary" href=' + codes[i] + ' download="qr_code' + i + '.png">DOWNLOAD</a>' +
                         '</div>';
 			}
-			qrs += '<div class="col-lg-12"><a class="btn btn-primary btn-lg btn-block" href=' + zip_url + ' download="qr_codes.zip">DOWNLOAD ALL QR CODES</a></div>'
+			qrs += '<div class="col-lg-12"><a class="btn btn-primary btn-lg btn-block" href=' + zip_url + ' download="qr_codes.zip">DOWNLOAD ALL</a></div>'
 			qrs += '</div>';
 			$('#qr').append(qrs);
 		}
@@ -225,9 +256,12 @@
 					$('#qr').text("");
 
 					if (data.resp_data.qr_codes.length > 1) {
+					    toggle_on(document.getElementById("qr"))
                         $("#qr").innerHTML = "";
                         zip_download_location = "http://" + url + "/contract/qr_code/zip/con_id=" + con_id
                         display_codes(data.resp_data.qr_codes, zip_download_location)
+                    }else {
+					    toggle_off(document.getElementById("qr"))
                     }
 				},
 
@@ -260,60 +294,60 @@
 		<div class="modal-dialog modal-lg" style="max-width: 90%!important; color:black;">
 			<div class="modal-content">
 				<div class="modal-header">
-
-
-					 <div class="container-fluid" id="all_constraints">
-
-						 <p id="claim_text">Claiming Constraints</p>
+                    <div class="container-fluid">
+                        <div class="row">
+                            <div class="col-lg-12 good-border">
+                                <div class="container-fluid">
+                                    <div class="row">
+                                        <div class="col-lg-12"><p id="claim_text">Claiming Constraints</p></div>
+                                    </div>
 
 						 <div class="row">
-                                <div class="col-lg-3" id="uc_codes">
+                                        <div class="col-lg-3 nested" id="uc_codes">
 
                                     <p>Input Codes:</p>
                                     <ul id="code_list" class="list-group list-group-flush"></ul>
 
                                 </div>
 
-								 <div class="col-lg-3" id="time_constraints">
+                                        <div class="col-lg-3 nested" id="time_constraints">
 
                                     <p>Time Window:</p>
                                     <ul id="time_list" class="list-group list-group-flush"></ul>
 
                                 </div>
 
-                                <div class="col-lg-3" id="location_constraints">
+                                        <div class="col-lg-3 nested" id="location_constraints">
                                     <p>Location</p>
                                     <ul id="loc_list" class="list-group list-group-flush"></ul>
                                 </div>
 
-						<div class="col-lg-3">
+                                        <div class="col-lg-3 nested">
 							<p id="trade_constraint"> Tradable: </p>
 						</div>
-
 						 </div>
-
+                                </div>
+                            </div>
+                        </div>
 					</div>
 				</div>
 				<div class="modal-body">
-
-
 					<div class="container-fluid">
 						<div class="row">
-							<div class="col-lg-3">
+							<div class="col-lg-3 good-border" id="claimed_div">
 
 								<p>Percent Claimed</p>
-								<canvas id="pie-chart" style="height: 100px;"></canvas>
+								<canvas id="pie-chart" style="height: 50px;"></canvas>
 
 							</div>
-							<div class="col-lg-3" id="traded_div">
+							<div class="col-lg-3 good-border" id="traded_div">
 
 								<p>Percent Traded</p>
-								<canvas id="pie-chart2" style="height: 100px;"></canvas>
+								<canvas id="pie-chart2" style="width: 50px;"></canvas>
 								<p id="traded"></p>
 
 							</div>
-							<div class="col-lg-5">
-								<div class="box">
+							<div class="col-lg-6 good-border" id="calendar_div">
 								<p>Token Claim Timestamps</p>
 
 								<div id="cal-heatmap"></div>
@@ -321,11 +355,12 @@
 									<button id="minDate-previous" class="btn"><i class="fa fa-angle-left"></i></button>
 									<button id="minDate-next" class="btn"><i class="fa fa-angle-right"></i></button>
 								</div>
-								</div>
+
 							</div>
+
 						</div>
 						<div class="row">
-							<div class="col-lg-6">
+							<div class="col-lg-6 good-border">
 								<p>Transaction Cost</p>
 								<canvas id="lineChart" width="50%" height="80%"></canvas>
 								<button id="gasprice" type="button" class="btn">Gas Price</button>
@@ -333,14 +368,14 @@
 								<button id="transactioncost" type="button" class="btn">Total Cost</button>
 
 							</div>
-							<div class="col-lg-5">
+							<div class="col-lg-6 good-border">
 								<p>Location</p>
 								<div id="mapid" style="height: 400px;"></div>
 							</div>
 						</div>
 
 					<div class="row">
-						<div class="col-lg-12" id="qr"></div>
+						<div class="col-lg-12 good-border" id="qr"></div>
 					</div>
 
                     <div class="row">
@@ -354,7 +389,8 @@
 
     <script>
         function setMetaDataURL(con_id){
-            $('#metadata_id').append('<a class="btn btn-primary btn-lg btn-block" href="http://' + url + '/contract/metadata/con_id=' + con_id + '" download="metadata.json"> DOWNLOAD METADATA</a>')
+            $('#metadata_id').empty();
+            $('#metadata_id').append('<a class="btn btn-primary btn-lg btn-block" href="http://' + url + '/contract/metadata/con_id=' + con_id + '" download="metadata.json"> DOWNLOAD METADATA</a>');
         }
 
         function drawConstraints(qr_code_claimable, constraints){
@@ -366,13 +402,13 @@
             ul.innerHTML = "";
 
             if(qr_code_claimable){
-                toggle_off(document.getElementById("all_constraints"))
-                toggle_on(document.getElementById("trade_constraint"));
-                toggle_on(document.getElementById("claim_text"));
+                toggle_off_all();
+                toggle_on(document.getElementById("qr"));
             }
 
             else{
-                toggle_on(document.getElementById("all_constraints"))
+                toggle_on_all();
+                toggle_off(document.getElementById("qr"));
 
                 var code_constraints = document.getElementById("uc_codes");
                 toggle_on(code_constraints);
@@ -429,16 +465,23 @@
         }
     </script>
 	<script>
-		function numTraded(traded) {
+		function numTraded(traded, claimed) {
 
 			if (traded == -1) {
 				document.getElementById("trade_constraint").innerHTML = "Tradable: No";
-				document.getElementById("traded").innerHTML = "";
+				toggle_off(document.getElementById("traded_div"));
+				document.getElementById("calendar_div").className = "col-lg-9 good-border";
+                console.log("turned trade off");
 			}
 
 			else {
 				document.getElementById("trade_constraint").innerHTML = "Tradable: Yes";
+				if (claimed > 0) {
+				    toggle_on(document.getElementById("traded_div"));
+				    console.log("turned trade on");
 				document.getElementById("traded").innerHTML = "\n Total number of trades: " + traded;
+				    document.getElementById("calendar_div").className = "col-lg-6 good-border";
+				}
 			}
 		}
 
@@ -568,10 +611,10 @@
 		var map = L.map("mapid");
 		var tileLayer = L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
 			 attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors',
-			subdomains: 'abcd',
+
 			minZoom: 1,
 			maxZoom: 16,
-			ext: 'jpg'
+
 		});
 
 		tileLayer.addTo(map);
@@ -674,10 +717,8 @@
 
 			var range = monthRange(minDate, maxDate);
 			var maxRangeToDisplay = 3;
-			if (range <= maxRangeToDisplay) {
-				document.getElementById('minDate-previous').style.visibility = 'hidden';
-				document.getElementById('minDate-next').style.visibility = 'hidden';
-			}
+			var date = new Date(claimEnd);
+			var start = date.setMonth(date.getMonth() - maxRangeToDisplay);
 
 
 			cal = cal.destroy();
@@ -686,12 +727,12 @@
 				data: stats,
 				itemNamespace: "cal-heatmap",
 				considerMissingDataAsZero: false,
-				start: new Date(claimBegin),
+				start: start,
 				domain: "month",
-				minDate: minDate,
+				//minDate: minDate,
 				maxDate: maxDate,
 				subDomain: "x_day",
-				range: Math.min(maxRangeToDisplay, monthRange(minDate, maxDate)),
+				range: 3,
 				cellSize: 15,
 				legendCellSize: 15,
 				domainGutter: 6,
