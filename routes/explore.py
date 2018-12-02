@@ -18,9 +18,9 @@ url_prefix = '/explore'
 @explore_bp.route(url_prefix + '/contracts', defaults={'keyword': None, 'include_nearby': 1}, methods=['GET'])
 @explore_bp.route(url_prefix + '/contracts/keyword=<string:keyword>', defaults={'include_nearby': 1},
                   methods=['GET'])
-@explore_bp.route(url_prefix + '/contracts/include_nearby=<integer:include_nearby>', defaults={'keyword': None},
+@explore_bp.route(url_prefix + '/contracts/include_nearby=<int:include_nearby>', defaults={'keyword': None},
                   methods=['GET'])
-@explore_bp.route(url_prefix + '/contracts/keyword=<string:keyword>&include_nearby=<integer:include_nearby>',
+@explore_bp.route(url_prefix + '/contracts/keyword=<string:keyword>&include_nearby=<int:include_nearby>',
                   methods=['GET'])
 @requires_db
 @explore_docs.document(url_prefix + '/contracts', 'GET',
