@@ -14,6 +14,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.1/ace.js"></script>
     <link href="{{ url_for('static',filename='css/home.css') }}" rel="stylesheet">
     <link href="{{ url_for('static',filename='css/loader.css') }}" rel="stylesheet">
+    <link href="css/home.css" rel="stylesheet">
 
 
 
@@ -33,7 +34,7 @@
 
     <header class="nav fixed-top">
         <img class="logo" src="{{ url_for('static',filename='images/tokentitlelight.png') }}" height="50px" data-toggle="tooltip"
-            data-placement="bottom" title="Alpha 1.0"></img>
+            data-placement="bottom" title="Full Release 1.0"></img>
 
         <a class="nav-btn" href="home">Home</a>
         <a class="nav-btn" href="analytics" data-placement="bottom" title="View Token Analytics">Analytics</a>
@@ -59,7 +60,7 @@
     <div class="col-lg-8 offset-lg-2">
         <div class="row align-items-center justify-content-center">
 
-            <h1 class='display-4'>Token Creation</h1>
+            <h1 class='display-4' style="padding-top: 30px; font-size: 40px;">Token Creation</h1>
         </div>
         <div class="row align-items-center justify-content-center">
             <p>Customize your token below</p>
@@ -219,6 +220,9 @@
         <form class="form" id="target" enctype="multipart/form-data" action="javascript:publish();">
             <div class="container">
                 <div class="col-sm">
+				<div class="container">
+    				<h4 class="panel-title">Basic Configuration</h4>
+					</div>
                     <input type="" class="form-control" id="name" name="name" placeholder="Name" required>
 
 
@@ -272,16 +276,25 @@
 
 
                     </div>
-                        
-                    <div class="btn-group container">
-                        <label class="form-control form-control-2" data-toggle="tooltip"  data-placement="left"
-                               title="Can this token be traded?">
-                            <input id="tradable" type="checkbox"> Tradable?
-                        </label>
+					<div class="container" style="margin-top: 20px;">
+    				<h4 class="panel-title">Advanced Configuration</h4>
+					</div>
+                    <div class="container form-control">
+                        <div class="panel panel-default">
+                            <div class="panel-heading">
+							</div>
 
-                        <label class="form-control form-control-2" data-toggle="tooltip"
-                        data-placement="right" title="Advanced Constraint Options will be disabled">
+                        <label class="form-check-label" data-toggle="tooltip"  data-placement="left"
+                               title="Can this token be traded?">
+                            <input id="tradable" type="checkbox"> Tradable
+                        </label>
+		                        <div class="panel panel-default">
+
+                        <label class="form-check-label" data-toggle="tooltip"
+                        data-placement="left" title="Advanced Constraint Options will be disabled">
                             <input id="qrcode" type="checkbox"> QR CODE</label>
+							                    </div>
+
                     </div>
 
                     <button class="btn btn-secondary advanced" id="advanced" type="button" data-toggle="collapse" onclick="toggle()"
@@ -369,11 +382,14 @@
                         <div id="sliderAmount">Radius</div>
                     </div>
 
+	</div>					
+					<div class="container">
+						<h4 class="panel-title">Token Meta Data</h4>
+					</div>					
 
-                    <div class="container">
+                    <div class="container form-control">
                         <div class="panel panel-default">
                             <div class="panel-heading">
-                                <h3 class="panel-title">Token Meta Data:</h3>
                                 <div class="form-check">
                                 <input type="checkbox" class="form-check-input" id="meta_check" onclick="hide_open_editor()">
                                 <label class="form-check-label" for="exampleCheck1">Enable Token Meta Data</label>
@@ -388,8 +404,17 @@
 
 
 
-                    <div class="row" style="margin: 10px;">
-                    <button type="submit" class="btn btn-primary">Publish</button>
+                    <div class="row">
+										<div class="col">                </div>
+
+
+					<div class="col">
+                    <button type="submit" class="btn btn-primary btn-block" id="submit">Publish</button>
+					                </div>
+
+										<div class="col"></div>
+
+
                 </div>
                     <div id="loader" style="display: none; width: 20px; height: 20px; position: relative; margin: 10px;"></div>
                 </div>
@@ -401,7 +426,7 @@
     </div>
 
     <div id="screen" style="display: none"></div>
-    <footer></footer>
+					<footer class="block2"><div class="container text-right">&copy; 2018 by Team Token.</div></footer>
 </body>
 
 <script>

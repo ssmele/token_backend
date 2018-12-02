@@ -9,7 +9,8 @@
 		<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"></script>
 		<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
 		<link href="{{ url_for('static',filename='css/home.css')}}" rel="stylesheet">
-		
+		<link href="css/home.css" rel="stylesheet">
+
 	</head>
 	
 	<body>
@@ -17,70 +18,112 @@
 		<script>
 			console.log("cookie: " + document.cookie);
 		</script>
-		<header class="nav fixed-top">
-			<img class="logo" src="{{ url_for('static',filename='images/tokentitlelight.png')}}" height="50px" data-toggle="tooltip" data-placement="bottom" title="Alpha 1.0"></img>
-			
+				<div class="nav justify-content-center">
+
+				<img class="logo" src="{{ url_for('static',filename='images/tokentitlelight.png')}}" height="100px" data-toggle="tooltip" data-placement="bottom" title="Full Release 1.0"/>
+				</div>
+				<div class="nav justify-content-center fixed-top" data-500-bottom="opacity: 1;" data-300-bottom="opacity: 0;" data-anchor-target="footer" >
+
+				<img class="logo" src="{{ url_for('static',filename='images/tokentitlelight.png')}}" height="100px" data-toggle="tooltip" data-placement="bottom" title="Full Release 1.0"/>
+				</div>
+
+		<header class="nav justify-content-center nav2" >
+
+
 			<a class="nav-btn active" href="">Home</a>
-			<a class="nav-btn" href="analytics" data-placement="bottom" title="View Token Analytics">Analytics</a>
+			<a class="nav-btn" href="analytics" data-placement="bottom" title="View Token Analytics">My Tokens</a>
 			<a class="nav-btn" href="explore" data-placement="bottom" title="Explore all issued tokens">Explore</a>			
 			<a class="nav-btn" href="creation" data-placement="bottom" title="Issue your very own token">Issuing</a>
 			<a class="nav-btn" href="about" data-placement="bottom" title="Learn about Token and its developers">About</a>
-			
-			<ul class="navbar-nav flex-row ml-md-auto d-none d-md-flex">
-				<li class="nav-item dropdown">
-					<a class="nav-item nav-link dropdown-toggle mr-md-2" href="#" id="bd-versions" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-						My Account
-					</a>
-					<div class="dropdown-menu dropdown-menu-right" aria-labelledby="bd-versions">
-						<a class="dropdown-item" id="#username">Username</a>
-						<a class="dropdown-item" href="index">Logout</a>
-					</div>
-				</li>			
-			</ul>
 		</header>
-		
-		<div class="image"></div>
+
+		<img class="image" src="{{ url_for('static',filename='images/blockchain.jpg')}}"  data--20="top: -100px;" data-500="top: 100px; "/>
 		<div class="block1">
 			<div class="row">
-				<div class="col-lg-6 offset-lg-1">
-					<br>
-					<h3>Create your virtual commemorative</h3>
+				<div class="col-lg-4 offset-lg-3" style="padding-top: 150px; padding-bottom:150px;" data-200-top="opacity: 1"
+                data--50-top="opacity: 0">
+					<h3 style="font-size: 30px;">Create your virtual commemorative</h3>
 					<br>
 					<p>Token allows businesses and individuals to create unique virtual tokens that can be collected by users, with <b>proof of ownership on the blockchain</b>.</p>
-					<p>Tokens may be artistic or contain media.	Some may be transferable, some may be limited, and they all map to an item or experience in the real world. 
-					Our users may receive tokens for attending a sporting event, purchasing an exclusive item, or participating in a competition.</p>
-						With this platform, anyone can release a unique digital token and receive real-time analytics on the interactions and values it has gone through.
-					All of this can now be accomplished without needing to exhaust resources on developing and deploying your own <a href="https://www.ethereum.org/" target="_blank">Ethereum smart contracts</a>.</p>
-					
-					
-				</div>
-				<div class="col-lg-4">
-					<img src="{{ url_for('static',filename='images/blockchain2.png')}}" height="350px" style="padding-top: 20px; padding-left: 50px; padding-right: 50px;"></img>
+						</div>
+			<div class="col-lg-4">
+					<img  src="images/blockchain2.png" height="350px" style="margin-top: 50px;" data-700-top="padding-left: 0px"
+									   data--300-top="padding-left: 150px"/>
 					
 				</div>
+			</div>		
 			</div>
+
+		<div class="block3">
+			<div class="row">
+			<div class="col-lg-3 offset-lg-3">
+					<img  src="{{ url_for('static',filename='images/idea.png')}}" height="300px" style="margin-top: 75px;" data-200-bottom=" transform: rotate(40deg);"
+					data--300-top="transform: rotate(-40deg);"></img>
+
+				</div>
+				<div class="col-lg-3 text-right" style="padding-top: 150px; padding-bottom:150px;" data-200-top="opacity: 1;"
+									   data--50-top="opacity: 0"
+                >
+					<h3 style="font-size: 30px;">Realize your ideas</h3>
+					<br>
+					<p>Tokens may be artistic or contain media.	Some may be transferable, some may be limited, and they all map to an item or experience in the real world. 
+					</p>
+						
+					</div>
+					</div>
+					</div>
+		<div class="block1" style="margin-top: 0px; color: #141d29; background: white; border: none;">
+			<div class="row">
+				<div class="col-lg-6 offset-lg-3 text-center" style="padding-top: 120px; padding-bottom:50px;" data-200-bottom="opacity: 1"
+                data-500-bottom="opacity: 0">
+					<h3 style="font-size: 30px;">Publish Faster</h3>
+					<br>
+				<p>With this platform, anyone can release a unique digital token and receive real-time analytics on the interactions and values it has gone through.
+					All of this can now be accomplished without needing to exhaust resources on developing and deploying your own 
+					
+					<a href="https://www.ethereum.org/" target="_blank">Ethereum smart contracts</a>.</p>	
+				<img  src="{{ url_for('static',filename='images/coding.jpg')}}" height="350px" style="position: relative" data-800-bottom="margin-top: 300px"
+                data--300-bottom="margin-top: 20px;"></img>
+					</div>		
+				</div>
+
+			</div>
+								<footer class="block2"><div class="container text-right">&copy; 2018 by Team Token.</div></footer>
+
+		<div class="end" data-200-bottom="top: -100%;" data--20-bottom="top: 0px;" data-anchor-target="footer" >
+		<div class="middle">
+
+
+		<img class="logo" src="{{ url_for('static',filename='images/tokentitlelight.png')}}" height="150px" data-toggle="tooltip" data-placement="bottom" title="Full Release 1.0"></img>
+			
+			<a class="nav-btn active" href="">Home</a>
+			<a class="nav-btn" href="analytics" data-placement="bottom" title="View Token Analytics">My Tokens</a>
+			<a class="nav-btn" href="explore" data-placement="bottom" title="Explore all issued tokens">Explore</a>			
+			<a class="nav-btn" href="creation" data-placement="bottom" title="Issue your very own token">Issuing</a>
+			<a class="nav-btn" href="about" data-placement="bottom" title="Learn about Token and its developers">About</a>
+
+</div>
 		</div>
-		<div class="image2"></div>
-		
 		<script>
 			$(document).ready(function(){
 				$('[data-toggle="tooltip"]').tooltip(); 
 			});
-			
-			$(window).scroll(function() {
-				if ($(document).scrollTop() > 20) {
-					$('div.image').addClass('shrink');
-					$('div.contain').addClass('shrink');
-					} else {
-					$('div.image').removeClass('shrink');
-					$('div.contain').removeClass('shrink');
-					
-				}
-			});
-		</script>	
-	</body>
-			<footer class="block2">&copy; 2018 by Team Token.</footer>
+$(window).scroll(function () {
+        if ($(document).scrollTop() > 50) {
+            $('header').addClass('shrink');
+            $('div.contain').addClass('shrink');
+        } else {
+            $('header').removeClass('shrink');
+            $('div.contain').removeClass('shrink');
 
+        }
+    });
+		</script>	
+	<script type="text/javascript" src="{{ url_for('static',filename='skrollr.min.js')}}"></script>
+    <script type="text/javascript">
+        var s = skrollr.init();
+    </script>
 	
-	
+		</body>
+
 </html>
