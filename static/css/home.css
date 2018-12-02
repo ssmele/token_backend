@@ -3,17 +3,41 @@ body {
   height: 100%;
 	width: 100%;
 	color: white;
-  background-color: #141d29;
+    background-color: #141d29;
 	overflow-x: hidden !important;
 	overflow-y: automatic;
 }
 
 .block1{
 	display: block;
-	height: 400px;
 	color: #a9c5e6;
-	
+    background-color: #141d29;
+	margin-top: 300px;
+	font-size: 20px;
+	border-top: 2px solid #70b4d6;
 }
+.block3{
+	display: block;
+	color: black;
+    background-color: #909090;
+	font-size: 20px;
+
+}
+.end{
+display: block;
+background: #505560;
+height: 100%;
+width: 100%;
+z-index: 1;
+position: fixed;
+}
+.middle{
+position: absolute;
+  top: 50%;
+  left:50%;
+  transform: translate(-50%,-50%);
+}
+
 .block2{
 	display: block;
 	background-color: #222223;
@@ -21,32 +45,20 @@ body {
 	color: #666669;
 	text-align: right;
 }
+
+footer{
+height: 200px;
+border-top: 3px solid rgb(60,100,165);
+}
 .image {
-	width:100%;
-	height: 300px;
-	display: block;
-	background-image: url("../images/blockchain.jpg");
-	opacity: 0.7;
-	transition: all 0.5s ease;
-	box-shadow: inset 0 -30px 30px #141d29;
-	
+	position: fixed;
+	height: 70%;
+	width: 100%;
+	object-fit: cover;
+	z-index: -1;	
+	overflow-y: hidden;
 }
-.image2 {
-	-moz-transform: scaleX(-1);
-	-o-transform: scaleX(-1);
-	-webkit-transform: scaleX(-1);
-	transform: scaleX(-1);
-	filter: FlipH;
-	-ms-filter: "FlipH";
-	width:100%;
-	height: 200px;
-	display: block;
-	background-image: url("../images/blockchain.jpg");
-	opacity: 0.7;
-	transition: all 0.5s ease;
-	box-shadow: inset 0 30px 30px #141d29;
-	
-}
+
 div.image.shrink{
 	opacity: 0.3;
 }
@@ -61,15 +73,22 @@ li{
 .logo{
 	margin-top:20px;
 }
+.nav{
+background-color: #243447;
+
+}
+
 
 header{
 	height: 80px;
-	
 	background-color: #243447;
 	transition: all .5s ease;
-  box-shadow: 0 0 7px rgba(0,0,0,0.4);
+	box-shadow: 0 0 7px rgba(0,0,0,0.2);
 }
+.nav2{
+	box-shadow: 0 2px 20px rgba(0,0,0,0.5);
 
+}
 header.nav.shrink{
 	height: 70px;
 	opacity: 0;
@@ -109,9 +128,6 @@ div.contain.shrink{
 	background-color: transparent;
 	border: none;
 	color: rgba(255,255,255,0.9);
-	margin: 15px;
-	margin-left: 5px;
-
 }
 .form-control:focus{
 	background-color: #1a2632;
@@ -131,29 +147,32 @@ div.contain.shrink{
 	color: #aaaaaa;
 }
 .advanced{
-	padding: 6px;
-	margin: 10px;
+	margin-top: 8px;
+	padding: 5px;
 }
 
 .nav-btn:hover, .nav-btn:focus{
 	outline: none;
 	border-bottom: 4px solid white;
 	text-decoration: none;
-	color: #aaaaaa;
+	color: #cccccc;
 	
 }
 
-
+#submit{
+margin-top: 20px;
+margin-bottom: 100px;
+}
 .token{
 	width: 200px;
 	height: 200px;
 	border-radius: 50%;
-	border: 10px solid #243447;
+	border: 8px solid #182430;
 	background: #182430;
 	overflow:hidden;
 	text-align:center;
 	cursor: pointer;
-	
+	transition: all 0.3s;
 }
 #image{
 	width: 100%;
@@ -164,6 +183,7 @@ div.contain.shrink{
 
 .active, .active:hover{
 	color: white;
+	border-bottom: 4px solid white;
 }
 .wave{
 	padding: 0px;
@@ -171,7 +191,7 @@ div.contain.shrink{
 	transition: all 0.5s;
 	box-shadow: 0 0 120px rgba(0,0,0,0);
 	border: none;
-	background-color: white;
+	background-color: #182430;
 	margin-bottom: 20px;
 	margin-top: 20px;
 	
@@ -180,8 +200,8 @@ div.contain.shrink{
 	margin-top: 0;
 	transition: all 0.5s;
 	padding:19px 20px 140px 20px;
-	border-radius: 10px;
-	border: 3px solid rgb(210,210,210);
+	border-radius: 8px;
+	border: 0px solid rgba(255,255,255, 0.05);
 	box-shadow: 18px 18px 25px rgba(0,0,0,0.2);
 	
 }
@@ -191,14 +211,15 @@ div.contain.shrink{
 	margin: 0;
 	border-radius: 50%;
 	border: none;
-	transition: all 1s ease;
-	padding: 2px;
-  background-image: linear-gradient(red, orange, yellow, green, blue, indigo);
+	transition: all 0.1s ease;
+	padding: 0px;
+	background-image: linear-gradient(red, yellow, green, blue);
+	background-image: none;
+
 	box-shadow: 0 0 20px rgba(0,0,0,0);
 }
-.shadow:hover{
+wave:hover .shadow{
 	transition: all 0.1s ease;
-	
 	box-shadow: 0 0 0px rgba(0,0,0,0);
 }
 
@@ -207,8 +228,8 @@ div.contain.shrink{
 	margin: 0;
 	height: 0;
 	opacity: 0;
-	color: black;
-	transition: all 0.5s;
+	color: white;
+	transition: all 0.15s;
 	transition-delay: 0s;
 	max-width: 200px;
 	
@@ -216,7 +237,7 @@ div.contain.shrink{
 
 .center{
 	text-align: center;
-	
+	font-size: 18px;
 }
 
 .wave:hover .title{
@@ -232,6 +253,11 @@ div.contain.shrink{
 	transition-delay: 0s;
 	
 }
+.wave:hover .token{
+	border: 0px solid #182430;
+	transition: all 0.3s;
+	
+}
 .card{
 	margin-left: 50px;
 	padding: 0;
@@ -240,7 +266,11 @@ div.contain.shrink{
 	width: 200px;
 }
 
-
+.panel-title{
+	padding-top: 20px;
+font-weight: 350;
+font-size: 21px;
+}
 
 .solo{
 	margin: 0;
