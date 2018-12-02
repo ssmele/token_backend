@@ -14,7 +14,7 @@ from ether.geth_keeper import GethException
 from models.constraints import get_all_constraints
 from models.contract import ContractRequest, GetContractByConID, GetContractByName, \
     GetContractsByIssuerID, process_constraints, insert_bulk_tokens, GetContractResponse, UpdateQRCODE, GetAllQRCodes, \
-    DoesContractHaveQRCode
+    DoesContractHaveQRCode, GetMetaDataByConID
 from models.issuer import GetIssuerInfo
 from routes import requires_geth
 from utils.db_utils import requires_db
@@ -220,6 +220,13 @@ def serve_qr_code(qr_code):
 
 @contract_bp.route(url_prefix + '/metadata=<string:metadata>')
 def serve_metadata(metadata):
+    return serve_file(metadata, Folders.METADATA.value)
+
+
+@contract_bp.route(url_prefix + '/metadata/con_id=<int:con_id>')
+@requires_db
+def meta_data_by_con_id(con_id):
+    metadata = GetMetaDataByConID().execute_n_fetchone({'con_id': con_id}, schema_out=False)['metadata_location']
     return serve_file(metadata, Folders.METADATA.value)
 
 
