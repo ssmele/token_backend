@@ -32,7 +32,6 @@ def get_collector_by_username(username):
         return error_response(status="Couldn't retrieve collector with that username", status_code=-1, http_code=200)
 
 
-# TODO: Let cole know that this token already is in a trade. Status.
 @collector_bp.route(url_prefix + '/collection', methods=['GET'])
 @collector_docs.document(url_prefix + '/collection', 'GET',
                          """

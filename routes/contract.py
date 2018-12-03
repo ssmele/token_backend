@@ -39,9 +39,11 @@ class Contract(Resource):
     @contract_docs.document(url_prefix + " ", 'POST',
                             """
                             Method to start a request to issue a new token on the eth network. This will also create all 
-                            new tokens associated with the method. This method requires a multipart form. The two 
-                            possible form values are token_image which should be an image, and json_data. The json_data 
-                            form should contain a json object matching the method request json fields below.
+                            new tokens associated with the method. This method requires a multipart form. The three 
+                            possible form values are "token_image" which should be an image, "meta_json_data" which 
+                            should be a correctly formatted json encoding of desired token metadata, and finally the 
+                            only required form value "json_data". The json_data form should contain a json object 
+                            matching the method request json fields below.
                             """,
                             error_codes={'89': 'Number of tokens requested to create exceeds limit.',
                                          '45': "Couldn't retrieve issuer specified."},
@@ -225,6 +227,8 @@ def serve_metadata(metadata):
 
 @contract_bp.route(url_prefix + '/metadata/con_id=<int:con_id>')
 @requires_db
+@contract_docs.document(url_prefix + '/metadata/con_id=<int:con_id>', 'GET',
+                        'Method to retrieve metadata for contract with con_id matching given one.')
 def meta_data_by_con_id(con_id):
     metadata = GetMetaDataByConID().execute_n_fetchone({'con_id': con_id}, schema_out=False)['metadata_location']
     return serve_file(metadata, Folders.METADATA.value)
