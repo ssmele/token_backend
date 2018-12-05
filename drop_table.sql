@@ -15,5 +15,6 @@ delete from contracts;
 delete from unique_code_claim;
 delete from time_claim;
 delete from location_claim;
+delete from tokens;
 delete from trade;
 delete from trade_item;
