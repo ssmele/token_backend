@@ -14,17 +14,12 @@ Session.configure(bind=engine)
 
 
 def purge():
-    delete_sql = text("""
-    delete from issuers;
-    delete from collectors;
-    delete from contracts;
-    delete from unique_code_claim;
-    delete from time_claim;
-    delete from location_claim;
-    delete from tokens;
-    delete from trade;
-    delete from trade_item;""")
+    statements = map(text, ['delete from issuers;', 'delete from collectors;', 'delete from contracts;',
+                       'delete from unique_code_claim;', 'delete from time_claim;', 'delete from location_claim;',
+                       'delete from tokens;', 'delete from trade_item;', 'delete from trade;'])
 
+    # issue statements.
     sess = Session()
-    sess.execute(delete_sql, {})
+    for stmt in statements:
+        sess.execute(stmt)
     sess.commit()
