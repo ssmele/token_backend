@@ -186,7 +186,7 @@
 					drawMap(data.resp_data.loc_constraints, data.resp_data.coordinates);
 					$('#ex1').on('shown.bs.modal', function () {
 
-						drawTradedChart(data.resp_data.num_traded_tokens, data.resp_data.num_claimed - data.resp_data.num_traded_tokens);
+						drawTradedChart(data.resp_data.num_traded_tokens, data.resp_data.num_claimed - data.resp_data.num_traded_tokens, data.resp_data.num_claimed);
 						drawChart(data.resp_data.num_claimed, data.resp_data.num_unclaimed, "Claimed", "Unclaimed", chartColors.claimColor, "#ededed", "pie_chart");
 						numTraded(data.resp_data.traded, data.resp_data.num_claimed);
 						drawGasPrices(data.resp_data.price_and_time, data.resp_data.traded);
@@ -500,8 +500,8 @@
 			}
 		}
 
-		function drawTradedChart(traded, untraded) {
-			if (untraded > 0) {
+		function drawTradedChart(traded, untraded, claimed) {
+			if (claimed > 0) {
 				toggle_on(document.getElementById("traded_div"));
 				drawSecondChart(traded, untraded, "Traded", "Original Owner", chartColors.tradeColor, chartColors.claimColor, "pie-chart2");
 			}
