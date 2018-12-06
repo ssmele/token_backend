@@ -14,17 +14,27 @@ Session.configure(bind=engine)
 
 
 def purge():
-    delete_sql = text("""
-    delete from issuers;
-    delete from collectors;
-    delete from contracts;
-    delete from unique_code_claim;
-    delete from time_claim;
-    delete from location_claim;
-    delete from tokens;
-    delete from trade;
-    delete from trade_item;""")
-
     sess = Session()
-    sess.execute(delete_sql, {})
+    commands = [
+        'delete from issuers;',
+        'delete from collectors;',
+        'delete from contracts;',
+        'delete from unique_code_claim;',
+        'delete from time_claim;',
+	'delete from location_claim;',
+	'delete from tokens;',
+	'delete from trade;',
+	'delete from trade_item;'
+    ]
+    
+    for command in commands:
+        print('Running delete statement: {}'.format(command))
+        sess.execute(text(command), {})
     sess.commit()
+    
+
+if __name__ == '__main__':
+    print('PURGING DB!!!')
+    purge()
+    print('PURGE COMPLETE!!!')
+
