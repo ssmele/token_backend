@@ -26,6 +26,5 @@ def purge():
     delete from trade_item;""")
 
     sess = Session()
-
     sess.execute(delete_sql, {})
     sess.commit()
