@@ -5,7 +5,7 @@ Majority of backend python code was designed and implemented by me. Please disre
 
 ***
 This project can be run in debug mode like any other flask app. "./python TOKER.py" should do the trick. To access the documentation for the application visit localhost:8088/docs after running the application.
-**
+***
 
 ### Things I would of changed?
 * Unified the model objects accross the application.  
