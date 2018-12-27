@@ -1,7 +1,7 @@
 # token_backend
 Backend that powered my senior capstone project. This project could be used in many different ways but its main use is to provide ease of access to the Ethereum platform for issuing contracts that interface with the ERC 720 spec.
 
-Majority of backend python code was designed and implemented by me. Please disregard the HTML I did not design or implement those sections. Most of the logic is within the /routes/*.py, and /models/*.py files. (I did not write the analytics.py file)
+Majority of backend python code was designed and implemented by me. I did not design or implement any of the html sections besides the "documentation.html". Most of the logic is within the /routes/*.py, and /models/*.py files. (I did not write the analytics.py file)
 
 ***
 This project can be run in debug mode like any other flask app. "./python TOKER.py" should do the trick. To access the documentation for the application visit localhost:8088/docs after running the application.
