@@ -1,5 +1,5 @@
 # token_backend
-Backend that powered my senior capstone project. This project could be used in many different ways but its main use is to allow ease of access to the Ethereum platform and issuing contracts that interface with the ERC 720 spec.
+Backend that powered my senior capstone project. This project could be used in many different ways but its main use is to provide ease of access to the Ethereum platform for issuing contracts that interface with the ERC 720 spec.
 
 Majority of backend python code was designed and implemented by me. Please disregard the HTML I did not design or implement those sections. Most of the logic is within the /routes/*.py, and /models/*.py files. (I did not write the analytics.py file)
 
