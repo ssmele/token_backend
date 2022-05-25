@@ -29,7 +29,7 @@ passlib==1.7.1
 pkg-resources==0.0.0
 py-solc==2.1.0
 pycryptodome==3.5.1
-PyJWT==1.6.1
+PyJWT==2.4.0
 PyMySQL==0.8.0
 pytz==2018.5
 PyYAML==3.13
